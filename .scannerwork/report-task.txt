@@ -1,0 +1,6 @@
+projectKey=Team_3
+serverUrl=http://10.0.40.179:9000
+serverVersion=25.3.0.104237
+dashboardUrl=http://10.0.40.179:9000/dashboard?id=Team_3
+ceTaskId=709ad051-ea53-4f50-ba06-dafd93956ce6
+ceTaskUrl=http://10.0.40.179:9000/api/ce/task?id=709ad051-ea53-4f50-ba06-dafd93956ce6

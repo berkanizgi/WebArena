@@ -6,15 +6,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 @Entity
-public class Map {
+public class GameMap {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private final int x = 600;
-    private final int y = 400;
+    private final int x = 1200;
+    private final int y = 800;
 
-    public Map() {
+    public GameMap() {
 
     }
 

@@ -72,7 +72,7 @@ export default function Page() {
             >
                 {positions.map((pos) => (
                     <div
-                        key={pos.characterId}
+                        key={`${pos.characterId}-${pos.x}-${pos.y}`}
                         className="absolute"
                         style={{
                             top: `${centerY + pos.y}px`,

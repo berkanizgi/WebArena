@@ -11,8 +11,8 @@ public class GameMap {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private final int x = 1200;
-    private final int y = 800;
+    private final int x = 1000;
+    private final int y = 600;
 
     public GameMap() {
 

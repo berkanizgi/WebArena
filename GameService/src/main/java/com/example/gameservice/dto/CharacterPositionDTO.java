@@ -7,11 +7,13 @@ public class CharacterPositionDTO {
     private String characterId;
     private int x;
     private int y;
+    private int rotation;
 
     public CharacterPositionDTO(CharacterPosition position) {
         this.characterId = position.getCharacterId();
         this.x = position.getX();
         this.y = position.getY();
+        this.rotation = position.getRotation();
     }
 
     public String getCharacterId() {
@@ -36,6 +38,14 @@ public class CharacterPositionDTO {
 
     public void setY(int y) {
         this.y = y;
+    }
+
+    public int getRotation() {
+        return rotation;
+    }
+
+    public void setRotation(int rotation) {
+        this.rotation = rotation;
     }
 }
 

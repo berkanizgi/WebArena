@@ -5,12 +5,21 @@ import { Stomp } from '@stomp/stompjs';
 import type { IMessage } from '@stomp/stompjs';
 import { v4 as uuidv4 } from 'uuid';
 
-
-
 interface CharacterPositionDTO {
     characterId: string;
     x: number;
     y: number;
+    rotation:number;
+}
+
+function getColorFromId(id: string) {
+    const colors = ['blue', 'red', 'green', 'yellow', 'purple', 'orange', 'pink', 'cyan', 'lime', 'magenta'];
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+        hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
 }
 
 export default function Page() {
@@ -18,6 +27,7 @@ export default function Page() {
     const [positions, setPositions] = useState<CharacterPositionDTO[]>([]);
     const [characterId] = useState<string>(() => uuidv4());
     const [client, setClient] = useState<any>(null);
+    const [rotation, setRotation] = useState<number>(0); // 🔥 Rotation-Status hinzufügen
 
     useEffect(() => {
         fetch("http://localhost:8080/api/map")
@@ -53,15 +63,31 @@ export default function Page() {
         const handleKeyPress = (event: KeyboardEvent) => {
             if (!client || !client.connected) return;
             let direction: string | null = null;
-            switch (event.key) {
-                case 'w': direction = 'UP'; break;
-                case 's': direction = 'DOWN'; break;
-                case 'a': direction = 'LEFT'; break;
-                case 'd': direction = 'RIGHT'; break;
+            let newRotation = rotation;
+
+            switch (event.key.toLowerCase()) {
+                case 'w':
+                    direction = 'UP';
+                    newRotation = 0;
+                    break;
+                case 'd':
+                    direction = 'RIGHT';
+                    newRotation = 90;
+                    break;
+                case 's':
+                    direction = 'DOWN';
+                    newRotation = 180;
+                    break;
+                case 'a':
+                    direction = 'LEFT';
+                    newRotation = 270;
+                    break;
             }
             if (direction) {
-                client.send('/app/move', {}, JSON.stringify({ characterId, direction }));
+                setRotation(newRotation);
+                client.send('/app/move', {}, JSON.stringify({ characterId, direction, rotation: newRotation }));
             }
+
         };
 
         window.addEventListener('keydown', handleKeyPress);
@@ -90,13 +116,12 @@ export default function Page() {
                             height: 0,
                             borderLeft: '10px solid transparent',
                             borderRight: '10px solid transparent',
-                            borderBottom: '20px solid blue',
-                            transform: 'translate(-50%, -100%)',
-                            transition: 'top 0.1s, left 0.1s',
+                            borderBottom: `20px solid ${getColorFromId(pos.characterId)}`,
+                            transform: `translate(-50%, -100%) rotate(${pos.rotation}deg)`,
+                            transition: 'top 0.1s, left 0.1s, transform 0.1s',
                         }}
                     />
                 ))}
-
             </div>
         </div>
     );

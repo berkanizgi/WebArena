@@ -26,7 +26,7 @@ public class MovementService {
                 request.getCharacterId(),
                 id -> new CharacterPosition(id, 0, 0)
         );
-        pos.move(request.getDirection());
+        pos.move(request.getDirection(), request.getRotation());
         return pos;
     }
 

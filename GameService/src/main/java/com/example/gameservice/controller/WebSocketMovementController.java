@@ -7,8 +7,17 @@ import com.example.gameservice.service.MovementService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+import java.util.List;
+
+
+@RestController
+@RequestMapping("/api")
+
 public class WebSocketMovementController {
 
     private final MovementService movementService;
@@ -22,6 +31,11 @@ public class WebSocketMovementController {
     @MessageMapping("/move")
     public void moveCharacterViaWebSocket(MovementRequest request) {
         movementService.moveAndBroadcast(request);
+    }
+
+    @GetMapping("/positions")
+    public List<CharacterPositionDTO> getAllPositions() {
+        return movementService.getAllPositions();
     }
 
 }

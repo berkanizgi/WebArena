@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react';
 import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
 import type { IMessage } from '@stomp/stompjs';
+import { v4 as uuidv4 } from 'uuid';
+
+
 
 interface CharacterPositionDTO {
     characterId: string;
@@ -13,11 +16,11 @@ interface CharacterPositionDTO {
 export default function Page() {
     const [mapSize, setMapSize] = useState<{ x: number; y: number } | null>(null);
     const [positions, setPositions] = useState<CharacterPositionDTO[]>([]);
-    const characterId = '123'; // Beispiel-ID, in echt evtl. aus Login holen
+    const [characterId] = useState<string>(() => uuidv4());
     const [client, setClient] = useState<any>(null);
 
     useEffect(() => {
-        fetch("http://localhost:8080/map")
+        fetch("http://localhost:8080/api/map")
             .then(res => res.json())
             .then(data => setMapSize(data));
 
@@ -33,6 +36,12 @@ export default function Page() {
                     return [...filtered, updatedPosition];
                 });
             });
+
+            fetch("http://localhost:8081/api/positions")
+                .then(res => res.json())
+                .then((players: CharacterPositionDTO[]) => {
+                    setPositions(players);
+                });
         });
 
         return () => {
@@ -85,12 +94,9 @@ export default function Page() {
                             transform: 'translate(-50%, -100%)',
                             transition: 'top 0.1s, left 0.1s',
                         }}
-                    >
-                        <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-xs bg-white px-1 rounded shadow">
-                            {pos.characterId}
-                        </span>
-                    </div>
+                    />
                 ))}
+
             </div>
         </div>
     );

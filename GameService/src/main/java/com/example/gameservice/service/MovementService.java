@@ -6,8 +6,10 @@ import com.example.gameservice.dto.MovementRequest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class MovementService {
@@ -37,4 +39,11 @@ public class MovementService {
         CharacterPositionDTO dto = new CharacterPositionDTO(updated);
         messagingTemplate.convertAndSend("/topic/movement", dto);
     }
+
+    public List<CharacterPositionDTO> getAllPositions() {
+        return positions.values().stream()
+                .map(CharacterPositionDTO::new)
+                .collect(Collectors.toList());
+    }
+
 }

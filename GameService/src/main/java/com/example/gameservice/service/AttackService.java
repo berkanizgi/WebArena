@@ -24,7 +24,7 @@ public class AttackService {
     }
 
     public void processAttack(AttackRequest request) {
-        // ❗ aktuelle Position vom Spieler aus dem MovementService holen!
+
         CharacterPosition character = movementService.getCharacterPosition(request.getPlayerId());
         if (character == null) {
             System.out.println("Spieler nicht gefunden: " + request.getPlayerId());
@@ -45,11 +45,11 @@ public class AttackService {
     }
 
     private void executeAttack(CharacterPosition character, AttackRequest request) {
-        // 📏 Richtung berechnen: von Spieler zur Maus
+
         double dirX = request.getMouseX() - character.getX();
         double dirY = request.getMouseY() - character.getY();
 
-        // Richtung normalisieren
+
         double length = Math.sqrt(dirX * dirX + dirY * dirY);
         if (length == 0) {
             length = 1; // Sicherheit gegen Division durch 0

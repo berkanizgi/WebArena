@@ -9,7 +9,7 @@ interface CharacterPositionDTO {
     characterId: string;
     x: number;
     y: number;
-    rotation:number;
+    rotation: number;
 }
 
 function getColorFromId(id: string) {
@@ -27,7 +27,7 @@ export default function Page() {
     const [positions, setPositions] = useState<CharacterPositionDTO[]>([]);
     const [characterId] = useState<string>(() => uuidv4());
     const [client, setClient] = useState<any>(null);
-    const [rotation, setRotation] = useState<number>(0); // 🔥 Rotation-Status hinzufügen
+    const [rotation, setRotation] = useState<number>(0);
 
     useEffect(() => {
         fetch("http://localhost:8080/api/map")
@@ -59,40 +59,69 @@ export default function Page() {
         };
     }, []);
 
+    // 👉 Mausbewegung nur für Rotation
+    useEffect(() => {
+        const handleMouseMove = (event: MouseEvent) => {
+            if (!client || !client.connected) return;
+
+            const player = positions.find(p => p.characterId === characterId);
+            if (!player) return;
+
+            const centerX = window.innerWidth / 2 + player.x;
+            const centerY = window.innerHeight / 2 + player.y;
+
+            const dx = event.clientX - centerX;
+            const dy = event.clientY - centerY;
+
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            const correctedAngle = (angle + 90 + 360) % 360;
+
+            setRotation(correctedAngle);
+
+            // Nur Rotation senden, nicht bewegen
+            client.send('/app/move', {}, JSON.stringify({
+                characterId,
+                direction: null,
+                rotation: correctedAngle
+            }));
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, [client, positions]);
+
+    // 👉 WASD Bewegung
     useEffect(() => {
         const handleKeyPress = (event: KeyboardEvent) => {
             if (!client || !client.connected) return;
             let direction: string | null = null;
-            let newRotation = rotation;
 
             switch (event.key.toLowerCase()) {
                 case 'w':
                     direction = 'UP';
-                    newRotation = 0;
                     break;
                 case 'd':
                     direction = 'RIGHT';
-                    newRotation = 90;
                     break;
                 case 's':
                     direction = 'DOWN';
-                    newRotation = 180;
                     break;
                 case 'a':
                     direction = 'LEFT';
-                    newRotation = 270;
                     break;
             }
             if (direction) {
-                setRotation(newRotation);
-                client.send('/app/move', {}, JSON.stringify({ characterId, direction, rotation: newRotation }));
+                client.send('/app/move', {}, JSON.stringify({
+                    characterId,
+                    direction,
+                    rotation
+                }));
             }
-
         };
 
         window.addEventListener('keydown', handleKeyPress);
         return () => window.removeEventListener('keydown', handleKeyPress);
-    }, [client]);
+    }, [client, rotation]);
 
     if (!mapSize) return <div>Lade Karte...</div>;
 
@@ -118,7 +147,7 @@ export default function Page() {
                             borderRight: '10px solid transparent',
                             borderBottom: `20px solid ${getColorFromId(pos.characterId)}`,
                             transform: `translate(-50%, -100%) rotate(${pos.rotation}deg)`,
-                            transition: 'top 0.1s, left 0.1s, transform 0.1s',
+                            transition: 'top 0.1s, left 0.1s, transform 0.1s ease',
                         }}
                     />
                 ))}

@@ -4,6 +4,7 @@ import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
 import type { IMessage } from '@stomp/stompjs';
 import { v4 as uuidv4 } from 'uuid';
+import { useMouseAttack } from '../hooks/useMouseAttack';
 
 interface CharacterPositionDTO {
     characterId: string;
@@ -28,6 +29,8 @@ export default function Page() {
     const [characterId] = useState<string>(() => uuidv4());
     const [client, setClient] = useState<any>(null);
     const [rotation, setRotation] = useState<number>(0);
+
+    useMouseAttack(client, characterId);
 
     useEffect(() => {
         fetch("http://localhost:8080/api/map")
@@ -78,12 +81,11 @@ export default function Page() {
 
             setRotation(correctedAngle);
 
-            // Nur Rotation senden, nicht bewegen
-            client.send('/app/move', {}, JSON.stringify({
+            client.send('/app/rotate', {}, JSON.stringify({
                 characterId,
-                direction: null,
                 rotation: correctedAngle
             }));
+
         };
 
         window.addEventListener('mousemove', handleMouseMove);

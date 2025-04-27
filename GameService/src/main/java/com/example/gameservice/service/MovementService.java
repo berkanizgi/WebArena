@@ -46,4 +46,14 @@ public class MovementService {
                 .collect(Collectors.toList());
     }
 
+    public void updateRotation(MovementRequest request) {
+        CharacterPosition pos = positions.get(request.getCharacterId());
+        if (pos != null) {
+            pos.setRotation(request.getRotation());
+            CharacterPositionDTO dto = new CharacterPositionDTO(pos);
+            messagingTemplate.convertAndSend("/topic/movement", dto);
+        }
+    }
+
+
 }

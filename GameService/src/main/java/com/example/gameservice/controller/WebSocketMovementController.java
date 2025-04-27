@@ -38,4 +38,10 @@ public class WebSocketMovementController {
         return movementService.getAllPositions();
     }
 
+    @MessageMapping("/rotate")
+    public void rotateCharacterViaWebSocket(MovementRequest request) {
+        movementService.updateRotation(request);
+    }
+
+
 }

@@ -5,6 +5,7 @@ import { Stomp } from '@stomp/stompjs';
 import type { IMessage } from '@stomp/stompjs';
 import { v4 as uuidv4 } from 'uuid';
 import { useMouseAttack } from '../hooks/useMouseAttack';
+import ProjectileManager from './ProjectileManager';
 
 interface CharacterPositionDTO {
     characterId: string;
@@ -85,7 +86,6 @@ export default function Page() {
                 characterId,
                 rotation: correctedAngle
             }));
-
         };
 
         window.addEventListener('mousemove', handleMouseMove);
@@ -125,6 +125,44 @@ export default function Page() {
         return () => window.removeEventListener('keydown', handleKeyPress);
     }, [client, rotation]);
 
+    // 👉 Mausklick für Attacke
+    // 👉 Mausklick für Angriff
+    useEffect(() => {
+        const handleMouseClick = (event: MouseEvent) => {
+            if (!client || !client.connected) return;
+
+            const player = positions.find(p => p.characterId === characterId);
+            if (!player) return;
+
+            // 🧠 Position auf dem Spielfeld (z.B. innerhalb deiner weißen Box)
+            const spielfeld = document.querySelector<HTMLDivElement>('.relative.bg-white.border-4.border-black');
+            if (!spielfeld) return;
+
+            const rect = spielfeld.getBoundingClientRect();
+
+            const mouseX = event.clientX - rect.left - rect.width / 2;
+            const mouseY = event.clientY - rect.top - rect.height / 2;
+
+            const attackMessage = {
+                playerId: characterId,
+                playerX: player.x,
+                playerY: player.y,
+                x: mouseX,
+                y: mouseY,
+            };
+
+            console.log('Attack absenden:', attackMessage);
+
+            client.send('/app/attack', {}, JSON.stringify(attackMessage));
+        };
+
+        window.addEventListener('click', handleMouseClick);
+        return () => window.removeEventListener('click', handleMouseClick);
+    }, [client, positions, characterId]);
+
+
+
+
     if (!mapSize) return <div>Lade Karte...</div>;
 
     const centerX = mapSize.x / 2;
@@ -153,6 +191,9 @@ export default function Page() {
                         }}
                     />
                 ))}
+
+                {/* Projektile */}
+                {client && <ProjectileManager client={client} />}
             </div>
         </div>
     );

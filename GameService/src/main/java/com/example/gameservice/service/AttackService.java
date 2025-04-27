@@ -45,26 +45,34 @@ public class AttackService {
     }
 
     private void executeAttack(CharacterPosition character, AttackRequest request) {
-        // 📏 Richtung berechnen: von Spieler zur Maus
+        // 📏 Richtung berechnen: von Charakter-Position zur Maus
         double dirX = request.getMouseX() - character.getX();
         double dirY = request.getMouseY() - character.getY();
 
-        // Richtung normalisieren
-        double length = Math.sqrt(dirX * dirX + dirY * dirY);
-        if (length == 0) {
-            length = 1; // Sicherheit gegen Division durch 0
+        double distance = Math.sqrt(dirX * dirX + dirY * dirY);
+
+        // ❗ Zusatz-Schutz: Ist die Maus überhaupt in Reichweite? (z.B. maximal 2000 Pixel weit entfernt)
+        if (distance > 2000) {
+            System.out.println("Attack abgelehnt: Maus zu weit weg!");
+            return; // 🛑 Angriff ignorieren
         }
-        double normX = dirX / length;
-        double normY = dirY / length;
+
+        // Richtung normalisieren
+        if (distance == 0) {
+            distance = 1; // Schutz gegen Division durch 0
+        }
+        double normX = dirX / distance;
+        double normY = dirY / distance;
 
         AttackEvent event = new AttackEvent(
                 character.getCharacterId(),
-                character.getX(),    // Startposition X = Charakter Position
-                character.getY(),    // Startposition Y = Charakter Position
+                character.getX(),    // Startposition vom Charakter
+                character.getY(),
                 normX,
                 normY
         );
 
         messagingTemplate.convertAndSend("/topic/attacks", event);
     }
+
 }

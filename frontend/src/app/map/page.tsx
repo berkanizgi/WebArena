@@ -193,7 +193,10 @@ export default function Page() {
                 ))}
 
                 {/* Projektile */}
-                {client && <ProjectileManager client={client} />}
+                {client && mapSize && (
+                    <ProjectileManager client={client} mapSize={mapSize} />
+                )}
+
             </div>
         </div>
     );

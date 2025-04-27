@@ -18,10 +18,8 @@ interface Projectile {
     dirY: number;
 }
 
-export default function ProjectileManager({ client }: { client: Client }) {
+export default function ProjectileManager({ client, mapSize }: { client: Client, mapSize: { x: number; y: number } }) {
     const [projectiles, setProjectiles] = useState<Projectile[]>([]);
-    const [mapSize] = useState({ width: 1000, height: 600 });
-    const [mapCenter] = useState({ x: 500, y: 300 }); // Mitte der Map
 
     useEffect(() => {
         if (!client || !client.connected) return;
@@ -31,9 +29,8 @@ export default function ProjectileManager({ client }: { client: Client }) {
 
             const id = Date.now() + '-' + Math.random();
 
-            const startX = mapCenter.x + event.playerX;
-            const startY = mapCenter.y + event.playerY -8;
-
+            const startX = mapSize.x / 2 + event.playerX;
+            const startY = mapSize.y / 2 + event.playerY;
 
             const newProjectile: Projectile = {
                 id: id.toString(),
@@ -44,32 +41,27 @@ export default function ProjectileManager({ client }: { client: Client }) {
             };
 
             setProjectiles(prev => [...prev, newProjectile]);
+
+            setTimeout(() => {
+                setProjectiles(prev => prev.filter(p => p.id !== id.toString()));
+            }, 2000);
         });
 
-        return () => {
-            subscription.unsubscribe();
-        };
-    }, [client?.connected, mapCenter]);
+        return () => subscription.unsubscribe();
+    }, [client?.connected, mapSize]);
 
     useEffect(() => {
         const interval = setInterval(() => {
             setProjectiles(prev =>
-                prev
-                    .map(p => ({
-                        ...p,
-                        x: p.x + p.dirX * 5,
-                        y: p.y + p.dirY * 5,
-                    }))
-                    .filter(p =>
-                        p.x >= 0 &&
-                        p.x <= mapSize.width &&
-                        p.y >= 0 &&
-                        p.y <= mapSize.height
-                    ) // ❗ Nur Projektile innerhalb der Map behalten
+                prev.map(p => ({
+                    ...p,
+                    x: p.x + p.dirX * 5,
+                    y: p.y + p.dirY * 5,
+                }))
             );
         }, 16);
         return () => clearInterval(interval);
-    }, [mapSize]);
+    }, []);
 
     return (
         <>

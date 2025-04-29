@@ -5,6 +5,7 @@ import { Stomp } from '@stomp/stompjs';
 import type { IMessage } from '@stomp/stompjs';
 import { v4 as uuidv4 } from 'uuid';
 import { useMouseAttack } from '../hooks/useMouseAttack';
+import { useCooldown } from '../hooks/useCooldown';
 import ProjectileManager from './ProjectileManager';
 
 interface CharacterPositionDTO {
@@ -30,6 +31,8 @@ export default function Page() {
     const [characterId] = useState<string>(() => uuidv4());
     const [client, setClient] = useState<any>(null);
     const [rotation, setRotation] = useState<number>(0);
+
+    const { cooldownProgress, trigger: triggerCooldown } = useCooldown(1000); // Cooldown 1s
 
     useMouseAttack(client, characterId);
 
@@ -63,7 +66,6 @@ export default function Page() {
         };
     }, []);
 
-    // 👉 Mausbewegung nur für Rotation
     useEffect(() => {
         const handleMouseMove = (event: MouseEvent) => {
             if (!client || !client.connected) return;
@@ -92,25 +94,16 @@ export default function Page() {
         return () => window.removeEventListener('mousemove', handleMouseMove);
     }, [client, positions]);
 
-    // 👉 WASD Bewegung
     useEffect(() => {
         const handleKeyPress = (event: KeyboardEvent) => {
             if (!client || !client.connected) return;
-            let direction: string | null = null;
 
+            let direction: string | null = null;
             switch (event.key.toLowerCase()) {
-                case 'w':
-                    direction = 'UP';
-                    break;
-                case 'd':
-                    direction = 'RIGHT';
-                    break;
-                case 's':
-                    direction = 'DOWN';
-                    break;
-                case 'a':
-                    direction = 'LEFT';
-                    break;
+                case 'w': direction = 'UP'; break;
+                case 'd': direction = 'RIGHT'; break;
+                case 's': direction = 'DOWN'; break;
+                case 'a': direction = 'LEFT'; break;
             }
             if (direction) {
                 client.send('/app/move', {}, JSON.stringify({
@@ -125,21 +118,17 @@ export default function Page() {
         return () => window.removeEventListener('keydown', handleKeyPress);
     }, [client, rotation]);
 
-    // 👉 Mausklick für Attacke
-    // 👉 Mausklick für Angriff
     useEffect(() => {
         const handleMouseClick = (event: MouseEvent) => {
-            if (!client || !client.connected) return;
+            if (!client || !client.connected || cooldownProgress < 1) return; // Cooldown beachten!
 
             const player = positions.find(p => p.characterId === characterId);
             if (!player) return;
 
-            // 🧠 Position auf dem Spielfeld (z.B. innerhalb deiner weißen Box)
             const spielfeld = document.querySelector<HTMLDivElement>('.relative.bg-white.border-4.border-black');
             if (!spielfeld) return;
 
             const rect = spielfeld.getBoundingClientRect();
-
             const mouseX = event.clientX - rect.left - rect.width / 2;
             const mouseY = event.clientY - rect.top - rect.height / 2;
 
@@ -151,17 +140,13 @@ export default function Page() {
                 y: mouseY,
             };
 
-            console.log('Attack absenden:', attackMessage);
-
             client.send('/app/attack', {}, JSON.stringify(attackMessage));
+            triggerCooldown(); // Cooldown neu starten
         };
 
         window.addEventListener('click', handleMouseClick);
         return () => window.removeEventListener('click', handleMouseClick);
-    }, [client, positions, characterId]);
-
-
-
+    }, [client, positions, characterId, cooldownProgress]);
 
     if (!mapSize) return <div>Lade Karte...</div>;
 
@@ -175,28 +160,53 @@ export default function Page() {
                 style={{ width: `${mapSize.x}px`, height: `${mapSize.y}px` }}
             >
                 {positions.map((pos) => (
-                    <div
-                        key={`${pos.characterId}-${pos.x}-${pos.y}`}
-                        className="absolute"
-                        style={{
-                            top: `${centerY + pos.y}px`,
-                            left: `${centerX + pos.x}px`,
-                            width: 0,
-                            height: 0,
-                            borderLeft: '10px solid transparent',
-                            borderRight: '10px solid transparent',
-                            borderBottom: `20px solid ${getColorFromId(pos.characterId)}`,
-                            transform: `translate(-50%, -100%) rotate(${pos.rotation}deg)`,
-                            transition: 'top 0.1s, left 0.1s, transform 0.1s ease',
-                        }}
-                    />
+                    <div key={`${pos.characterId}-${pos.x}-${pos.y}`}>
+                        {/* Spieler-Dreieck */}
+                        <div
+                            className="absolute"
+                            style={{
+                                top: `${centerY + pos.y}px`,
+                                left: `${centerX + pos.x}px`,
+                                width: 0,
+                                height: 0,
+                                borderLeft: '10px solid transparent',
+                                borderRight: '10px solid transparent',
+                                borderBottom: `20px solid ${getColorFromId(pos.characterId)}`,
+                                transform: `translate(-50%, -100%) rotate(${pos.rotation}deg)`,
+                                transition: 'top 0.1s, left 0.1s, transform 0.1s ease',
+                            }}
+                        />
+
+                        {/* Cooldown-Balken bei eigenem Spieler */}
+                        {pos.characterId === characterId && cooldownProgress < 1 && (
+                            <div
+                                className="absolute bg-gray-300"
+                                style={{
+                                    top: `${centerY + pos.y - 30}px`,
+                                    left: `${centerX + pos.x - 25}px`,
+                                    width: '50px',
+                                    height: '6px',
+                                    borderRadius: '3px',
+                                    overflow: 'hidden',
+                                    border: '1px solid #666',
+                                }}
+                            >
+                                <div
+                                    className="bg-green-500 h-full"
+                                    style={{
+                                        width: `${cooldownProgress * 100}%`,
+                                        transition: 'width 0.1s linear',
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
                 ))}
 
                 {/* Projektile */}
                 {client && mapSize && (
                     <ProjectileManager client={client} mapSize={mapSize} />
                 )}
-
             </div>
         </div>
     );

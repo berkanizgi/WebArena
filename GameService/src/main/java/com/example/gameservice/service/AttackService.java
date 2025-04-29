@@ -40,9 +40,15 @@ public class AttackService {
             character.registerAttack(now); // Cooldown setzen
             executeAttack(character, request);
         } else {
-            System.out.println("Cooldown aktiv für: " + character.getCharacterId());
+            // Neuer Block: ❗ Cooldown Nachricht senden
+            messagingTemplate.convertAndSendToUser(
+                    character.getCharacterId(), // Benutzer ID
+                    "/queue/cooldown",          // Persönlicher Channel
+                    "COOLDOWN_ACTIVE"
+            );
         }
     }
+
 
     private void executeAttack(CharacterPosition character, AttackRequest request) {
         // 📏 Richtung berechnen: von Charakter-Position zur Maus

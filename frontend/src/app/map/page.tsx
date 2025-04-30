@@ -25,14 +25,23 @@ function getColorFromId(id: string) {
     return colors[index];
 }
 
+// Rotationsglättung
+function normalizeAngle(prev: number, target: number): number {
+    let delta = target - prev;
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+    return prev + delta;
+}
+
 export default function Page() {
     const [mapSize, setMapSize] = useState<{ x: number; y: number } | null>(null);
     const [positions, setPositions] = useState<CharacterPositionDTO[]>([]);
     const [characterId] = useState<string>(() => uuidv4());
     const [client, setClient] = useState<any>(null);
     const [rotation, setRotation] = useState<number>(0);
+    const [lastSentRotation, setLastSentRotation] = useState<number>(0);
 
-    const { cooldownProgress, trigger: triggerCooldown } = useCooldown(1000); // Cooldown 1s
+    const { cooldownProgress, trigger: triggerCooldown } = useCooldown(1000);
 
     useMouseAttack(client, characterId);
 
@@ -84,10 +93,16 @@ export default function Page() {
 
             setRotation(correctedAngle);
 
-            client.send('/app/rotate', {}, JSON.stringify({
-                characterId,
-                rotation: correctedAngle
-            }));
+            const angleDiff = Math.abs(correctedAngle - lastSentRotation);
+            const minimalDiff = Math.min(angleDiff, 360 - angleDiff);
+
+            if (minimalDiff > 2) {
+                client.send('/app/rotate', {}, JSON.stringify({
+                    characterId,
+                    rotation: correctedAngle
+                }));
+                setLastSentRotation(correctedAngle);
+            }
         };
 
         window.addEventListener('mousemove', handleMouseMove);
@@ -120,7 +135,7 @@ export default function Page() {
 
     useEffect(() => {
         const handleMouseClick = (event: MouseEvent) => {
-            if (!client || !client.connected || cooldownProgress < 1) return; // Cooldown beachten!
+            if (!client || !client.connected || cooldownProgress < 1) return;
 
             const player = positions.find(p => p.characterId === characterId);
             if (!player) return;
@@ -141,7 +156,7 @@ export default function Page() {
             };
 
             client.send('/app/attack', {}, JSON.stringify(attackMessage));
-            triggerCooldown(); // Cooldown neu starten
+            triggerCooldown();
         };
 
         window.addEventListener('click', handleMouseClick);
@@ -159,51 +174,52 @@ export default function Page() {
                 className="relative bg-white border-4 border-black"
                 style={{ width: `${mapSize.x}px`, height: `${mapSize.y}px` }}
             >
-                {positions.map((pos) => (
-                    <div key={`${pos.characterId}-${pos.x}-${pos.y}`}>
-                        {/* Spieler-Dreieck */}
-                        <div
-                            className="absolute"
-                            style={{
-                                top: `${centerY + pos.y}px`,
-                                left: `${centerX + pos.x}px`,
-                                width: 0,
-                                height: 0,
-                                borderLeft: '10px solid transparent',
-                                borderRight: '10px solid transparent',
-                                borderBottom: `20px solid ${getColorFromId(pos.characterId)}`,
-                                transform: `translate(-50%, -100%) rotate(${pos.rotation}deg)`,
-                                transition: 'top 0.1s, left 0.1s, transform 0.1s ease',
-                            }}
-                        />
+                {positions.map((pos) => {
+                    const angle = pos.characterId === characterId
+                        ? normalizeAngle(rotation, pos.rotation)
+                        : pos.rotation;
 
-                        {/* Cooldown-Balken bei eigenem Spieler */}
-                        {pos.characterId === characterId && cooldownProgress < 1 && (
+                    return (
+                        <div key={`${pos.characterId}-${pos.x}-${pos.y}`}>
                             <div
-                                className="absolute bg-gray-300"
+                                className="absolute"
                                 style={{
-                                    top: `${centerY + pos.y - 30}px`,
-                                    left: `${centerX + pos.x - 25}px`,
-                                    width: '50px',
-                                    height: '6px',
-                                    borderRadius: '3px',
-                                    overflow: 'hidden',
-                                    border: '1px solid #666',
+                                    top: `${centerY + pos.y}px`,
+                                    left: `${centerX + pos.x}px`,
+                                    width: 0,
+                                    height: 0,
+                                    borderLeft: '10px solid transparent',
+                                    borderRight: '10px solid transparent',
+                                    borderBottom: `20px solid ${getColorFromId(pos.characterId)}`,
+                                    transform: `translate(-50%, -100%) rotate(${angle}deg)`,
+                                    transition: 'top 0.1s, left 0.1s',
                                 }}
-                            >
+                            />
+                            {pos.characterId === characterId && cooldownProgress < 1 && (
                                 <div
-                                    className="bg-green-500 h-full"
+                                    className="absolute bg-gray-300"
                                     style={{
-                                        width: `${cooldownProgress * 100}%`,
-                                        transition: 'width 0.1s linear',
+                                        top: `${centerY + pos.y - 30}px`,
+                                        left: `${centerX + pos.x - 25}px`,
+                                        width: '50px',
+                                        height: '6px',
+                                        borderRadius: '3px',
+                                        overflow: 'hidden',
+                                        border: '1px solid #666',
                                     }}
-                                />
-                            </div>
-                        )}
-                    </div>
-                ))}
-
-                {/* Projektile */}
+                                >
+                                    <div
+                                        className="bg-green-500 h-full"
+                                        style={{
+                                            width: `${cooldownProgress * 100}%`,
+                                            transition: 'width 0.1s linear',
+                                        }}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
                 {client && mapSize && (
                     <ProjectileManager client={client} mapSize={mapSize} />
                 )}

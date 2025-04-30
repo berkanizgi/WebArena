@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://10.0.40.182:3000")
 @RestController
 @RequestMapping("/api")
 public class MapController {

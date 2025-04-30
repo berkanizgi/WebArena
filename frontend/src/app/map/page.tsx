@@ -46,11 +46,11 @@ export default function Page() {
     useMouseAttack(client, characterId);
 
     useEffect(() => {
-        fetch("http://localhost:8080/api/map")
+        fetch("http://10.0.40.182:8080/api/map")
             .then(res => res.json())
             .then(data => setMapSize(data));
 
-        const socket = new SockJS('http://localhost:8081/ws');
+        const socket = new SockJS('http://10.0.40.182:8081/ws');
         const stompClient = Stomp.over(socket);
         setClient(stompClient);
 
@@ -63,7 +63,7 @@ export default function Page() {
                 });
             });
 
-            fetch("http://localhost:8081/api/positions")
+            fetch("http://10.0.40.182:8081/api/positions")
                 .then(res => res.json())
                 .then((players: CharacterPositionDTO[]) => {
                     setPositions(players);

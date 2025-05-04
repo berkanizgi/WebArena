@@ -14,6 +14,7 @@ export default class GameScene extends Phaser.Scene {
     private characterId = crypto.randomUUID();
     private stompClient!: Client;
     private otherPlayers = new Map<string, Phaser.Physics.Arcade.Sprite>();
+    private pointer!: Phaser.Input.Pointer;
 
     preload() {
         this.load.image('tiles', 'map/terrain.png');
@@ -25,6 +26,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     create() {
+        this.pointer = this.input.activePointer;
+
         const map = this.make.tilemap({ key: 'map' });
         const tileset = map.addTilesetImage('WebArenaTiles', 'tiles');
         map.createLayer('Bottom', tileset!, 0, 0);
@@ -41,51 +44,25 @@ export default class GameScene extends Phaser.Scene {
             right: Phaser.Input.Keyboard.KeyCodes.D,
         }) as Phaser.Types.Input.Keyboard.CursorKeys;
 
-
         this.setupAnimations();
         this.setupWebSocket();
 
-        //Kamera folgt Spieler
         this.cameras.main.startFollow(this.player);
-
-        // Kamera-Zoom setzen
-        this.cameras.main.setZoom(2); // z.B. 2-fach vergrößert
+        this.cameras.main.setZoom(2);
     }
 
-
-
     setupAnimations() {
-        this.anims.create({
-            key: 'down',
-            frames: this.anims.generateFrameNumbers('soldier', { start: 0, end: 2 }),
-            frameRate: 10,
-            repeat: -1,
-        });
-        this.anims.create({
-            key: 'left',
-            frames: this.anims.generateFrameNumbers('soldier', { start: 3, end: 5 }),
-            frameRate: 10,
-            repeat: -1,
-        });
-        this.anims.create({
-            key: 'right',
-            frames: this.anims.generateFrameNumbers('soldier', { start: 6, end: 8 }),
-            frameRate: 10,
-            repeat: -1,
-        });
-        this.anims.create({
-            key: 'up',
-            frames: this.anims.generateFrameNumbers('soldier', { start: 9, end: 11 }),
-            frameRate: 10,
-            repeat: -1,
-        });
+        this.anims.create({ key: 'down', frames: this.anims.generateFrameNumbers('soldier', { start: 0, end: 2 }), frameRate: 6, repeat: -1 });
+        this.anims.create({ key: 'left', frames: this.anims.generateFrameNumbers('soldier', { start: 3, end: 5 }), frameRate: 6, repeat: -1 });
+        this.anims.create({ key: 'right', frames: this.anims.generateFrameNumbers('soldier', { start: 6, end: 8 }), frameRate: 6, repeat: -1 });
+        this.anims.create({ key: 'up', frames: this.anims.generateFrameNumbers('soldier', { start: 9, end: 11 }), frameRate: 6, repeat: -1 });
     }
 
     setupWebSocket() {
         this.stompClient = createStompClient('http://localhost:8081/ws');
 
         this.stompClient.onConnect = () => {
-            console.log(' Verbunden mit WebSocket');
+            console.log('Verbunden mit WebSocket');
 
             this.stompClient.subscribe('/topic/movement', (message: IMessage) => {
                 const data: CharacterPositionDTO = JSON.parse(message.body);
@@ -122,31 +99,46 @@ export default class GameScene extends Phaser.Scene {
         const speed = 40;
         this.player.setVelocity(0);
 
-        let direction: string | null = null;
+        let moveX = 0;
+        let moveY = 0;
 
-        if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-speed);
-            this.player.anims.play('left', true);
-            direction = 'LEFT';
-        } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(speed);
-            this.player.anims.play('right', true);
-            direction = 'RIGHT';
-        }
+        if (this.cursors.left.isDown) moveX -= 1;
+        if (this.cursors.right.isDown) moveX += 1;
+        if (this.cursors.up.isDown) moveY -= 1;
+        if (this.cursors.down.isDown) moveY += 1;
 
-        if (this.cursors.up.isDown) {
-            this.player.setVelocityY(-speed);
-            if (!direction) this.player.anims.play('up', true);
-            direction = 'UP';
-        } else if (this.cursors.down.isDown) {
-            this.player.setVelocityY(speed);
-            if (!direction) this.player.anims.play('down', true);
-            direction = 'DOWN';
-        }
+        this.player.setVelocity(moveX * speed, moveY * speed);
 
-        if (!direction) {
+        const dx = this.pointer.worldX - this.player.x;
+        const dy = this.pointer.worldY - this.player.y;
+        const angle = Phaser.Math.RadToDeg(Math.atan2(dy, dx));
+        const normalized = (angle + 360) % 360;
+
+        // 8 Richtungen definieren und auf 4 Animationen mappen
+        let aimDirection: 'down' | 'left' | 'right' | 'up';
+
+        if (normalized >= 337.5 || normalized < 22.5) aimDirection = 'right';
+        else if (normalized >= 22.5 && normalized < 67.5) aimDirection = 'right';
+        else if (normalized >= 67.5 && normalized < 112.5) aimDirection = 'down';
+        else if (normalized >= 112.5 && normalized < 157.5) aimDirection = 'left';
+        else if (normalized >= 157.5 && normalized < 202.5) aimDirection = 'left';
+        else if (normalized >= 202.5 && normalized < 247.5) aimDirection = 'left';
+        else if (normalized >= 247.5 && normalized < 292.5) aimDirection = 'up';
+        else aimDirection = 'right';
+
+        const isMoving = moveX !== 0 || moveY !== 0;
+
+        if (isMoving) {
+            this.player.anims.play(aimDirection, true);
+        } else {
             this.player.anims.stop();
-            return;
+            const idleFrames: Record<'down' | 'left' | 'right' | 'up', number> = {
+                down: 0,
+                left: 3,
+                right: 6,
+                up: 9,
+            };
+            this.player.setFrame(idleFrames[aimDirection]);
         }
 
         if (this.stompClient && this.stompClient.connected) {
@@ -154,8 +146,8 @@ export default class GameScene extends Phaser.Scene {
                 destination: '/app/move',
                 body: JSON.stringify({
                     characterId: this.characterId,
-                    direction: direction,
-                    rotation: 0
+                    direction: aimDirection,
+                    rotation: normalized
                 })
             });
         }

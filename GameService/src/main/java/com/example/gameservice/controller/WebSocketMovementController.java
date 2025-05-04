@@ -14,10 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/api")
-
 public class WebSocketMovementController {
 
     private final MovementService movementService;
@@ -33,15 +31,14 @@ public class WebSocketMovementController {
         movementService.moveAndBroadcast(request);
     }
 
-    @GetMapping("/positions")
-    public List<CharacterPositionDTO> getAllPositions() {
-        return movementService.getAllPositions();
-    }
-
     @MessageMapping("/rotate")
     public void rotateCharacterViaWebSocket(MovementRequest request) {
         movementService.updateRotation(request);
     }
 
-
+    @GetMapping("/positions")
+    public List<CharacterPositionDTO> getAllPositions() {
+        List<CharacterPositionDTO> all = movementService.getAllPositions();
+        return all;
+    }
 }

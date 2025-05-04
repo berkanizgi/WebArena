@@ -24,11 +24,16 @@ public class MovementService {
     public CharacterPosition moveCharacter(MovementRequest request) {
         CharacterPosition pos = positions.computeIfAbsent(
                 request.getCharacterId(),
-                id -> new CharacterPosition(id, 0, 0)
+                id -> new CharacterPosition(id, request.getX(), request.getY())
         );
-        pos.move(request.getDirection(), request.getRotation());
+
+        pos.setX(request.getX());
+        pos.setY(request.getY());
+        pos.setDirection(request.getDirection());
+        pos.setRotation(request.getRotation());
         return pos;
     }
+
 
     public CharacterPosition getCharacterPosition(String characterId) {
         return positions.get(characterId);
@@ -54,6 +59,5 @@ public class MovementService {
             messagingTemplate.convertAndSend("/topic/movement", dto);
         }
     }
-
-
 }
+

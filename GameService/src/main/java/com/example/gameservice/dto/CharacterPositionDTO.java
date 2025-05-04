@@ -49,5 +49,13 @@ public class CharacterPositionDTO {
     public void setRotation(int rotation) {
         this.rotation = rotation;
     }
+
+    public String getDirection() {
+        return direction != null ? direction : "down";
+    }
+
+    public void setDirection(String direction) {
+        this.direction = direction;
+    }
 }
 

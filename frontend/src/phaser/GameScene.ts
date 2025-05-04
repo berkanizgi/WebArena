@@ -1,20 +1,34 @@
 import Phaser from 'phaser';
 import { createStompClient } from './stompClient';
-import type { Client, IMessage } from '@stomp/stompjs';
+import { Client as StompClient } from '@stomp/stompjs';
+import Projectile from '@/phaser/Projectile';
+import type { IMessage } from '@stomp/stompjs';
 
 interface CharacterPositionDTO {
     characterId: string;
     x: number;
     y: number;
+    direction: 'up' | 'down' | 'left' | 'right';
+    rotation: number;
 }
 
 export default class GameScene extends Phaser.Scene {
     private player!: Phaser.Physics.Arcade.Sprite;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private characterId = crypto.randomUUID();
-    private stompClient!: Client;
-    private otherPlayers = new Map<string, Phaser.Physics.Arcade.Sprite>();
+    private stompClient!: StompClient;
+    private otherPlayers = new Map<string, {
+        sprite: Phaser.Physics.Arcade.Sprite;
+        lastX: number;
+        lastY: number;
+        lastDirection: string;
+    }>();
     private pointer!: Phaser.Input.Pointer;
+    private lastAttackTime = 0;
+    private cooldown = 1000;
+    private projectiles!: Phaser.GameObjects.Group;
+    private cooldownBar!: Phaser.GameObjects.Graphics;
+    private cooldownProgress = 1;
 
     preload() {
         this.load.image('tiles', 'map/terrain.png');
@@ -48,7 +62,31 @@ export default class GameScene extends Phaser.Scene {
         this.setupWebSocket();
 
         this.cameras.main.startFollow(this.player);
-        this.cameras.main.setZoom(2);
+        this.cameras.main.setZoom(1);
+
+        this.projectiles = this.add.group();
+        this.cooldownBar = this.add.graphics();
+        this.cooldownBar.setDepth(10);
+
+        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+            const now = this.time.now;
+            if (now - this.lastAttackTime < this.cooldown) return;
+            this.lastAttackTime = now;
+
+            const projectile = new Projectile(this, this.player.x, this.player.y, pointer.worldX, pointer.worldY);
+            this.projectiles.add(projectile);
+
+            this.stompClient.publish({
+                destination: '/app/attack',
+                body: JSON.stringify({
+                    playerId: this.characterId,
+                    playerX: this.player.x,
+                    playerY: this.player.y,
+                    dirX: pointer.worldX - this.player.x,
+                    dirY: pointer.worldY - this.player.y
+                })
+            });
+        });
     }
 
     setupAnimations() {
@@ -62,20 +100,42 @@ export default class GameScene extends Phaser.Scene {
         this.stompClient = createStompClient('http://localhost:8081/ws');
 
         this.stompClient.onConnect = () => {
-            console.log('Verbunden mit WebSocket');
-
             this.stompClient.subscribe('/topic/movement', (message: IMessage) => {
                 const data: CharacterPositionDTO = JSON.parse(message.body);
                 if (data.characterId === this.characterId) return;
 
-                const existing = this.otherPlayers.get(data.characterId);
-                if (existing) {
-                    existing.setPosition(data.x, data.y);
+                const existingEntry = this.otherPlayers.get(data.characterId);
+                if (existingEntry) {
+                    const sprite = existingEntry.sprite;
+                    const isMoving = data.x !== existingEntry.lastX || data.y !== existingEntry.lastY;
+
+                    sprite.setPosition(data.x, data.y);
+
+                    if (isMoving) {
+                        sprite.anims.play(data.direction, true);
+                    } else {
+                        sprite.anims.stop();
+                        const idleFrames: Record<'down' | 'left' | 'right' | 'up', number> = {
+                            down: 0,
+                            left: 3,
+                            right: 6,
+                            up: 9,
+                        };
+                        sprite.setFrame(idleFrames[data.direction]);
+                    }
+
+                    existingEntry.lastX = data.x;
+                    existingEntry.lastY = data.y;
+                    existingEntry.lastDirection = data.direction;
                 } else {
-                    const newPlayer = this.physics.add.sprite(data.x, data.y, 'soldier');
-                    newPlayer.setTint(0xffaaaa);
-                    newPlayer.play('down');
-                    this.otherPlayers.set(data.characterId, newPlayer);
+                    const newSprite = this.physics.add.sprite(data.x, data.y, 'soldier');
+                    newSprite.anims.play(data.direction, true);
+                    this.otherPlayers.set(data.characterId, {
+                        sprite: newSprite,
+                        lastX: data.x,
+                        lastY: data.y,
+                        lastDirection: data.direction
+                    });
                 }
             });
 
@@ -85,9 +145,14 @@ export default class GameScene extends Phaser.Scene {
                     players.forEach(p => {
                         if (p.characterId === this.characterId) return;
                         const other = this.physics.add.sprite(p.x, p.y, 'soldier');
-                        other.setTint(0xffaaaa);
-                        other.play('down');
-                        this.otherPlayers.set(p.characterId, other);
+                        const direction = p.direction ?? 'down';
+                        other.anims.play(direction, true);
+                        this.otherPlayers.set(p.characterId, {
+                            sprite: other,
+                            lastX: p.x,
+                            lastY: p.y,
+                            lastDirection: p.direction
+                        });
                     });
                 });
         };
@@ -114,7 +179,6 @@ export default class GameScene extends Phaser.Scene {
         const angle = Phaser.Math.RadToDeg(Math.atan2(dy, dx));
         const normalized = (angle + 360) % 360;
 
-        // 8 Richtungen definieren und auf 4 Animationen mappen
         let aimDirection: 'down' | 'left' | 'right' | 'up';
 
         if (normalized >= 337.5 || normalized < 22.5) aimDirection = 'right';
@@ -141,15 +205,40 @@ export default class GameScene extends Phaser.Scene {
             this.player.setFrame(idleFrames[aimDirection]);
         }
 
+        this.projectiles.getChildren().forEach((p: any) => {
+            if (typeof p.update === 'function') {
+                p.update(this.time.now, this.game.loop.delta);
+            }
+        });
+
         if (this.stompClient && this.stompClient.connected) {
+            if (moveX === 0 && moveY === 0) return;
             this.stompClient.publish({
                 destination: '/app/move',
                 body: JSON.stringify({
                     characterId: this.characterId,
+                    x: this.player.x,
+                    y: this.player.y,
                     direction: aimDirection,
                     rotation: normalized
                 })
             });
         }
+
+        const now = this.time.now;
+        const elapsed = now - this.lastAttackTime;
+        this.cooldownProgress = Phaser.Math.Clamp(elapsed / this.cooldown, 0, 1);
+
+        const barWidth = 30;
+        const barHeight = 4;
+        const barX = this.player.x - barWidth / 2;
+        const barY = this.player.y - 25;
+
+        this.cooldownBar.clear();
+        this.cooldownBar.fillStyle(0x000000, 0.6);
+        this.cooldownBar.fillRect(barX, barY, barWidth, barHeight);
+
+        this.cooldownBar.fillStyle(0x00ffff, 1);
+        this.cooldownBar.fillRect(barX, barY, barWidth * this.cooldownProgress, barHeight);
     }
 }

@@ -24,18 +24,6 @@ public class CharacterPosition {
 
     }
 
-    public void move(String direction, int rotation) {
-        if (direction != null) {
-            this.direction = direction;
-            switch (direction) {
-                case "UP" -> y -= 1;
-                case "DOWN" -> y += 1;
-                case "LEFT" -> x -= 1;
-                case "RIGHT" -> x += 1;
-            }
-        }
-        this.rotation = rotation;
-    }
     public String getCharacterId() {
         return characterId;
     }

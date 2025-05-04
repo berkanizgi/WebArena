@@ -4,6 +4,8 @@ public class MovementRequest {
     private String characterId;
     private String direction; //e.g. "UP" "DOWN" usw.
     private int rotation;
+    private int x;
+    private int y;
 
     public MovementRequest(){}
     public String getCharacterId() {
@@ -26,7 +28,21 @@ public class MovementRequest {
         return rotation;
     }
 
-    public void setRotation(int rotation) {
+    public void setRotation(int rotation){
         this.rotation = rotation;
+    }
+
+    public int getX() {
+        return x;
+    }
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return y;
+    }
+    public void setY(int y) {
+        this.y = y;
     }
 }

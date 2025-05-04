@@ -8,12 +8,14 @@ public class CharacterPositionDTO {
     private int x;
     private int y;
     private int rotation;
+    String direction;
 
     public CharacterPositionDTO(CharacterPosition position) {
         this.characterId = position.getCharacterId();
         this.x = position.getX();
         this.y = position.getY();
         this.rotation = position.getRotation();
+        this.direction = position.getDirection();
     }
 
     public String getCharacterId() {

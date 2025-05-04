@@ -12,6 +12,8 @@ public class CharacterPosition {
 
     private int rotation;
 
+    private String direction;
+
     private Instant lastShotTime = Instant.EPOCH; // Instant kein LocalDateTime, weil Instant ist UCT
 
     public CharacterPosition(String characterId, int x, int y) {
@@ -24,6 +26,7 @@ public class CharacterPosition {
 
     public void move(String direction, int rotation) {
         if (direction != null) {
+            this.direction = direction;
             switch (direction) {
                 case "UP" -> y -= 1;
                 case "DOWN" -> y += 1;
@@ -81,4 +84,11 @@ public class CharacterPosition {
         this.lastShotTime = now;
     }
 
+    public String getDirection() {
+        return direction;
+    }
+
+    public void setDirection(String direction) {
+        this.direction = direction;
+    }
 }

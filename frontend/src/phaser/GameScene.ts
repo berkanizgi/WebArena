@@ -62,7 +62,7 @@ export default class GameScene extends Phaser.Scene {
         this.setupWebSocket();
 
         this.cameras.main.startFollow(this.player);
-        this.cameras.main.setZoom(1);
+        this.cameras.main.setZoom(2);
 
         this.projectiles = this.add.group();
         this.cooldownBar = this.add.graphics();

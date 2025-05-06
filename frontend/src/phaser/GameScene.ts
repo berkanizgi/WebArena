@@ -1,10 +1,7 @@
 import Phaser from 'phaser';
 import { createStompClient } from './stompClient';
 import { Client as StompClient } from '@stomp/stompjs';
-import Projectile from '@/phaser/Projectile';
-import type { IMessage } from '@stomp/stompjs';
 import {sendAttack} from "@/phaser/attackClient";
-import type { CharacterPositionDTO, AttackEventDTO } from './types';
 import { setupMap } from '@/phaser/setup/mapSetup';
 import { setupPlayer } from '@/phaser/setup/playerSetup';
 import { setupAnimations } from '@/phaser/setup/animationSetup';
@@ -54,15 +51,16 @@ export default class GameScene extends Phaser.Scene {
 
         setupAnimations(this); //ANIMATION ERSTELLEN aus animationSetup.ts
 
-        this.stompClient = createStompClient('http://localhost:8081/ws');
-        setupWebSocket(this);
+
+
 
         setupCamera(this, this.player); //KAMERA KONFIGURIEREN aus cameraSetup.ts
 
-        this.projectiles = createProjectileGroup(this);
+        this.projectiles = createProjectileGroup(this);  //PROJECTILE aus projectileSetup
 
         this.cooldownBar = createCooldownBar(this); //COOLDOWN aus cooldownSetup
 
+        this.stompClient = createStompClient('http://localhost:8081/ws');
 
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             const now = this.time.now;
@@ -78,6 +76,8 @@ export default class GameScene extends Phaser.Scene {
                 playerY: this.player.y
             });
         });
+
+        setupWebSocket(this);
 
     }
 

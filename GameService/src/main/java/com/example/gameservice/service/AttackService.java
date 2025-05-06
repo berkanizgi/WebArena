@@ -1,8 +1,8 @@
 package com.example.gameservice.service;
 
 import com.example.gameservice.domain.CharacterPosition;
-import com.example.gameservice.dto.AttackEvent;
-import com.example.gameservice.dto.AttackRequest;
+import com.example.gameservice.dto.AttackEventDTO;
+import com.example.gameservice.request.AttackRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -70,7 +70,7 @@ public class AttackService {
         double normX = dirX / distance;
         double normY = dirY / distance;
 
-        AttackEvent event = new AttackEvent(
+        AttackEventDTO event = new AttackEventDTO(
                 character.getCharacterId(),
                 character.getX(),    // Startposition vom Charakter
                 character.getY(),

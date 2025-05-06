@@ -2,7 +2,7 @@ package com.example.gameservice.service;
 
 import com.example.gameservice.domain.CharacterPosition;
 import com.example.gameservice.dto.CharacterPositionDTO;
-import com.example.gameservice.dto.MovementRequest;
+import com.example.gameservice.request.MovementRequest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 

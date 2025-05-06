@@ -1,13 +1,10 @@
 package com.example.gameservice.controller;
 
-import com.example.gameservice.domain.CharacterPosition;
 import com.example.gameservice.dto.CharacterPositionDTO;
-import com.example.gameservice.dto.MovementRequest;
+import com.example.gameservice.request.MovementRequest;
 import com.example.gameservice.service.MovementService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

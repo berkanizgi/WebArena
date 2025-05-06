@@ -21,7 +21,6 @@ public class CharacterPosition {
         this.x = x;
         this.y = y;
         this.rotation = 0;
-
     }
 
     public String getCharacterId() {

@@ -1,4 +1,4 @@
-package com.example.gameservice.dto;
+package com.example.gameservice.request;
 
 public class AttackRequest {
     private int x;

@@ -2,7 +2,7 @@
 //
 //import com.example.gameservice.domain.CharacterPosition;
 //import com.example.gameservice.dto.CharacterPositionDTO;
-//import com.example.gameservice.dto.MovementRequest;
+//import com.example.gameservice.request.MovementRequest;
 //import com.example.gameservice.service.MovementService;
 //import org.springframework.http.ResponseEntity;
 //import org.springframework.messaging.simp.SimpMessagingTemplate;

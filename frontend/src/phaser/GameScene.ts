@@ -3,14 +3,9 @@ import { createStompClient } from './stompClient';
 import { Client as StompClient } from '@stomp/stompjs';
 import Projectile from '@/phaser/Projectile';
 import type { IMessage } from '@stomp/stompjs';
+import {sendAttack} from "@/phaser/attackClient";
+import type { CharacterPositionDTO, AttackEventDTO } from './types';
 
-interface CharacterPositionDTO {
-    characterId: string;
-    x: number;
-    y: number;
-    direction: 'up' | 'down' | 'left' | 'right';
-    rotation: number;
-}
 
 export default class GameScene extends Phaser.Scene {
     private player!: Phaser.Physics.Arcade.Sprite;
@@ -33,7 +28,7 @@ export default class GameScene extends Phaser.Scene {
     preload() {
         this.load.image('tiles', 'map/terrain.png');
         this.load.tilemapTiledJSON('map', 'map/WebArenaMap.json');
-        this.load.spritesheet('soldier', 'assets/soldier.png', {
+        this.load.spritesheet('soldier', 'assets/soldier.png', {  //TBD: Different Chars
             frameWidth: 32,
             frameHeight: 32
         });
@@ -47,8 +42,8 @@ export default class GameScene extends Phaser.Scene {
         map.createLayer('Bottom', tileset!, 0, 0);
         map.createLayer('Top', tileset!, 0, 0);
 
-        const spawnX = map.widthInPixels / 2;
-        const spawnY = map.heightInPixels / 2;
+        const spawnX = map.widthInPixels / 2;  //TBD: Backend
+        const spawnY = map.heightInPixels / 2; //TBD: Backend
 
         this.player = this.physics.add.sprite(spawnX, spawnY, 'soldier');
         this.cursors = this.input.keyboard!.addKeys({
@@ -69,24 +64,13 @@ export default class GameScene extends Phaser.Scene {
         this.cooldownBar.setDepth(10);
 
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-            const now = this.time.now;
-            if (now - this.lastAttackTime < this.cooldown) return;
-            this.lastAttackTime = now;
-
-            const projectile = new Projectile(this, this.player.x, this.player.y, pointer.worldX, pointer.worldY);
-            this.projectiles.add(projectile);
-
-            this.stompClient.publish({
-                destination: '/app/attack',
-                body: JSON.stringify({
-                    playerId: this.characterId,
-                    playerX: this.player.x,
-                    playerY: this.player.y,
-                    dirX: pointer.worldX - this.player.x,
-                    dirY: pointer.worldY - this.player.y
-                })
+            sendAttack(this.stompClient, {
+                playerId: this.characterId,
+                x: pointer.worldX,
+                y: pointer.worldY
             });
         });
+
     }
 
     setupAnimations() {

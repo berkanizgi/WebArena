@@ -1,13 +1,13 @@
 package com.example.gameservice.dto;
 
-public class AttackEvent {
+public class AttackEventDTO {
     private String playerId;
     private int playerX;
     private int playerY;
     private double dirX;
     private double dirY;
 
-    public AttackEvent(String playerId, int playerX, int playerY, double dirX, double dirY) {
+    public AttackEventDTO(String playerId, int playerX, int playerY, double dirX, double dirY) {
         this.playerId = playerId;
         this.playerX = playerX;
         this.playerY = playerY;

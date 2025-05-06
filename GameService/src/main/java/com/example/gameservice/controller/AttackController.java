@@ -1,6 +1,6 @@
 package com.example.gameservice.controller;
 
-import com.example.gameservice.dto.AttackRequest;
+import com.example.gameservice.request.AttackRequest;
 import com.example.gameservice.service.AttackService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.web.bind.annotation.RestController;

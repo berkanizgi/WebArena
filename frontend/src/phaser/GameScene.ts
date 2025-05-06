@@ -67,7 +67,9 @@ export default class GameScene extends Phaser.Scene {
             sendAttack(this.stompClient, {
                 playerId: this.characterId,
                 x: pointer.worldX,
-                y: pointer.worldY
+                y: pointer.worldY,
+                playerX: this.player.x,
+                playerY: this.player.y
             });
         });
 
@@ -122,6 +124,21 @@ export default class GameScene extends Phaser.Scene {
                     });
                 }
             });
+
+            this.stompClient.subscribe('/topic/attacks', (message: IMessage) => {
+                const data: AttackEventDTO = JSON.parse(message.body);
+
+                const projectile = new Projectile(
+                    this,
+                    data.playerX,
+                    data.playerY,
+                    data.playerX + data.dirX * 50,
+                    data.playerY + data.dirY * 50
+                );
+                this.projectiles.add(projectile);
+
+            });
+
 
             fetch('http://localhost:8081/api/positions')
                 .then(res => res.json())

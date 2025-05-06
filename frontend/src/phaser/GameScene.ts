@@ -9,6 +9,12 @@ import { setupMap } from '@/phaser/setup/mapSetup';
 import { setupPlayer } from '@/phaser/setup/playerSetup';
 import { setupAnimations } from '@/phaser/setup/animationSetup';
 import { setupWebSocket } from '@/phaser/setup/webSocketSetup';
+import { setupCamera } from '@/phaser/setup/cameraSetup';
+import { createCooldownBar, updateCooldownBar } from '@/phaser/setup/cooldownSetup';
+import { createProjectileGroup, updateProjectiles } from '@/phaser/setup/projectileSetup';
+import { handlePlayerMovement } from '@/phaser/movement/movementHandler';
+import { sendMovement } from '@/phaser/movement/movementSender';
+
 
 export default class GameScene extends Phaser.Scene {
     private player!: Phaser.Physics.Arcade.Sprite;
@@ -51,14 +57,19 @@ export default class GameScene extends Phaser.Scene {
         this.stompClient = createStompClient('http://localhost:8081/ws');
         setupWebSocket(this);
 
-        this.cameras.main.startFollow(this.player);
-        this.cameras.main.setZoom(2);
+        setupCamera(this, this.player); //KAMERA KONFIGURIEREN aus cameraSetup.ts
 
-        this.projectiles = this.add.group();
-        this.cooldownBar = this.add.graphics();
-        this.cooldownBar.setDepth(10);
+        this.projectiles = createProjectileGroup(this);
+
+        this.cooldownBar = createCooldownBar(this); //COOLDOWN aus cooldownSetup
+
 
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+            const now = this.time.now;
+            if (now - this.lastAttackTime < this.cooldown) return;
+
+            this.lastAttackTime = now;
+
             sendAttack(this.stompClient, {
                 playerId: this.characterId,
                 x: pointer.worldX,
@@ -70,86 +81,26 @@ export default class GameScene extends Phaser.Scene {
 
     }
 
-
     update() {
-        const speed = 40;
-        this.player.setVelocity(0);
+        const { aimDirection, moveX, moveY, rotation } = handlePlayerMovement(this.player, this.cursors, this.pointer);
 
-        let moveX = 0;
-        let moveY = 0;
-
-        if (this.cursors.left.isDown) moveX -= 1;
-        if (this.cursors.right.isDown) moveX += 1;
-        if (this.cursors.up.isDown) moveY -= 1;
-        if (this.cursors.down.isDown) moveY += 1;
-
-        this.player.setVelocity(moveX * speed, moveY * speed);
-
-        const dx = this.pointer.worldX - this.player.x;
-        const dy = this.pointer.worldY - this.player.y;
-        const angle = Phaser.Math.RadToDeg(Math.atan2(dy, dx));
-        const normalized = (angle + 360) % 360;
-
-        let aimDirection: 'down' | 'left' | 'right' | 'up';
-
-        if (normalized >= 337.5 || normalized < 22.5) aimDirection = 'right';
-        else if (normalized >= 22.5 && normalized < 67.5) aimDirection = 'right';
-        else if (normalized >= 67.5 && normalized < 112.5) aimDirection = 'down';
-        else if (normalized >= 112.5 && normalized < 157.5) aimDirection = 'left';
-        else if (normalized >= 157.5 && normalized < 202.5) aimDirection = 'left';
-        else if (normalized >= 202.5 && normalized < 247.5) aimDirection = 'left';
-        else if (normalized >= 247.5 && normalized < 292.5) aimDirection = 'up';
-        else aimDirection = 'right';
-
-        const isMoving = moveX !== 0 || moveY !== 0;
-
-        if (isMoving) {
-            this.player.anims.play(aimDirection, true);
-        } else {
-            this.player.anims.stop();
-            const idleFrames: Record<'down' | 'left' | 'right' | 'up', number> = {
-                down: 0,
-                left: 3,
-                right: 6,
-                up: 9,
-            };
-            this.player.setFrame(idleFrames[aimDirection]);
-        }
-
-        this.projectiles.getChildren().forEach((p: any) => {
-            if (typeof p.update === 'function') {
-                p.update(this.time.now, this.game.loop.delta);
-            }
-        });
-
-        if (this.stompClient && this.stompClient.connected) {
-            if (moveX === 0 && moveY === 0) return;
-            this.stompClient.publish({
-                destination: '/app/move',
-                body: JSON.stringify({
-                    characterId: this.characterId,
-                    x: this.player.x,
-                    y: this.player.y,
-                    direction: aimDirection,
-                    rotation: normalized
-                })
-            });
-        }
+        updateProjectiles(this.projectiles, this.time.now, this.game.loop.delta);
+        sendMovement(
+            this.stompClient,
+            this.characterId,
+            this.player.x,
+            this.player.y,
+            aimDirection,
+            rotation,
+            moveX,
+            moveY
+        );
 
         const now = this.time.now;
         const elapsed = now - this.lastAttackTime;
         this.cooldownProgress = Phaser.Math.Clamp(elapsed / this.cooldown, 0, 1);
 
-        const barWidth = 30;
-        const barHeight = 4;
-        const barX = this.player.x - barWidth / 2;
-        const barY = this.player.y - 25;
+        updateCooldownBar(this.cooldownBar, this.player, this.cooldownProgress);   //Im CooldownSetup.ts
 
-        this.cooldownBar.clear();
-        this.cooldownBar.fillStyle(0x000000, 0.6);
-        this.cooldownBar.fillRect(barX, barY, barWidth, barHeight);
-
-        this.cooldownBar.fillStyle(0x00ffff, 1);
-        this.cooldownBar.fillRect(barX, barY, barWidth * this.cooldownProgress, barHeight);
     }
 }

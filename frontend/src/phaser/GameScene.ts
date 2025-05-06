@@ -5,14 +5,17 @@ import Projectile from '@/phaser/Projectile';
 import type { IMessage } from '@stomp/stompjs';
 import {sendAttack} from "@/phaser/attackClient";
 import type { CharacterPositionDTO, AttackEventDTO } from './types';
-
+import { setupMap } from '@/phaser/setup/mapSetup';
+import { setupPlayer } from '@/phaser/setup/playerSetup';
+import { setupAnimations } from '@/phaser/setup/animationSetup';
+import { setupWebSocket } from '@/phaser/setup/webSocketSetup';
 
 export default class GameScene extends Phaser.Scene {
     private player!: Phaser.Physics.Arcade.Sprite;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-    private characterId = crypto.randomUUID();
-    private stompClient!: StompClient;
-    private otherPlayers = new Map<string, {
+    public characterId = crypto.randomUUID();
+    public stompClient!: StompClient;
+    public otherPlayers = new Map<string, {
         sprite: Phaser.Physics.Arcade.Sprite;
         lastX: number;
         lastY: number;
@@ -21,7 +24,7 @@ export default class GameScene extends Phaser.Scene {
     private pointer!: Phaser.Input.Pointer;
     private lastAttackTime = 0;
     private cooldown = 1000;
-    private projectiles!: Phaser.GameObjects.Group;
+    public projectiles!: Phaser.GameObjects.Group;
     private cooldownBar!: Phaser.GameObjects.Graphics;
     private cooldownProgress = 1;
 
@@ -37,24 +40,16 @@ export default class GameScene extends Phaser.Scene {
     create() {
         this.pointer = this.input.activePointer;
 
-        const map = this.make.tilemap({ key: 'map' });
-        const tileset = map.addTilesetImage('WebArenaTiles', 'tiles');
-        map.createLayer('Bottom', tileset!, 0, 0);
-        map.createLayer('Top', tileset!, 0, 0);
+        const { map, spawnX, spawnY } = setupMap(this);  //MAP ERSTELLEN aus mapSetup.ts
 
-        const spawnX = map.widthInPixels / 2;  //TBD: Backend
-        const spawnY = map.heightInPixels / 2; //TBD: Backend
+        const { player, cursors } = setupPlayer(this, spawnX, spawnY); //PLAYER ERSTELLEN aus playerSetup.ts
+        this.player = player;
+        this.cursors = cursors;
 
-        this.player = this.physics.add.sprite(spawnX, spawnY, 'soldier');
-        this.cursors = this.input.keyboard!.addKeys({
-            up: Phaser.Input.Keyboard.KeyCodes.W,
-            down: Phaser.Input.Keyboard.KeyCodes.S,
-            left: Phaser.Input.Keyboard.KeyCodes.A,
-            right: Phaser.Input.Keyboard.KeyCodes.D,
-        }) as Phaser.Types.Input.Keyboard.CursorKeys;
+        setupAnimations(this); //ANIMATION ERSTELLEN aus animationSetup.ts
 
-        this.setupAnimations();
-        this.setupWebSocket();
+        this.stompClient = createStompClient('http://localhost:8081/ws');
+        setupWebSocket(this);
 
         this.cameras.main.startFollow(this.player);
         this.cameras.main.setZoom(2);
@@ -75,91 +70,6 @@ export default class GameScene extends Phaser.Scene {
 
     }
 
-    setupAnimations() {
-        this.anims.create({ key: 'down', frames: this.anims.generateFrameNumbers('soldier', { start: 0, end: 2 }), frameRate: 6, repeat: -1 });
-        this.anims.create({ key: 'left', frames: this.anims.generateFrameNumbers('soldier', { start: 3, end: 5 }), frameRate: 6, repeat: -1 });
-        this.anims.create({ key: 'right', frames: this.anims.generateFrameNumbers('soldier', { start: 6, end: 8 }), frameRate: 6, repeat: -1 });
-        this.anims.create({ key: 'up', frames: this.anims.generateFrameNumbers('soldier', { start: 9, end: 11 }), frameRate: 6, repeat: -1 });
-    }
-
-    setupWebSocket() {
-        this.stompClient = createStompClient('http://localhost:8081/ws');
-
-        this.stompClient.onConnect = () => {
-            this.stompClient.subscribe('/topic/movement', (message: IMessage) => {
-                const data: CharacterPositionDTO = JSON.parse(message.body);
-                if (data.characterId === this.characterId) return;
-
-                const existingEntry = this.otherPlayers.get(data.characterId);
-                if (existingEntry) {
-                    const sprite = existingEntry.sprite;
-                    const isMoving = data.x !== existingEntry.lastX || data.y !== existingEntry.lastY;
-
-                    sprite.setPosition(data.x, data.y);
-
-                    if (isMoving) {
-                        sprite.anims.play(data.direction, true);
-                    } else {
-                        sprite.anims.stop();
-                        const idleFrames: Record<'down' | 'left' | 'right' | 'up', number> = {
-                            down: 0,
-                            left: 3,
-                            right: 6,
-                            up: 9,
-                        };
-                        sprite.setFrame(idleFrames[data.direction]);
-                    }
-
-                    existingEntry.lastX = data.x;
-                    existingEntry.lastY = data.y;
-                    existingEntry.lastDirection = data.direction;
-                } else {
-                    const newSprite = this.physics.add.sprite(data.x, data.y, 'soldier');
-                    newSprite.anims.play(data.direction, true);
-                    this.otherPlayers.set(data.characterId, {
-                        sprite: newSprite,
-                        lastX: data.x,
-                        lastY: data.y,
-                        lastDirection: data.direction
-                    });
-                }
-            });
-
-            this.stompClient.subscribe('/topic/attacks', (message: IMessage) => {
-                const data: AttackEventDTO = JSON.parse(message.body);
-
-                const projectile = new Projectile(
-                    this,
-                    data.playerX,
-                    data.playerY,
-                    data.playerX + data.dirX * 50,
-                    data.playerY + data.dirY * 50
-                );
-                this.projectiles.add(projectile);
-
-            });
-
-
-            fetch('http://localhost:8081/api/positions')
-                .then(res => res.json())
-                .then((players: CharacterPositionDTO[]) => {
-                    players.forEach(p => {
-                        if (p.characterId === this.characterId) return;
-                        const other = this.physics.add.sprite(p.x, p.y, 'soldier');
-                        const direction = p.direction ?? 'down';
-                        other.anims.play(direction, true);
-                        this.otherPlayers.set(p.characterId, {
-                            sprite: other,
-                            lastX: p.x,
-                            lastY: p.y,
-                            lastDirection: p.direction
-                        });
-                    });
-                });
-        };
-
-        this.stompClient.activate();
-    }
 
     update() {
         const speed = 40;

@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 public class MovementService {
 
     private final Map<String, CharacterPosition> positions = new ConcurrentHashMap<>();
+
     private final SimpMessagingTemplate messagingTemplate;
 
     public MovementService(SimpMessagingTemplate messagingTemplate) {
@@ -23,8 +24,7 @@ public class MovementService {
 
     public CharacterPosition moveCharacter(MovementRequest request) {
         CharacterPosition pos = positions.computeIfAbsent(
-                request.getCharacterId(),
-                id -> new CharacterPosition(id, request.getX(), request.getY())
+                request.getCharacterId(), id -> new CharacterPosition(id, request.getX(), request.getY())
         );
 
         pos.setX(request.getX());
@@ -33,7 +33,6 @@ public class MovementService {
         pos.setRotation(request.getRotation());
         return pos;
     }
-
 
     public CharacterPosition getCharacterPosition(String characterId) {
         return positions.get(characterId);

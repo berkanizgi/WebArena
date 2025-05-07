@@ -16,17 +16,17 @@ import { sendMovement } from '@/phaser/movement/movementSender';
 export default class GameScene extends Phaser.Scene {
     private player!: Phaser.Physics.Arcade.Sprite;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-    public characterId = crypto.randomUUID();
+    public characterId = crypto.randomUUID();       // TBD: in Backend
     public stompClient!: StompClient;
-    public otherPlayers = new Map<string, {
+    public otherPlayers = new Map<string, { // TBD: in Backend
         sprite: Phaser.Physics.Arcade.Sprite;
         lastX: number;
         lastY: number;
         lastDirection: string;
     }>();
     private pointer!: Phaser.Input.Pointer;
-    private lastAttackTime = 0;
-    private cooldown = 1000;
+    private lastAttackTime = 0; // wird glaub schon in Backend gemacht, sollte hier vlt. gelöscht werden
+    private cooldown = 1000;    // wird glaub schon in Backend gemacht, sollte hier vlt. gelöscht werden
     public projectiles!: Phaser.GameObjects.Group;
     private cooldownBar!: Phaser.GameObjects.Graphics;
     private cooldownProgress = 1;
@@ -51,9 +51,6 @@ export default class GameScene extends Phaser.Scene {
 
         setupAnimations(this); //ANIMATION ERSTELLEN aus animationSetup.ts
 
-
-
-
         setupCamera(this, this.player); //KAMERA KONFIGURIEREN aus cameraSetup.ts
 
         this.projectiles = createProjectileGroup(this);  //PROJECTILE aus projectileSetup
@@ -64,7 +61,7 @@ export default class GameScene extends Phaser.Scene {
 
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             const now = this.time.now;
-            if (now - this.lastAttackTime < this.cooldown) return;
+            if (now - this.lastAttackTime < this.cooldown) return;  // wird glaub schon in Backend gemacht, sollte hier vlt. gelöscht werden
 
             this.lastAttackTime = now;
 
@@ -88,8 +85,8 @@ export default class GameScene extends Phaser.Scene {
         sendMovement(
             this.stompClient,
             this.characterId,
-            this.player.x,
-            this.player.y,
+            this.player.x,      //TBD, wenn Spawnlogik da, dann löschen
+            this.player.y,      //TBD, wenn Spawnlogik da, dann löschen
             aimDirection,
             rotation,
             moveX,

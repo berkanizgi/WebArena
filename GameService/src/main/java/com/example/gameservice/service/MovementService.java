@@ -5,6 +5,7 @@ import com.example.gameservice.dto.CharacterPositionDTO;
 import com.example.gameservice.request.MovementRequest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import com.example.gameservice.infrastructure.CollisionMapLoader;
 
 import java.util.List;
 import java.util.Map;
@@ -18,11 +19,26 @@ public class MovementService {
 
     private final SimpMessagingTemplate messagingTemplate;
 
+    private final boolean[][] blocked = new CollisionMapLoader().loadCollisionMap();
+
+
     public MovementService(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
     }
 
+
+    public CharacterPosition getCharacterPosition(String characterId) {
+        return positions.get(characterId);
+    }
+
     public CharacterPosition moveCharacter(MovementRequest request) {
+        int tileX = request.getX() / 32;
+        int tileY = request.getY() / 32;
+
+        if (blocked[tileY][tileX]) {
+            return positions.get(request.getCharacterId()); // blockiert
+        }
+
         CharacterPosition pos = positions.computeIfAbsent(
                 request.getCharacterId(), id -> new CharacterPosition(id, request.getX(), request.getY())
         );
@@ -31,12 +47,10 @@ public class MovementService {
         pos.setY(request.getY());
         pos.setDirection(request.getDirection());
         pos.setRotation(request.getRotation());
+
         return pos;
     }
 
-    public CharacterPosition getCharacterPosition(String characterId) {
-        return positions.get(characterId);
-    }
 
     public void moveAndBroadcast(MovementRequest request) {
         CharacterPosition updated = moveCharacter(request);

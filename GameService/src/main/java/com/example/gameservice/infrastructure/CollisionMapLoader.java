@@ -17,7 +17,7 @@ public class CollisionMapLoader {
             JsonNode root = mapper.readTree(is);
 
             for (JsonNode layer : root.get("layers")) {
-                if ("Colission".equals(layer.get("name").asText())) {
+                if ("Collision".equals(layer.get("name").asText())) {
                     int width = layer.get("width").asInt();
                     int height = layer.get("height").asInt();
                     boolean[][] blocked = new boolean[height][width];

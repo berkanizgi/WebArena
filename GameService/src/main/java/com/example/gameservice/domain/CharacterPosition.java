@@ -1,11 +1,14 @@
 package com.example.gameservice.domain;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import java.time.Instant;
 
+@Entity
 public class CharacterPosition {
 
+    @Id
     private String characterId;
     private int x;
     private int y;

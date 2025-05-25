@@ -28,11 +28,6 @@ public class WebSocketMovementController {
         movementService.moveAndBroadcast(request);
     }
 
-    @MessageMapping("/rotate")
-    public void rotateCharacterViaWebSocket(MovementRequest request) {
-        movementService.updateRotation(request);
-    }
-
     @GetMapping("/positions")
     public List<CharacterPositionDTO> getAllPositions() {
         List<CharacterPositionDTO> all = movementService.getAllPositions();

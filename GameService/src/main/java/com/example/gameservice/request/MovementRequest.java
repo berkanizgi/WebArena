@@ -6,6 +6,7 @@ public class MovementRequest {
     private int rotation;
     private int x;
     private int y;
+    private String skin;
 
     public MovementRequest(){}
     public String getCharacterId() {
@@ -44,5 +45,13 @@ public class MovementRequest {
     }
     public void setY(int y) {
         this.y = y;
+    }
+
+    public String getSkin() {
+        return skin;
+    }
+
+    public void setSkin(String skin) {
+        this.skin = skin;
     }
 }

@@ -17,6 +17,7 @@ export default class GameScene extends Phaser.Scene {
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     public characterId = crypto.randomUUID();
     public stompClient!: StompClient;
+    public skin!: string;
     public otherPlayers = new Map<string, {
         sprite: Phaser.Physics.Arcade.Sprite;
         lastX: number;
@@ -52,23 +53,36 @@ export default class GameScene extends Phaser.Scene {
         // Beispiel für Spezialelemente (optional)
         this.load.image('big_waterfall', 'map/Tiles/Waterfalls/Big waterfall sheet.png');
 
-        // Charakter-Sprite
-        this.load.spritesheet('soldier', 'assets/soldier.png', {
+        this.load.spritesheet('green_asha', 'map/Tiles/character/green/green_asha_walk.png', {
             frameWidth: 32,
             frameHeight: 32
         });
+        this.load.spritesheet('black_asha', 'map/Tiles/character/black/black_asha_walk.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+
+
+
     }
 
     create() {
         this.pointer = this.input.activePointer;
+        this.physics.world.createDebugGraphic(); // einmalig in `create()`
+
 
         const { map, spawnX, spawnY } = setupMap(this); // Map und Spawnpunkt
+        const skin = 'black_asha'; // oder später dynamisch via Backend/DTO
 
-        const { player, cursors } = setupPlayer(this, spawnX, spawnY); // Spieler erstellen
+        this.skin = skin;
+
+        const { player, cursors } = setupPlayer(this, spawnX, spawnY, skin);
+
         this.player = player;
         this.cursors = cursors;
 
-        setupAnimations(this); // Animationen
+        setupAnimations(this, skin);
+
         setupCamera(this, this.player); // Kamera
 
         this.projectiles = createProjectileGroup(this); // Projektile
@@ -107,7 +121,8 @@ export default class GameScene extends Phaser.Scene {
             aimDirection,
             rotation,
             moveX,
-            moveY
+            moveY,
+            this.skin
         );
 
         const now = this.time.now;

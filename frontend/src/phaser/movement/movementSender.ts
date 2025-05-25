@@ -8,13 +8,25 @@ export function sendMovement(
     direction: string,
     rotation: number,
     moveX: number,
-    moveY: number
+    moveY: number,
+    skin: string
 ) {
     if (!stompClient || !stompClient.connected) return;
-    if (moveX === 0 && moveY === 0) return;
+
+    // Hier schicken wir auch Movement, selbst wenn Spieler stillsteht (z. B. beim Join wichtig)
+    const payload = {
+        characterId,
+        x,
+        y,
+        direction,
+        rotation,
+        skin
+    };
+
+    console.log('[sendMovement] Sende Movement:', payload);
 
     stompClient.publish({
         destination: '/app/move',
-        body: JSON.stringify({ characterId, x, y, direction, rotation })
+        body: JSON.stringify(payload)
     });
 }

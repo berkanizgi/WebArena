@@ -26,6 +26,7 @@ public class CharacterPositionDTO {
         this.y = position.getY();
         this.rotation = position.getRotation();
         this.direction = position.getDirection();
+        this.skin = position.getSkin();
     }
 
     public String getCharacterId() {

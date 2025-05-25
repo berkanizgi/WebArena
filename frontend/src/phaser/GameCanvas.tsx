@@ -19,10 +19,10 @@ export default function GameCanvas() {
             scene: [GameScene],
             physics: {
                 default: 'arcade',
-                arcade: { debug: false },
+                arcade: { debug: true },
             },
             audio: {
-                noAudio: true,
+                noAudio: true
             },
         });
 

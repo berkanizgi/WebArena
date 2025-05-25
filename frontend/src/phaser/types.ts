@@ -5,6 +5,7 @@ export interface CharacterPositionDTO {
     direction: 'up' | 'down' | 'left' | 'right';
     rotation: number;
     skin: string;
+    isMoving?: boolean;
 }
 
 export interface AttackEventDTO {

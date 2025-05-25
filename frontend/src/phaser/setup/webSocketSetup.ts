@@ -10,7 +10,7 @@ export function setupWebSocket(scene: GameScene) {
     scene.stompClient.onConnect = () => {
         scene.stompClient.subscribe('/topic/movement', (message: IMessage) => {
             const data: CharacterPositionDTO = JSON.parse(message.body);
-            if (data.characterId === scene.characterId) return;
+          //  console.log('[WebSocket][Movement] Empfangene Daten:', data);  // <-- NEU!
 
             if (!data.skin) {
                 console.warn('[WebSocket] Fehlende skin bei Movement:', data);
@@ -29,23 +29,24 @@ export function setupWebSocket(scene: GameScene) {
             const existingEntry = scene.otherPlayers.get(data.characterId);
             if (existingEntry) {
                 const sprite = existingEntry.sprite;
-                const isMoving = data.x !== existingEntry.lastX || data.y !== existingEntry.lastY;
+                const isMoving = !!data.isMoving;
                 sprite.setPosition(data.x, data.y);
 
                 if (isMoving) {
                     if (scene.anims.exists(animKey)) {
                         sprite.anims.play(animKey, true);
-                    } else {
-                        console.warn('[WebSocket] Animation nicht gefunden:', animKey);
                     }
                 } else {
                     sprite.anims.stop();
-                    sprite.setFrame(idleFrames[data.direction]);
+                    sprite.setFrame(idleFrames[data.direction as 'down' | 'left' | 'right' | 'up']);
                 }
+
 
                 existingEntry.lastX = data.x;
                 existingEntry.lastY = data.y;
                 existingEntry.lastDirection = data.direction;
+
+
             } else {
                 const newSprite = scene.physics.add.sprite(data.x, data.y, data.skin);
                 if (scene.anims.exists(animKey)) {
@@ -53,6 +54,12 @@ export function setupWebSocket(scene: GameScene) {
                 } else {
                     console.warn('[WebSocket] Animation nicht gefunden (neuer Spieler):', animKey);
                 }
+                newSprite.setOrigin(0.5, 0.5);
+                if (newSprite.body) {
+                    newSprite.body.setSize(16, 16);
+                    newSprite.body.setOffset(8, 16);
+                }
+
 
                 scene.otherPlayers.set(data.characterId, {
                     sprite: newSprite,
@@ -89,6 +96,11 @@ export function setupWebSocket(scene: GameScene) {
                     const direction = p.direction ?? 'down';
                     const animKey = `${p.skin}_${direction}`;
                     const other = scene.physics.add.sprite(p.x, p.y, p.skin);
+                    other.setOrigin(0.5, 0.5);
+                    if (other.body) {
+                        other.body.setSize(16, 16);
+                        other.body.setOffset(8, 16);
+                    }
 
                     if (!initializedSkins.has(p.skin)) {
                         setupAnimations(scene, p.skin);

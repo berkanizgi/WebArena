@@ -22,6 +22,7 @@ public class CharacterPosition {
     private Long speed;
     private String direction;
     private Instant lastShotTime = Instant.EPOCH; // Instant kein LocalDateTime, weil Instant ist UCT
+    private Boolean isMoving;
 
     public CharacterPosition(String characterId, int x, int y) {
         this.characterId = characterId;
@@ -146,4 +147,11 @@ public class CharacterPosition {
         this.skin = skin;
     }
 
+    public Boolean getIsMoving() {
+        return isMoving;
+    }
+
+    public void setIsMoving(Boolean moving) {
+        isMoving = moving;
+    }
 }

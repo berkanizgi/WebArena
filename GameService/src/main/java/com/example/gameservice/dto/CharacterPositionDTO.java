@@ -18,6 +18,7 @@ public class CharacterPositionDTO {
     private Boolean rare;
     private Long speed;
     private String direction;
+    private Boolean isMoving;
 
 
     public CharacterPositionDTO(CharacterPosition position) {
@@ -27,6 +28,7 @@ public class CharacterPositionDTO {
         this.rotation = position.getRotation();
         this.direction = position.getDirection();
         this.skin = position.getSkin();
+        this.isMoving = position.getIsMoving();
     }
 
     public String getCharacterId() {
@@ -123,6 +125,14 @@ public class CharacterPositionDTO {
 
     public void setSpeed(Long speed) {
         this.speed = speed;
+    }
+
+    public Boolean getIsMoving() {
+        return isMoving;
+    }
+
+    public void setIsMoving(Boolean moving) {
+        isMoving = moving;
     }
 }
 

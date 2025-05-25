@@ -22,7 +22,7 @@ export default class GameScene extends Phaser.Scene {
         sprite: Phaser.Physics.Arcade.Sprite;
         lastX: number;
         lastY: number;
-        lastDirection: string;
+        lastDirection: 'up' | 'down' | 'left' | 'right'; // ✅ Fix
     }>();
     private pointer!: Phaser.Input.Pointer;
     private lastAttackTime = 0;

@@ -57,13 +57,11 @@ public class MovementService {
         if (pos == null) {
             return null;
         }
-
-
-
         pos.setX(request.getX());
         pos.setY(request.getY());
         pos.setDirection(request.getDirection());
         pos.setRotation(request.getRotation());
+        pos.setIsMoving(request.getIsMoving());
 
         return pos;
     }

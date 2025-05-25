@@ -7,6 +7,7 @@ public class MovementRequest {
     private int x;
     private int y;
     private String skin;
+    private Boolean isMoving;
 
     public MovementRequest(){}
     public String getCharacterId() {
@@ -53,5 +54,13 @@ public class MovementRequest {
 
     public void setSkin(String skin) {
         this.skin = skin;
+    }
+
+    public Boolean getIsMoving() {
+        return isMoving;
+    }
+
+    public void setIsMoving(Boolean moving) {
+        isMoving = moving;
     }
 }

@@ -46,6 +46,8 @@ export function handlePlayerMovement(
         };
         player.setFrame(idleFrames[aimDirection]);
     }
+    //console.log('moveX:', moveX, 'moveY:', moveY, 'isMoving:', isMoving);
+
 
     return { aimDirection, moveX, moveY, rotation: normalized };
 }

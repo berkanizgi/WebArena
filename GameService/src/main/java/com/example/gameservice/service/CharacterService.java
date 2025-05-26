@@ -15,6 +15,9 @@ public class CharacterService {
     @Autowired
     public CharacterRepository characterRepository;
 
+    @Autowired
+    private MovementService movementService;
+
     public void createCharacter(GameCharacter character) {
         characterRepository.save(character);
     }
@@ -23,14 +26,24 @@ public class CharacterService {
         return characterRepository.findAll();
     }
 
-    // Optional: Methode, um NUR den nächsten Character zu geben
-    private int lastIndex = -1;
-    public synchronized GameCharacter getNextCharacter() {
-        List<GameCharacter> all = new ArrayList<>();
-        characterRepository.findAll().forEach(all::add);
-        if (all.isEmpty()) return null;
-        lastIndex = (lastIndex + 1) % all.size();
-        return all.get(lastIndex);
+    public GameCharacter assignNextAvailableCharacter(String playerId) {
+        List<String> usedSkins = movementService.getAllPositions()
+                .stream()
+                .map(p -> p.getSkin())
+                .toList();
+
+        List<GameCharacter> all = characterRepository.findAll();
+
+        for (GameCharacter gc : all) {
+            if (!usedSkins.contains(gc.getSkin())) {
+                movementService.registerInitialCharacter(playerId, gc);
+                return gc;
+            }
+        }
+        return null;
     }
+
+
+
 
 }

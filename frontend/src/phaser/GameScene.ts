@@ -11,11 +11,12 @@ import { createCooldownBar, updateCooldownBar } from '@/phaser/setup/cooldownSet
 import { createProjectileGroup, updateProjectiles } from '@/phaser/setup/projectileSetup';
 import { handlePlayerMovement } from '@/phaser/movement/movementHandler';
 import { sendMovement } from '@/phaser/movement/movementSender';
+import Projectile from "@/phaser/Projectile";
 
 export default class GameScene extends Phaser.Scene {
     private player!: Phaser.Physics.Arcade.Sprite;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-    public playerId = crypto.randomUUID(); // <--- geändert!
+    public playerId! : string; // <--- geändert!
     public stompClient!: StompClient;
     public skin!: string;
     public otherPlayers = new Map<string, {
@@ -30,6 +31,13 @@ export default class GameScene extends Phaser.Scene {
     public projectiles!: Phaser.GameObjects.Group;
     private cooldownBar!: Phaser.GameObjects.Graphics;
     private cooldownProgress = 1;
+
+
+    constructor(config: Phaser.Types.Scenes.SettingsConfig & { skin: string; playerId: string }) {
+        super(config);
+        this.skin = config.skin;
+        this.playerId = config.playerId;
+    }
 
     preload() {
         this.load.tilemapTiledJSON('map', 'map/WebArenaMap.json');
@@ -59,6 +67,16 @@ export default class GameScene extends Phaser.Scene {
             frameWidth: 32,
             frameHeight: 32
         });
+
+        this.load.spritesheet('red_asha', 'map/Tiles/character/red/red_asha_walk.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+
+        this.load.spritesheet('blue_asha', 'map/Tiles/character/blue/blue_asha_walk.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
     }
 
     create() {
@@ -66,8 +84,7 @@ export default class GameScene extends Phaser.Scene {
         this.physics.world.createDebugGraphic();
 
         const { map, spawnX, spawnY } = setupMap(this);
-        const skin = 'black_asha';
-
+        const skin = this.skin;
         this.skin = skin;
 
         const { player, cursors } = setupPlayer(this, spawnX, spawnY, skin);

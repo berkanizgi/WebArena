@@ -42,7 +42,7 @@ public class AttackService {
         } else {
             // Neuer Block: ❗ Cooldown Nachricht senden
             messagingTemplate.convertAndSendToUser(
-                    character.getCharacterId(), // Benutzer ID
+                    character.getPlayerId(), // Benutzer ID
                     "/queue/cooldown",          // Persönlicher Channel
                     "COOLDOWN_ACTIVE"
             );
@@ -71,13 +71,12 @@ public class AttackService {
         double normY = dirY / distance;
 
         AttackEventDTO event = new AttackEventDTO(
-                character.getCharacterId(),
-                character.getX(),    // Startposition vom Charakter
+                character.getPlayerId(),
+                character.getX(),
                 character.getY(),
                 normX,
                 normY
         );
-
         messagingTemplate.convertAndSend("/topic/attacks", event);
     }
 

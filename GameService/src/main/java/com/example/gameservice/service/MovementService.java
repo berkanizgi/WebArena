@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import com.example.gameservice.infrastructure.CollisionMapLoader;
+import com.example.gameservice.domain.GameCharacter;
 
 import java.util.List;
 import java.util.Map;
@@ -31,8 +32,8 @@ public class MovementService {
     }
 
 
-    public CharacterPosition getCharacterPosition(String characterId) {
-        return positions.get(characterId);
+    public CharacterPosition getCharacterPosition(String playerId) {
+        return positions.get(playerId);
     }
 
     public CharacterPosition moveCharacter(MovementRequest request) {
@@ -40,19 +41,24 @@ public class MovementService {
         int tileY = request.getY() / 32;
 
         if (blocked[tileY][tileX]) {
-            return positions.get(request.getCharacterId()); // blockiert
+            return positions.get(request.getPlayerId()); // blockiert
         }
         CharacterPosition pos = positions.computeIfAbsent(
-                request.getCharacterId(),
+                request.getPlayerId(),
                 id -> {
-                    if (request.getSkin() == null || request.getSkin().isEmpty()) {
+                    GameCharacter character = characterRepository.findBySkin(request.getSkin()).orElse(null);
+                    if (character == null) {
+                        System.out.println("[ERROR] Character mit Skin '" + request.getSkin() + "' nicht gefunden!");
                         return null;
                     }
-                    CharacterPosition cp = new CharacterPosition(id, request.getX(), request.getY());
-                    cp.setSkin(request.getSkin());
-                    return cp;
+                    // Rückgabe für computeIfAbsent!
+                    return new CharacterPosition(id, character, request.getX(), request.getY());
                 }
         );
+
+
+
+
 
         if (pos == null) {
             return null;
@@ -63,6 +69,10 @@ public class MovementService {
         pos.setRotation(request.getRotation());
         pos.setIsMoving(request.getIsMoving());
 
+        System.out.println("[Backend][moveCharacter] isMoving im Request: " + request.getIsMoving());
+        System.out.println("[Backend][moveCharacter] pos.isMoving danach: " + pos.getIsMoving());
+
+
         return pos;
     }
 
@@ -72,6 +82,7 @@ public class MovementService {
         if (updated == null) {
             return;
         }
+
         messagingTemplate.convertAndSend("/topic/movement", new CharacterPositionDTO(updated));
     }
 

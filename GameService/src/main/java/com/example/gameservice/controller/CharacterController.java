@@ -1,6 +1,6 @@
 package com.example.gameservice.controller;
 
-import com.example.gameservice.domain.CharacterPosition;
+import com.example.gameservice.domain.GameCharacter;
 import com.example.gameservice.service.CharacterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,12 +17,13 @@ public class CharacterController {
     private CharacterService characterService;
 
     @GetMapping
-    public List<CharacterPosition> getAllCharacters() {
+    public List<GameCharacter> getAllCharacters() {
         return characterService.getAllCharacters();
     }
 
     @GetMapping("/next")
-    public CharacterPosition getNextCharacter() {
+    public GameCharacter getNextCharacter() {
         return characterService.getNextCharacter();
     }
+
 }

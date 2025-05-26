@@ -1,5 +1,5 @@
 export interface CharacterPositionDTO {
-    characterId: string;
+    playerId: string;
     x: number;
     y: number;
     direction: 'up' | 'down' | 'left' | 'right';

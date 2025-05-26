@@ -15,7 +15,7 @@ import { sendMovement } from '@/phaser/movement/movementSender';
 export default class GameScene extends Phaser.Scene {
     private player!: Phaser.Physics.Arcade.Sprite;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-    public characterId = crypto.randomUUID();
+    public playerId = crypto.randomUUID(); // <--- geändert!
     public stompClient!: StompClient;
     public skin!: string;
     public otherPlayers = new Map<string, {
@@ -49,8 +49,6 @@ export default class GameScene extends Phaser.Scene {
         this.load.image('Set 4.4', 'map/Tiles/Set 4.4.png');
         this.load.image('Set 4.5', 'map/Tiles/Set 4.5.png');
 
-
-        // Beispiel für Spezialelemente (optional)
         this.load.image('big_waterfall', 'map/Tiles/Waterfalls/Big waterfall sheet.png');
 
         this.load.spritesheet('green_asha', 'map/Tiles/character/green/green_asha_walk.png', {
@@ -61,18 +59,14 @@ export default class GameScene extends Phaser.Scene {
             frameWidth: 32,
             frameHeight: 32
         });
-
-
-
     }
 
     create() {
         this.pointer = this.input.activePointer;
-        this.physics.world.createDebugGraphic(); // einmalig in `create()`
+        this.physics.world.createDebugGraphic();
 
-
-        const { map, spawnX, spawnY } = setupMap(this); // Map und Spawnpunkt
-        const skin = 'black_asha'; // oder später dynamisch via Backend/DTO
+        const { map, spawnX, spawnY } = setupMap(this);
+        const skin = 'black_asha';
 
         this.skin = skin;
 
@@ -83,12 +77,12 @@ export default class GameScene extends Phaser.Scene {
 
         setupAnimations(this, skin);
 
-        setupCamera(this, this.player); // Kamera
+        setupCamera(this, this.player);
 
-        this.projectiles = createProjectileGroup(this); // Projektile
-        this.cooldownBar = createCooldownBar(this);     // Cooldown-Bar
+        this.projectiles = createProjectileGroup(this);
+        this.cooldownBar = createCooldownBar(this);
 
-        this.stompClient = createStompClient('http://localhost:8081/ws'); // WebSocket-Client
+        this.stompClient = createStompClient('http://localhost:8081/ws');
 
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             const now = this.time.now;
@@ -97,7 +91,7 @@ export default class GameScene extends Phaser.Scene {
             this.lastAttackTime = now;
 
             sendAttack(this.stompClient, {
-                playerId: this.characterId,
+                playerId: this.playerId, // <---
                 x: pointer.worldX,
                 y: pointer.worldY,
                 playerX: this.player.x,
@@ -105,7 +99,7 @@ export default class GameScene extends Phaser.Scene {
             });
         });
 
-        setupWebSocket(this); // WebSocket-Verarbeitung
+        setupWebSocket(this);
     }
 
     update() {
@@ -115,7 +109,7 @@ export default class GameScene extends Phaser.Scene {
 
         sendMovement(
             this.stompClient,
-            this.characterId,
+            this.playerId, // <---
             this.player.x,
             this.player.y,
             aimDirection,

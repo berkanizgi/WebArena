@@ -11,7 +11,7 @@ export function setupWebSocket(scene: GameScene) {
         scene.stompClient.subscribe('/topic/movement', (message: IMessage) => {
             const data: CharacterPositionDTO = JSON.parse(message.body);
           //  console.log('[WebSocket][Movement] Empfangene Daten:', data);
-            if (data.characterId === scene.characterId) return;
+            if (data.playerId === scene.playerId) return;
             if (!data.skin) {
                 console.warn('[WebSocket] Fehlende skin bei Movement:', data);
                 return;
@@ -26,7 +26,7 @@ export function setupWebSocket(scene: GameScene) {
             const animKey = `${data.skin}_${data.direction}`;
             const idleFrames = { down: 0, left: 24, right: 8, up: 16 };
 
-            const existingEntry = scene.otherPlayers.get(data.characterId);
+            const existingEntry = scene.otherPlayers.get(data.playerId);
             if (existingEntry) {
                 const sprite = existingEntry.sprite;
                 const isMoving = !!data.isMoving;
@@ -60,13 +60,13 @@ export function setupWebSocket(scene: GameScene) {
                 }
 
 
-                scene.otherPlayers.set(data.characterId, {
+                scene.otherPlayers.set(data.playerId, {
                     sprite: newSprite,
                     lastX: data.x,
                     lastY: data.y,
                     lastDirection: data.direction
                 });
-                console.log('[WebSocket] Neuer Spieler hinzugefügt:', data.characterId);
+                console.log('[WebSocket] Neuer Spieler hinzugefügt:', data.playerId);
             }
         });
 
@@ -87,9 +87,9 @@ export function setupWebSocket(scene: GameScene) {
             .then((players: CharacterPositionDTO[]) => {
                 players.forEach(p => {
 
-                    if (p.characterId === scene.characterId) return;
+                    if (p.playerId === scene.playerId) return;
                     if (!p.skin) {
-                        console.warn('[Fetch] Fehlende skin bei Player:', p.characterId);
+                        console.warn('[Fetch] Fehlende skin bei Player:', p.playerId);
                         return;
                     }
 
@@ -113,7 +113,7 @@ export function setupWebSocket(scene: GameScene) {
                         console.warn('[Fetch] Animation nicht gefunden:', animKey);
                     }
 
-                    scene.otherPlayers.set(p.characterId, {
+                    scene.otherPlayers.set(p.playerId, {
                         sprite: other,
                         lastX: p.x,
                         lastY: p.y,

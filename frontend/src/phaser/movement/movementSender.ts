@@ -2,7 +2,7 @@ import { Client as StompClient } from '@stomp/stompjs';
 
 export function sendMovement(
     stompClient: StompClient,
-    characterId: string,
+    playerId: string,
     x: number,
     y: number,
     direction: string,
@@ -16,7 +16,7 @@ export function sendMovement(
     const isMoving = moveX !== 0 || moveY !== 0;
     // Hier schicken wir auch Movement, selbst wenn Spieler stillsteht
     const payload = {
-        characterId,
+        playerId,
         x,
         y,
         direction,

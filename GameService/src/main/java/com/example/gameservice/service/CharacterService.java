@@ -6,6 +6,9 @@ import com.example.gameservice.dto.CharacterPositionDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class CharacterService {
     @Autowired
@@ -15,9 +18,22 @@ public class CharacterService {
         CharacterPosition character = new CharacterPosition();
         character.setName(characterDTO.getName());
         character.setDescription(characterDTO.getDescription());
-        character.setBaseStats(characterDTO.getBaseStats());
+        character.setHealth(characterDTO.getHealth());
+        character.setAttack(characterDTO.getAttack());
         character.setRare(characterDTO.getRare());
         character.setRole(characterDTO.getRole());
         characterRepository.save(character);
+    }
+
+    public List<CharacterPosition> getAllCharacters() {
+        return characterRepository.findAll();
+    }
+
+    private int lastIndex = -1;
+    public synchronized CharacterPosition getNextCharacter() {
+        List<CharacterPosition> all = new ArrayList<>();
+        characterRepository.findAll().forEach(all::add);
+        lastIndex = (lastIndex + 1) % all.size();
+        return all.get(lastIndex);
     }
 }

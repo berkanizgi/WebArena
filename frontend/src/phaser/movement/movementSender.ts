@@ -14,7 +14,7 @@ export function sendMovement(
     if (!stompClient || !stompClient.connected) return;
 
     const isMoving = moveX !== 0 || moveY !== 0;
-    // Hier schicken wir auch Movement, selbst wenn Spieler stillsteht (z. B. beim Join wichtig)
+    // Hier schicken wir auch Movement, selbst wenn Spieler stillsteht
     const payload = {
         characterId,
         x,

@@ -15,7 +15,8 @@ public class CharacterPosition {
     private int rotation;
     private String name;
     private String skin;
-    private String baseStats;
+    private int health;
+    private int attack;
     private String role;
     private String description;
     private Boolean rare;
@@ -99,12 +100,21 @@ public class CharacterPosition {
         this.name = name;
     }
 
-    public String getBaseStats() {
-        return baseStats;
+
+    public int getAttack() {
+        return attack;
     }
 
-    public void setBaseStats(String baseStats) {
-        this.baseStats = baseStats;
+    public void setAttack(int attack) {
+        this.attack = attack;
+    }
+
+    public int getHealth() {
+        return health;
+    }
+
+    public void setHealth(int health) {
+        this.health = health;
     }
 
     public String getRole() {

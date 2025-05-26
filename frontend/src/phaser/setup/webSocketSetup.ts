@@ -10,8 +10,8 @@ export function setupWebSocket(scene: GameScene) {
     scene.stompClient.onConnect = () => {
         scene.stompClient.subscribe('/topic/movement', (message: IMessage) => {
             const data: CharacterPositionDTO = JSON.parse(message.body);
-          //  console.log('[WebSocket][Movement] Empfangene Daten:', data);  // <-- NEU!
-
+          //  console.log('[WebSocket][Movement] Empfangene Daten:', data);
+            if (data.characterId === scene.characterId) return;
             if (!data.skin) {
                 console.warn('[WebSocket] Fehlende skin bei Movement:', data);
                 return;
@@ -57,7 +57,6 @@ export function setupWebSocket(scene: GameScene) {
                 newSprite.setOrigin(0.5, 0.5);
                 if (newSprite.body) {
                     newSprite.body.setSize(16, 16);
-                    newSprite.body.setOffset(8, 16);
                 }
 
 
@@ -87,6 +86,7 @@ export function setupWebSocket(scene: GameScene) {
             .then(res => res.json())
             .then((players: CharacterPositionDTO[]) => {
                 players.forEach(p => {
+
                     if (p.characterId === scene.characterId) return;
                     if (!p.skin) {
                         console.warn('[Fetch] Fehlende skin bei Player:', p.characterId);
@@ -99,7 +99,6 @@ export function setupWebSocket(scene: GameScene) {
                     other.setOrigin(0.5, 0.5);
                     if (other.body) {
                         other.body.setSize(16, 16);
-                        other.body.setOffset(8, 16);
                     }
 
                     if (!initializedSkins.has(p.skin)) {
@@ -109,7 +108,7 @@ export function setupWebSocket(scene: GameScene) {
                     }
 
                     if (scene.anims.exists(animKey)) {
-                        other.anims.play(animKey, true);
+                 //       other.anims.play(animKey, true);
                     } else {
                         console.warn('[Fetch] Animation nicht gefunden:', animKey);
                     }

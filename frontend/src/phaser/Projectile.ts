@@ -39,27 +39,42 @@ export default class Projectile extends Phaser.GameObjects.Ellipse {
         this.x += this.dirX * this.speed * (delta / 1000);
         this.y += this.dirY * this.speed * (delta / 1000);
 
-        //Kollionüberprüfung, aber auch im Basckend AttackService
+        // Prüfe andere Spieler
         this.sceneRef.otherPlayers.forEach((entry, playerId) => {
+            if (playerId === this.shooterId) return;
+
             const sprite = entry.sprite;
             const distance = Phaser.Math.Distance.Between(this.x, this.y, sprite.x, sprite.y);
 
-            if (distance < 16 && this.sceneRef.playerId === this.shooterId) {
-                this.sceneRef.stompClient.publish({
-                    destination: '/app/hit',
-                    body: JSON.stringify({
-                        shooterId: this.shooterId,
-                        targetId: playerId
-                    })
-                });
+            if (distance < 16) {
+                if (this.sceneRef.playerId === this.shooterId) {
+                    this.sceneRef.stompClient.publish({
+                        destination: '/app/hit',
+                        body: JSON.stringify({
+                            shooterId: this.shooterId,
+                            targetId: playerId
+                        })
+                    });
+                }
                 this.destroy();
             }
         });
 
+        // Prüfe eigenen Spieler (wenn du nicht der Schütze bist)
+        if (this.shooterId !== this.sceneRef.playerId) {
+            const myPlayer = this.sceneRef.player;
+            const distance = Phaser.Math.Distance.Between(this.x, this.y, myPlayer.x, myPlayer.y);
+
+            if (distance < 16) {
+                // Getroffen! – Kein publish nötig, der Schütze hat das bereits gesendet
+                this.destroy();
+            }
+        }
+
+        // Auto-destroy
         if (this.sceneRef.time.now - this.createdAt > 1000) {
             this.destroy();
         }
-
     }
 
 }

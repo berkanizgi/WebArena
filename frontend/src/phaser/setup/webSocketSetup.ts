@@ -86,18 +86,23 @@ export function setupWebSocket(scene: GameScene) {
 
         scene.stompClient.subscribe('/topic/health', (message: IMessage) => {
             const data = JSON.parse(message.body); // { playerId, newHealth }
-            const entry = scene.otherPlayers.get(data.playerId);
-            if (entry) {
-                // EINFÄRBEN als Treffer-Feedback
-                entry.sprite.setTint(0xff0000);
-                scene.time.delayedCall(200, () => entry.sprite.clearTint());
-                // TODO: Zeige Health-Balken an, etc.
-            }
-            // ... falls es der eigene Spieler ist:
+
             if (data.playerId === scene.playerId) {
-                // z.B. rot blinken lassen, "Du wurdest getroffen!" anzeigen usw.
+                // DU SELBST wurdest getroffen
+                scene.player.setTint(0xff0000);
+                scene.time.delayedCall(200, () => scene.player.clearTint());
+
+                // TODO: z.B. HP-Anzeige, Soundeffekt usw.
+            } else {
+                // ANDERER Spieler wurde getroffen
+                const entry = scene.otherPlayers.get(data.playerId);
+                if (entry) {
+                    entry.sprite.setTint(0xff0000);
+                    scene.time.delayedCall(200, () => entry.sprite.clearTint());
+                }
             }
         });
+
 
 
 

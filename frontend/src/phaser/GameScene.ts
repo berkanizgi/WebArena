@@ -14,7 +14,7 @@ import { sendMovement } from '@/phaser/movement/movementSender';
 import Projectile from "@/phaser/Projectile";
 
 export default class GameScene extends Phaser.Scene {
-    private player!: Phaser.Physics.Arcade.Sprite;
+    public player!: Phaser.Physics.Arcade.Sprite;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     public playerId! : string; // <--- geändert!
     public stompClient!: StompClient;
@@ -23,7 +23,7 @@ export default class GameScene extends Phaser.Scene {
         sprite: Phaser.Physics.Arcade.Sprite;
         lastX: number;
         lastY: number;
-        lastDirection: 'up' | 'down' | 'left' | 'right'; // ✅ Fix
+        lastDirection: 'up' | 'down' | 'left' | 'right';
     }>();
     private pointer!: Phaser.Input.Pointer;
     public lastAttackTime = 0;

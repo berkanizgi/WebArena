@@ -13,11 +13,16 @@ export default function GameCanvas() {
     const [playerId, setPlayerId] = useState<string | null>(null);
 
     useEffect(() => {
-        async function fetchCharacter() {
-            const id = crypto.randomUUID();
-            setPlayerId(id);
+        const id = crypto.randomUUID();
+        setPlayerId(id);
+    }, []);
 
-            const res = await fetch(`http://localhost:8081/api/characters/next-available?playerId=${id}`);
+    useEffect(() => {
+        if (!playerId) return;
+
+        async function fetchCharacter() {
+            const res = await fetch(`http://localhost:8081/api/characters/next-available?playerId=${playerId}`);
+
             if (res.status === 409) {
                 alert('Alle Charaktere sind bereits im Spiel!');
                 return;
@@ -25,10 +30,17 @@ export default function GameCanvas() {
 
             const data = await res.json();
             setCharacter(data);
+
+            // Jetzt Registrierung mit Skin
+            await fetch('http://localhost:8081/api/characters/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playerId: playerId, skin: data.skin })
+            });
         }
 
         fetchCharacter();
-    }, []);
+    }, [playerId]);
 
     useEffect(() => {
         if (!containerRef.current || gameRef.current || !character || !playerId) return;

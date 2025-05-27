@@ -132,7 +132,7 @@ export default class GameScene extends Phaser.Scene {
         const { aimDirection, moveX, moveY, rotation } = handlePlayerMovement(this.player, this.cursors, this.pointer);
 
         updateProjectiles(this.projectiles, this.time.now, this.game.loop.delta);
-
+        if (!this.stompClient || !this.player || !this.skin || !this.playerId) return;
         sendMovement(
             this.stompClient,
             this.playerId, // <---

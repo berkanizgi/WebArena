@@ -8,7 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 
 @Service
 public class CharacterService {
@@ -18,24 +21,15 @@ public class CharacterService {
     @Autowired
     private MovementService movementService;
 
-    public void createCharacter(GameCharacter character) {
-        characterRepository.save(character);
-    }
-
-    public List<GameCharacter> getAllCharacters() {
-        return characterRepository.findAll();
-    }
+    // Neue In-Memory-Liste der verwendeten Skins
+    private Set<String> usedSkins = new HashSet<>();
 
     public GameCharacter assignNextAvailableCharacter(String playerId) {
-        List<String> usedSkins = movementService.getAllPositions()
-                .stream()
-                .map(p -> p.getSkin())
-                .toList();
-
         List<GameCharacter> all = characterRepository.findAll();
 
         for (GameCharacter gc : all) {
             if (!usedSkins.contains(gc.getSkin())) {
+                usedSkins.add(gc.getSkin()); // Merken, dass dieser Skin verwendet wird
                 movementService.registerInitialCharacter(playerId, gc);
                 return gc;
             }
@@ -43,7 +37,16 @@ public class CharacterService {
         return null;
     }
 
+    public void releaseCharacter(String skin) {
+        usedSkins.remove(skin);     }
 
+    public boolean isInUse(String skin) {
+        return usedSkins.contains(skin);
+    }
 
+    public List<GameCharacter> getAllCharacters() {
+        return characterRepository.findAll();
+    }
 
 }
+

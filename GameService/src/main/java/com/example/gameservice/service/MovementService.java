@@ -44,9 +44,13 @@ public class MovementService {
         if (blocked[tileY][tileX]) {
             return positions.get(request.getPlayerId()); // blockiert
         }
+      //  System.out.println("[DEBUG] moveCharacter() aufgerufen mit ID: " + request.getPlayerId());
+
         CharacterPosition pos = positions.computeIfAbsent(
                 request.getPlayerId(),
                 id -> {
+                  //  System.out.println("[DEBUG] Spieler neu erstellt: " + id + ", Skin: " + request.getSkin());
+
                     GameCharacter character = characterRepository.findBySkin(request.getSkin()).orElse(null);
                     if (character == null) {
                         System.out.println("[ERROR] Character mit Skin '" + request.getSkin() + "' nicht gefunden!");

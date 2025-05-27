@@ -26,7 +26,7 @@ export default class GameScene extends Phaser.Scene {
         lastDirection: 'up' | 'down' | 'left' | 'right'; // ✅ Fix
     }>();
     private pointer!: Phaser.Input.Pointer;
-    private lastAttackTime = 0;
+    public lastAttackTime = 0;
     private cooldown = 1000;
     public projectiles!: Phaser.GameObjects.Group;
     private cooldownBar!: Phaser.GameObjects.Graphics;
@@ -107,14 +107,23 @@ export default class GameScene extends Phaser.Scene {
 
             this.lastAttackTime = now;
 
+            // Richtung berechnen (normalisierter Richtungsvektor)
+            const dx = pointer.worldX - this.player.x;
+            const dy = pointer.worldY - this.player.y;
+            const distance = Math.sqrt(dx * dx + dy * dy) || 1; // Schutz gegen 0
+            const normX = dx / distance;
+            const normY = dy / distance;
+
+            // AttackPayload, passend zum Backend
             sendAttack(this.stompClient, {
-                playerId: this.playerId, // <---
-                x: pointer.worldX,
-                y: pointer.worldY,
+                playerId: this.playerId,
                 playerX: this.player.x,
-                playerY: this.player.y
+                playerY: this.player.y,
+                dirX: normX,
+                dirY: normY
             });
         });
+
 
         setupWebSocket(this);
     }

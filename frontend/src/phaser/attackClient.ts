@@ -2,10 +2,10 @@ import { Client as StompClient } from '@stomp/stompjs';
 
 export interface AttackPayload {
     playerId: string;
-    x: number;
-    y: number;
     playerX: number;
     playerY: number;
+    dirX: number;
+    dirY: number;
 }
 
 export function sendAttack(stompClient: StompClient, payload: AttackPayload) {

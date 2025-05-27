@@ -76,11 +76,31 @@ export function setupWebSocket(scene: GameScene) {
                 scene,
                 data.playerX,
                 data.playerY,
-                data.playerX + data.dirX * 50,
-                data.playerY + data.dirY * 50
+                data.dirX,
+                data.dirY,
+                data.playerId
             );
+
             scene.projectiles.add(projectile);
         });
+
+        scene.stompClient.subscribe('/topic/health', (message: IMessage) => {
+            const data = JSON.parse(message.body); // { playerId, newHealth }
+            const entry = scene.otherPlayers.get(data.playerId);
+            if (entry) {
+                // EINFÄRBEN als Treffer-Feedback
+                entry.sprite.setTint(0xff0000);
+                scene.time.delayedCall(200, () => entry.sprite.clearTint());
+                // TODO: Zeige Health-Balken an, etc.
+            }
+            // ... falls es der eigene Spieler ist:
+            if (data.playerId === scene.playerId) {
+                // z.B. rot blinken lassen, "Du wurdest getroffen!" anzeigen usw.
+            }
+        });
+
+
+
 
         fetch('http://localhost:8081/api/positions')
             .then(res => res.json())

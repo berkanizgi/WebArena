@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.example.gameservice.infrastructure.CollisionMapLoader;
 import com.example.gameservice.domain.GameCharacter;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,8 +70,8 @@ public class MovementService {
         pos.setRotation(request.getRotation());
         pos.setIsMoving(request.getIsMoving());
 
-        System.out.println("[Backend][moveCharacter] isMoving im Request: " + request.getIsMoving());
-        System.out.println("[Backend][moveCharacter] pos.isMoving danach: " + pos.getIsMoving());
+//        System.out.println("[Backend][moveCharacter] isMoving im Request: " + request.getIsMoving());
+//        System.out.println("[Backend][moveCharacter] pos.isMoving danach: " + pos.getIsMoving());
 
 
         return pos;
@@ -91,6 +92,17 @@ public class MovementService {
                 .map(CharacterPositionDTO::new)
                 .collect(Collectors.toList());
     }
+    public void registerInitialCharacter(String playerId, GameCharacter character) {
+        CharacterPosition newPos = new CharacterPosition(playerId, character, 100, 100);
+        positions.put(playerId, newPos);
+    }
+
+
+    public Collection<CharacterPosition> getAllRawPositions() {
+        return positions.values();
+    }
+
+
 
 //    public void updateRotation(MovementRequest request) {
 //        CharacterPosition pos = positions.computeIfAbsent(

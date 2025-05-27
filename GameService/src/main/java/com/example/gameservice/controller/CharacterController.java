@@ -42,18 +42,10 @@ public class CharacterController {
 
     @PostMapping("/register")
     public ResponseEntity<Void> registerPlayer(@RequestBody RegisterRequest request) {
-        Optional<GameCharacter> optional = characterRepository.findBySkin(request.getSkin());
-
-        if (optional.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+        boolean success = characterService.registerCharacter(request.getPlayerId(), request.getSkin());
+        if (!success) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-
-        GameCharacter character = optional.get();
-        if (characterService.isInUse(character.getSkin())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build(); // Skin schon vergeben
-        }
-
-        movementService.registerInitialCharacter(request.getPlayerId(), character);
         return ResponseEntity.ok().build();
     }
 

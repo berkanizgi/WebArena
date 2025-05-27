@@ -31,7 +31,6 @@ export default function GameCanvas() {
             const data = await res.json();
             setCharacter(data);
 
-            // Jetzt Registrierung mit Skin
             await fetch('http://localhost:8081/api/characters/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

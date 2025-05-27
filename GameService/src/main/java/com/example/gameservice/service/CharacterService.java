@@ -7,10 +7,7 @@ import com.example.gameservice.dto.CharacterPositionDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 @Service
@@ -29,16 +26,38 @@ public class CharacterService {
 
         for (GameCharacter gc : all) {
             if (!usedSkins.contains(gc.getSkin())) {
-                usedSkins.add(gc.getSkin()); // Merken, dass dieser Skin verwendet wird
-                movementService.registerInitialCharacter(playerId, gc);
                 return gc;
             }
         }
         return null;
     }
 
+    public boolean registerCharacter(String playerId, String skin) {
+        Optional<GameCharacter> optional = characterRepository.findBySkin(skin);
+
+        if (optional.isEmpty()) {
+            return false;
+        }
+
+        GameCharacter character = optional.get();
+        if (isInUse(character.getSkin())) {
+            return false;
+        }
+
+        markInUse(character.getSkin());
+        movementService.registerInitialCharacter(playerId, character);
+        return true;
+    }
+
+    public void markInUse(String skin) {
+        usedSkins.add(skin);
+    }
+
+
+
     public void releaseCharacter(String skin) {
-        usedSkins.remove(skin);     }
+        usedSkins.remove(skin);
+    }
 
     public boolean isInUse(String skin) {
         return usedSkins.contains(skin);

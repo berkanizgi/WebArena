@@ -7,9 +7,13 @@ export default class Projectile extends Phaser.GameObjects.Ellipse {
     private dirY: number;
     private shooterId: string;
     private sceneRef: GameScene;
+    private createdAt: number;
+
 
     constructor(scene: GameScene, x: number, y: number, dirX: number, dirY: number, shooterId: string) {
         super(scene, x, y, 10, 10, 0xff3300);
+        this.createdAt = scene.time.now;
+
 
         this.sceneRef = scene;
         this.shooterId = shooterId;
@@ -35,13 +39,12 @@ export default class Projectile extends Phaser.GameObjects.Ellipse {
         this.x += this.dirX * this.speed * (delta / 1000);
         this.y += this.dirY * this.speed * (delta / 1000);
 
-        //Kollision check passiert hier, aber Überprüfung ist im backend
+        //Kollionüberprüfung, aber auch im Basckend AttackService
         this.sceneRef.otherPlayers.forEach((entry, playerId) => {
-            if (playerId === this.shooterId) return;
             const sprite = entry.sprite;
             const distance = Phaser.Math.Distance.Between(this.x, this.y, sprite.x, sprite.y);
 
-            if (distance < 16) {
+            if (distance < 16 && this.sceneRef.playerId === this.shooterId) {
                 this.sceneRef.stompClient.publish({
                     destination: '/app/hit',
                     body: JSON.stringify({
@@ -49,14 +52,14 @@ export default class Projectile extends Phaser.GameObjects.Ellipse {
                         targetId: playerId
                     })
                 });
-
                 this.destroy();
             }
         });
 
-        // 1 Sekunde automatisch zerstören (Flugzeitgrenze)
-        if (this.sceneRef.time.now - this.sceneRef.lastAttackTime > 1000) {
+        if (this.sceneRef.time.now - this.createdAt > 1000) {
             this.destroy();
         }
+
     }
+
 }

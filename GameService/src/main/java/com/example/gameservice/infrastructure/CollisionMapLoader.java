@@ -13,7 +13,7 @@ public class CollisionMapLoader {
     private static final String MAP_PATH = "map/WebArenaMap.json";
 
     public boolean[][] loadCollisionMap() {
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(MAP_PATH)) {
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("map/WebArenaMap.json")) {
             JsonNode root = mapper.readTree(is);
 
             for (JsonNode layer : root.get("layers")) {
@@ -27,17 +27,14 @@ public class CollisionMapLoader {
                         int tile = data.get(i).asInt();
                         int x = i % width;
                         int y = i / width;
-                        blocked[y][x] = tile != 0;
+                        blocked[y][x] = tile != 0;  // Nicht 0 = Kollision
                     }
-
                     return blocked;
                 }
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         throw new IllegalStateException("Collision layer not found or map could not be loaded.");
     }
 }

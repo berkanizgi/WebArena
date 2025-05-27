@@ -38,48 +38,43 @@ public class MovementService {
     }
 
     public CharacterPosition moveCharacter(MovementRequest request) {
-        int tileX = request.getX() / 32;
-        int tileY = request.getY() / 32;
-
-        if (blocked[tileY][tileX]) {
-            return positions.get(request.getPlayerId()); // blockiert
-        }
-      //  System.out.println("[DEBUG] moveCharacter() aufgerufen mit ID: " + request.getPlayerId());
-
         CharacterPosition pos = positions.computeIfAbsent(
                 request.getPlayerId(),
                 id -> {
-                  //  System.out.println("[DEBUG] Spieler neu erstellt: " + id + ", Skin: " + request.getSkin());
-
                     GameCharacter character = characterRepository.findBySkin(request.getSkin()).orElse(null);
                     if (character == null) {
                         System.out.println("[ERROR] Character mit Skin '" + request.getSkin() + "' nicht gefunden!");
                         return null;
                     }
-                    // Rückgabe für computeIfAbsent!
+                    // Startposition (z.B. Spawn-Point)
                     return new CharacterPosition(id, character, request.getX(), request.getY());
                 }
         );
+        if (pos == null) return null;
 
+        // Neue Zielkoordinaten (du willst weiterhin absolute Bewegung):
+        int targetX = request.getX();
+        int targetY = request.getY();
 
+        int tileSize = 32; // ODER 16! Je nach eurer Map. (Bitte ggf. angleichen!)
+        int tileX = targetX / tileSize;
+        int tileY = targetY / tileSize;
 
-
-
-        if (pos == null) {
-            return null;
+        // **Hier: Kollision + Grenzen prüfen wie bei deinem Kollegen**
+        if (tileY < 0 || tileY >= blocked.length || tileX < 0 || tileX >= blocked[0].length || blocked[tileY][tileX]) {
+            return pos; // Blockiert oder außerhalb der Map
         }
-        pos.setX(request.getX());
-        pos.setY(request.getY());
+
+        // Bewegung ist erlaubt → Zielposition setzen
+        pos.setX(targetX);
+        pos.setY(targetY);
         pos.setDirection(request.getDirection());
         pos.setRotation(request.getRotation());
         pos.setIsMoving(request.getIsMoving());
 
-//        System.out.println("[Backend][moveCharacter] isMoving im Request: " + request.getIsMoving());
-//        System.out.println("[Backend][moveCharacter] pos.isMoving danach: " + pos.getIsMoving());
-
-
         return pos;
     }
+
 
 
     public void moveAndBroadcast(MovementRequest request) {

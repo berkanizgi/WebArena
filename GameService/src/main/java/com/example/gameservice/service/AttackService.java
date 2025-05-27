@@ -2,11 +2,12 @@ package com.example.gameservice.service;
 
 import com.example.gameservice.domain.CharacterPosition;
 import com.example.gameservice.dto.AttackEventDTO;
+import com.example.gameservice.dto.HealthUpdateDTO;
 import com.example.gameservice.request.AttackRequest;
+import com.example.gameservice.request.HitRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-
 import java.time.Instant;
 
 @Service
@@ -42,43 +43,60 @@ public class AttackService {
         } else {
             // Neuer Block: ❗ Cooldown Nachricht senden
             messagingTemplate.convertAndSendToUser(
-                    character.getCharacterId(), // Benutzer ID
+                    character.getPlayerId(), // Benutzer ID
                     "/queue/cooldown",          // Persönlicher Channel
                     "COOLDOWN_ACTIVE"
             );
         }
     }
 
-
-    private void executeAttack(CharacterPosition character, AttackRequest request) {
-        // 📏 Richtung berechnen: von Charakter-Position zur Maus
-        double dirX = request.getMouseX() - character.getX();
-        double dirY = request.getMouseY() - character.getY();
-
+    private void executeAttack(CharacterPosition shooter, AttackRequest request) {
+        double dirX = request.getDirX();
+        double dirY = request.getDirY();
         double distance = Math.sqrt(dirX * dirX + dirY * dirY);
+        if (distance == 0) distance = 1;
 
-        // ❗ Zusatz-Schutz: Ist die Maus überhaupt in Reichweite? (z.B. maximal 2000 Pixel weit entfernt)
-        if (distance > 2000) {
-            System.out.println("Attack abgelehnt: Maus zu weit weg!");
-            return; // 🛑 Angriff ignorieren
-        }
-
-        // Richtung normalisieren
-        if (distance == 0) {
-            distance = 1; // Schutz gegen Division durch 0
-        }
         double normX = dirX / distance;
         double normY = dirY / distance;
 
+        // Projektil direkt an alle Clients senden (ohne Delay!)
         AttackEventDTO event = new AttackEventDTO(
-                character.getCharacterId(),
-                character.getX(),    // Startposition vom Charakter
-                character.getY(),
+                shooter.getPlayerId(),
+                shooter.getX(),
+                shooter.getY(),
                 normX,
                 normY
         );
 
         messagingTemplate.convertAndSend("/topic/attacks", event);
     }
+
+
+    public void processHit(HitRequest request) {
+        CharacterPosition shooter = movementService.getCharacterPosition(request.getShooterId());
+        CharacterPosition target = movementService.getCharacterPosition(request.getTargetId());
+
+        if (shooter == null || target == null) {
+            System.out.println("Ungültiger Hit: Spieler nicht gefunden");
+            return;
+        }
+
+        int damage = shooter.getCharacter().getBaseAttack();
+        int newHealth = Math.max(0, target.getCurrentHealth() - damage);
+        target.setCurrentHealth(newHealth);
+
+        System.out.println( shooter.getPlayerId() + " trifft " + target.getPlayerId() + " für " + damage + " Schaden (HP: " + newHealth + ")");
+
+        messagingTemplate.convertAndSend(
+                "/topic/health",
+                new HealthUpdateDTO(target.getPlayerId(), newHealth)
+        );
+    }
+
+
+
+
+
+
 
 }

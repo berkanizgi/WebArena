@@ -1,45 +1,57 @@
 package com.example.gameservice.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-
+import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
 public class CharacterPosition {
 
     @Id
-    private String characterId;
+    private String playerId;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "character_id")
+    private GameCharacter gameCharacter;
+
     private int x;
     private int y;
     private int rotation;
-    private String name;
-    private String skin;
-    private String baseStats;
-    private String role;
-    private String description;
-    private Boolean rare;
-    private Long speed;
     private String direction;
-    private Instant lastShotTime = Instant.EPOCH; // Instant kein LocalDateTime, weil Instant ist UCT
+    private int currentHealth;
+    private Boolean isMoving;
+    private Instant lastShotTime;
 
-    public CharacterPosition(String characterId, int x, int y) {
-        this.characterId = characterId;
+    // --- Konstruktoren ---
+
+    public CharacterPosition() {
+    }
+
+    public CharacterPosition(String playerId, GameCharacter gameCharacter, int x, int y) {
+        this.playerId = playerId;
+        this.gameCharacter = gameCharacter;
         this.x = x;
         this.y = y;
         this.rotation = 0;
+        this.direction = "down";
+        this.currentHealth = gameCharacter != null ? gameCharacter.getBaseHealth() : 100;
+        this.isMoving = false;
+        this.lastShotTime = Instant.EPOCH;
     }
 
-    public CharacterPosition(){
-
+    public String getPlayerId() {
+        return playerId;
     }
 
-    public String getCharacterId() {
-        return characterId;
+    public void setPlayerId(String playerId) {
+        this.playerId = playerId;
     }
 
-    public void setCharacterId(String characterId) {
-        this.characterId = characterId;
+    public GameCharacter getCharacter() {
+        return gameCharacter;
+    }
+
+    public void setCharacter(GameCharacter character) {
+        this.gameCharacter = character;
     }
 
     public int getX() {
@@ -66,6 +78,30 @@ public class CharacterPosition {
         this.rotation = rotation;
     }
 
+    public String getDirection() {
+        return direction;
+    }
+
+    public void setDirection(String direction) {
+        this.direction = direction;
+    }
+
+    public int getCurrentHealth() {
+        return currentHealth;
+    }
+
+    public void setCurrentHealth(int currentHealth) {
+        this.currentHealth = currentHealth;
+    }
+
+    public Boolean getIsMoving() {
+        return isMoving;
+    }
+
+    public void setIsMoving(Boolean isMoving) {
+        this.isMoving = isMoving;
+    }
+
     public Instant getLastShotTime() {
         return lastShotTime;
     }
@@ -73,6 +109,8 @@ public class CharacterPosition {
     public void setLastShotTime(Instant lastShotTime) {
         this.lastShotTime = lastShotTime;
     }
+
+    // --- Nützliche Methoden ---
 
     public boolean canAttack(Instant now, long cooldownMillis) {
         return now.isAfter(lastShotTime.plusMillis(cooldownMillis));
@@ -82,68 +120,12 @@ public class CharacterPosition {
         this.lastShotTime = now;
     }
 
-    public String getDirection() {
-        return direction;
-    }
-
-    public void setDirection(String direction) {
-        this.direction = direction;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getBaseStats() {
-        return baseStats;
-    }
-
-    public void setBaseStats(String baseStats) {
-        this.baseStats = baseStats;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Boolean getRare() {
-        return rare;
-    }
-
-    public void setRare(Boolean rare) {
-        this.rare = rare;
-    }
-
-    public Long getSpeed() {
-        return speed;
-    }
-
-    public void setSpeed(Long speed) {
-        this.speed = speed;
-    }
-
     public String getSkin() {
-        return skin;
+        return gameCharacter != null ? gameCharacter.getSkin() : null;
     }
-
-    public void setSkin(String skin) {
-        this.skin = skin;
+    public int getAttack() {
+        return gameCharacter != null ? gameCharacter.getBaseAttack() : 0;
     }
+// usw.
 
 }

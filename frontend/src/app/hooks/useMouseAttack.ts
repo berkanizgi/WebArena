@@ -8,7 +8,7 @@ interface AttackRequest {
     timestamp: number;
 }
 
-export function useMouseAttack(client: any, characterId: string) {
+export function useMouseAttack(client: any, playerId: string) {
     useEffect(() => {
         if (!client || !client.connected) return;
 
@@ -21,7 +21,7 @@ export function useMouseAttack(client: any, characterId: string) {
             const attackRequest: AttackRequest = {
                 x: event.clientX,  // oder clientX relativ zur Map, falls nötig
                 y: event.clientY,
-                playerId: characterId,
+                playerId: playerId,
                 timestamp: Date.now()
             };
 
@@ -33,5 +33,5 @@ export function useMouseAttack(client: any, characterId: string) {
         return () => {
             window.removeEventListener('mousedown', handleMouseDown);
         };
-    }, [client, characterId]);
+    }, [client, playerId]);
 }

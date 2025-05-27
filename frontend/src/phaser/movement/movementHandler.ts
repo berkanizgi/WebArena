@@ -35,17 +35,19 @@ export function handlePlayerMovement(
     const isMoving = moveX !== 0 || moveY !== 0;
 
     if (isMoving) {
-        player.anims.play(aimDirection, true);
+        player.anims.play(`${player.texture.key}_${aimDirection}`, true);
     } else {
         player.anims.stop();
         const idleFrames: Record<'down' | 'left' | 'right' | 'up', number> = {
             down: 0,
-            left: 3,
-            right: 6,
-            up: 9,
+            right: 8,
+            up: 16,
+            left: 24,
         };
         player.setFrame(idleFrames[aimDirection]);
     }
+    //console.log('moveX:', moveX, 'moveY:', moveY, 'isMoving:', isMoving);
+
 
     return { aimDirection, moveX, moveY, rotation: normalized };
 }

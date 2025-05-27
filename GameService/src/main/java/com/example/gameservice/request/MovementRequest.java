@@ -1,19 +1,22 @@
 package com.example.gameservice.request;
 
 public class MovementRequest {
-    private String characterId;
+    private String playerId;
     private String direction; //e.g. "UP" "DOWN" usw.
     private int rotation;
     private int x;
     private int y;
+    private String skin;
+    private Boolean isMoving;
 
     public MovementRequest(){}
-    public String getCharacterId() {
-        return characterId;
+
+    public String getPlayerId() {
+        return playerId;
     }
 
-    public void setCharacterId(String characterId) {
-        this.characterId = characterId;
+    public void setPlayerId(String playerId) {
+        this.playerId = playerId;
     }
 
     public String getDirection() {
@@ -44,5 +47,21 @@ public class MovementRequest {
     }
     public void setY(int y) {
         this.y = y;
+    }
+
+    public String getSkin() {
+        return skin;
+    }
+
+    public void setSkin(String skin) {
+        this.skin = skin;
+    }
+
+    public Boolean getIsMoving() {
+        return isMoving;
+    }
+
+    public void setIsMoving(Boolean moving) {
+        isMoving = moving;
     }
 }

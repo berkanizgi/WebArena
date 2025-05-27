@@ -2,19 +2,33 @@ import { Client as StompClient } from '@stomp/stompjs';
 
 export function sendMovement(
     stompClient: StompClient,
-    characterId: string,
+    playerId: string,
     x: number,
     y: number,
     direction: string,
     rotation: number,
     moveX: number,
-    moveY: number
+    moveY: number,
+    skin: string
 ) {
     if (!stompClient || !stompClient.connected) return;
-    if (moveX === 0 && moveY === 0) return;
+
+    const isMoving = moveX !== 0 || moveY !== 0;
+    // Hier schicken wir auch Movement, selbst wenn Spieler stillsteht
+    const payload = {
+        playerId,
+        x,
+        y,
+        direction,
+        rotation,
+        skin,
+        isMoving
+    };
+
+    console.log('[sendMovement] Sende Movement:', payload);
 
     stompClient.publish({
         destination: '/app/move',
-        body: JSON.stringify({ characterId, x, y, direction, rotation })
+        body: JSON.stringify(payload)
     });
 }

@@ -1,8 +1,36 @@
 import Phaser from 'phaser';
 
-export function setupAnimations(scene: Phaser.Scene) {
-    scene.anims.create({ key: 'down', frames: scene.anims.generateFrameNumbers('soldier', { start: 0, end: 2 }), frameRate: 6, repeat: -1 });
-    scene.anims.create({ key: 'left', frames: scene.anims.generateFrameNumbers('soldier', { start: 3, end: 5 }), frameRate: 6, repeat: -1 });
-    scene.anims.create({ key: 'right', frames: scene.anims.generateFrameNumbers('soldier', { start: 6, end: 8 }), frameRate: 6, repeat: -1 });
-    scene.anims.create({ key: 'up', frames: scene.anims.generateFrameNumbers('soldier', { start: 9, end: 11 }), frameRate: 6, repeat: -1 });
+const registeredSkins = new Set<string>();
+
+export function setupAnimations(scene: Phaser.Scene, skin: string) {
+    if (registeredSkins.has(skin)) {
+        return;
+    }
+
+    scene.anims.create({
+        key: `${skin}_down`,
+        frames: scene.anims.generateFrameNumbers(skin, {start: 0, end: 7}),
+        frameRate: 6,
+        repeat: -1
+    });
+    scene.anims.create({
+        key: `${skin}_right`,
+        frames: scene.anims.generateFrameNumbers(skin, {start: 8, end: 15}),
+        frameRate: 6,
+        repeat: -1
+    });
+    scene.anims.create({
+        key: `${skin}_up`,
+        frames: scene.anims.generateFrameNumbers(skin, {start: 16, end: 23}),
+        frameRate: 6,
+        repeat: -1
+    });
+    scene.anims.create({
+        key: `${skin}_left`,
+        frames: scene.anims.generateFrameNumbers(skin, {start: 24, end: 31}),
+        frameRate: 6,
+        repeat: -1
+    });
+
+    registeredSkins.add(skin);
 }

@@ -15,7 +15,7 @@ export interface AttackEventDTO {
     dirX: number;
     dirY: number;
 }
-export interface CharacterDTO {
+export interface GameCharacterDTO {
     characterId: string;
     name: string;
     skin: string;

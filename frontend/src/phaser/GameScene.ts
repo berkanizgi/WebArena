@@ -58,7 +58,6 @@ export default class GameScene extends Phaser.Scene {
 
     create() {
         this.pointer = this.input.activePointer;
-        this.physics.world.createDebugGraphic();
 
         const { map, spawnX, spawnY, collisionLayer } = setupMap(this);
         this.collisionLayer = collisionLayer;

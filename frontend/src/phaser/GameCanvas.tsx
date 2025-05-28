@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import GameScene from './GameScene';
-import { CharacterDTO } from './types'; // ← falls types.ts im gleichen Ordner liegt
+import { GameCharacterDTO } from './types'; // ← falls types.ts im gleichen Ordner liegt
 
 export default function GameCanvas() {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const gameRef = useRef<Phaser.Game | null>(null);
 
-    const [character, setCharacter] = useState<CharacterDTO | null>(null);
+    const [character, setCharacter] = useState<GameCharacterDTO | null>(null);
     const [playerId, setPlayerId] = useState<string | null>(null);
 
     useEffect(() => {
@@ -52,7 +52,7 @@ export default function GameCanvas() {
             scene: [new GameScene({ key: 'main', skin: character.skin, playerId })],
             physics: {
                 default: 'arcade',
-                arcade: { debug: true },
+                arcade: { debug: false },
             },
             audio: {
                 noAudio: true,

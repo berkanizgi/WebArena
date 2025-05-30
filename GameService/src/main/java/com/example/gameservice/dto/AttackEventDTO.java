@@ -2,18 +2,19 @@ package com.example.gameservice.dto;
 
 public class AttackEventDTO {
     private String playerId;
-    private int playerX;
-    private int playerY;
+    private double playerX;
+    private double playerY;
     private double dirX;
     private double dirY;
 
-    public AttackEventDTO(String playerId, int playerX, int playerY, double dirX, double dirY) {
+    public AttackEventDTO(String playerId, double playerX, double playerY, double dirX, double dirY) {
         this.playerId = playerId;
         this.playerX = playerX;
         this.playerY = playerY;
         this.dirX = dirX;
         this.dirY = dirY;
     }
+
 
     // Getter
 
@@ -25,19 +26,19 @@ public class AttackEventDTO {
         this.playerId = playerId;
     }
 
-    public int getPlayerX() {
+    public double getPlayerX() {
         return playerX;
     }
 
-    public void setPlayerX(int playerX) {
+    public void setPlayerX(double playerX) {
         this.playerX = playerX;
     }
 
-    public int getPlayerY() {
+    public double getPlayerY() {
         return playerY;
     }
 
-    public void setPlayerY(int playerY) {
+    public void setPlayerY(double playerY) {
         this.playerY = playerY;
     }
 

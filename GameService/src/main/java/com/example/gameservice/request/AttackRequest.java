@@ -2,8 +2,8 @@ package com.example.gameservice.request;
 
 public class AttackRequest {
     private String playerId;
-    private int playerX;
-    private int playerY;
+    private double playerX;
+    private double playerY;
     private double dirX;
     private double dirY;
 
@@ -12,11 +12,11 @@ public class AttackRequest {
     public String getPlayerId() { return playerId; }
     public void setPlayerId(String playerId) { this.playerId = playerId; }
 
-    public int getPlayerX() { return playerX; }
-    public void setPlayerX(int playerX) { this.playerX = playerX; }
+    public double getPlayerX() { return playerX; }
+    public void setPlayerX(double playerX) { this.playerX = playerX; }
 
-    public int getPlayerY() { return playerY; }
-    public void setPlayerY(int playerY) { this.playerY = playerY; }
+    public double getPlayerY() { return playerY; }
+    public void setPlayerY(double playerY) { this.playerY = playerY; }
 
     public double getDirX() { return dirX; }
     public void setDirX(double dirX) { this.dirX = dirX; }

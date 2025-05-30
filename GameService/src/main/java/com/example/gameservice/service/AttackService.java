@@ -7,6 +7,7 @@ import com.example.gameservice.request.AttackRequest;
 import com.example.gameservice.request.HitRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import java.time.Instant;
 
@@ -24,6 +25,7 @@ public class AttackService {
         this.movementService = movementService;
     }
 
+    @Async
     public void processAttack(AttackRequest request) {
         // ❗ aktuelle Position vom Spieler aus dem MovementService holen!
         CharacterPosition character = movementService.getCharacterPosition(request.getPlayerId());
@@ -39,7 +41,7 @@ public class AttackService {
         Instant now = Instant.now();
         if (character.canAttack(now, cooldownMillis)) {
             character.registerAttack(now); // Cooldown setzen
-            executeAttack(character, request);
+            executeAttack(character.getPlayerId(), request);
         } else {
             // Neuer Block: ❗ Cooldown Nachricht senden
             messagingTemplate.convertAndSendToUser(
@@ -50,7 +52,8 @@ public class AttackService {
         }
     }
 
-    private void executeAttack(CharacterPosition shooter, AttackRequest request) {
+
+    private void executeAttack(String playerId, AttackRequest request) {
         double dirX = request.getDirX();
         double dirY = request.getDirY();
         double distance = Math.sqrt(dirX * dirX + dirY * dirY);
@@ -59,17 +62,18 @@ public class AttackService {
         double normX = dirX / distance;
         double normY = dirY / distance;
 
-        // Projektil direkt an alle Clients senden (ohne Delay!)
         AttackEventDTO event = new AttackEventDTO(
-                shooter.getPlayerId(),
-                shooter.getX(),
-                shooter.getY(),
+                playerId, // statt shooter.getPlayerId()
+                request.getPlayerX(),
+                request.getPlayerY(),
                 normX,
                 normY
         );
 
         messagingTemplate.convertAndSend("/topic/attacks", event);
     }
+
+
 
 
     public void processHit(HitRequest request) {

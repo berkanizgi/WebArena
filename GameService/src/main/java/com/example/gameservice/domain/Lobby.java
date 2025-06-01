@@ -1,53 +1,27 @@
 package com.example.gameservice.domain;
 
-import jakarta.persistence.*;
-
 import java.util.*;
 
 public class Lobby {
-    private final String id;
-    private LobbyStatus status;
-    private final Set<String> players = new HashSet<>();
-    private static final int MAX_PLAYERS = 4;
+    private String id;
+    private String status;
+    private List<Player> players = new ArrayList<>();
 
-    public Lobby(String id) {
+    public Lobby(String id, Player owner) {
         this.id = id;
-        this.status = LobbyStatus.WAITING;
+        this.status = "WAITING";
+        owner.setHost(true);
+        players.add(owner);
     }
 
-    public void addPlayer(String playerId) {
-        if (players.size() < MAX_PLAYERS) {
-            players.add(playerId);
-            if (players.size() == MAX_PLAYERS) {
-                this.status = LobbyStatus.STARTED;
-            }
-        }
-    }
+    public String getId() { return id; }
+    public String getStatus() { return status; }
+    public List<Player> getPlayers() { return players; }
 
-    public void removePlayer(String playerId) {
-        players.remove(playerId);
-    }
+    public void setStatus(String status) { this.status = status; }
 
-    public boolean isFull() {
-        return players.size() >= MAX_PLAYERS;
+    public void updateStatus() {
+        boolean allReady = players.stream().allMatch(Player::isReady);
+        this.status = allReady ? "READY" : "WAITING";
     }
-
-    public String getId() {
-        return id;
-    }
-
-    public LobbyStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(LobbyStatus status) {
-        this.status = status;
-    }
-
-    public Set<String> getPlayers() {
-        return players;
-    }
-
 }
-
-

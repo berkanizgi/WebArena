@@ -8,9 +8,7 @@ import org.springframework.web.socket.config.annotation.*;
 
 @Configuration
 @EnableWebSocketMessageBroker
-public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, WebSocketConfigurer {
-
-    private final LobbyWebSocketHandler lobbyWebSocketHandler;
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -23,15 +21,4 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, WebSoc
         registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
     }
 
-
-
-    @Autowired
-    public WebSocketConfig(LobbyWebSocketHandler lobbyWebSocketHandler) {
-        this.lobbyWebSocketHandler = lobbyWebSocketHandler;
-    }
-
-    @Override
-    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(lobbyWebSocketHandler, "/ws/lobby").setAllowedOrigins("*");
-    }
 }

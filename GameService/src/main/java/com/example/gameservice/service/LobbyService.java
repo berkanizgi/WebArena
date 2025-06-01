@@ -34,6 +34,23 @@ public class LobbyService {
         return Optional.of(createLobby(playerId));
     }
 
+    public Lobby toggleReady(String playerId) {
+        String lobbyId = playerToLobby.get(playerId);
+        if (lobbyId == null) return null;
+        Lobby lobby = lobbies.get(lobbyId);
+        if (lobby == null) return null;
+
+        lobby.toggleReady(playerId);
+
+        if (lobby.allReady() && lobby.getPlayerStates().size() == 4) {
+            lobby.setStatus(LobbyStatus.STARTED);
+        } else {
+            lobby.setStatus(LobbyStatus.WAITING);
+        }
+
+        return lobby;
+    }
+
     public void removePlayer(String playerId) {
         String lobbyId = playerToLobby.remove(playerId);
         if (lobbyId != null) {
@@ -57,3 +74,4 @@ public class LobbyService {
         return lobbies.get(id);
     }
 }
+

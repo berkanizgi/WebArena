@@ -28,7 +28,9 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
     implementation("com.fasterxml.jackson.core:jackson-core:2.17.0")
-
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
+    implementation("org.webjars:sockjs-client:1.5.1")
+    implementation("org.webjars:stomp-websocket:2.3.4")
 }
 
 tasks.withType<Test> {

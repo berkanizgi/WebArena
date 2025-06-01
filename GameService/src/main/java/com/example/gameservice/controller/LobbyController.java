@@ -4,31 +4,55 @@ package com.example.gameservice.controller;
 
 import com.example.gameservice.domain.Lobby;
 import com.example.gameservice.service.LobbyService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
-@RestController
-@RequestMapping("/api/lobbies")
+@Controller
+@CrossOrigin
 public class LobbyController {
 
-    private final LobbyService lobbyService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final Map<String, Lobby> lobbies = new HashMap<>();
 
-    public LobbyController(LobbyService lobbyService) {
-        this.lobbyService = lobbyService;
+    public LobbyController(SimpMessagingTemplate messagingTemplate) {
+        this.messagingTemplate = messagingTemplate;
     }
 
-    @GetMapping
-    public Collection<Lobby> getAllLobbies() {
-        return lobbyService.getAllLobbies();
+    @MessageMapping("/createLobby")
+    public void createLobby(@Payload Map<String, String> data) {
+        String playerId = data.get("playerId");
+        Player owner = new Player(playerId);
+        String lobbyId = UUID.randomUUID().toString();
+        Lobby lobby = new Lobby(lobbyId, owner);
+        lobbies.put(lobbyId, lobby);
+
+        messagingTemplate.convertAndSend("/topic/lobby", Map.of("type", "LOBBY_CREATED", "lobby", lobby));
     }
 
-    @GetMapping("/{id}")
-    public Lobby getLobby(@PathVariable String id) {
-        return lobbyService.getLobby(id);
+    @MessageMapping("/setReady")
+    public void setReady(@Payload Map<String, String> data) {
+        String lobbyId = data.get("lobbyId");
+        String playerId = data.get("playerId");
+        Lobby lobby = lobbies.get(lobbyId);
+
+        if (lobby != null) {
+            lobby.getPlayers().stream()
+                    .filter(p -> p.getId().equals(playerId))
+                    .findFirst()
+                    .ifPresent(p -> p.setReady(true));
+
+            lobby.updateStatus();
+
+            messagingTemplate.convertAndSend("/topic/lobby", Map.of("type", "LOBBY_UPDATED", "lobby", lobby));
+        }
     }
 }
 

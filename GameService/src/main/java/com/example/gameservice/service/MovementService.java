@@ -61,9 +61,9 @@ public class MovementService {
         int tileY = targetY / tileSize;
 
         // **Hier: Kollision + Grenzen prüfen wie bei deinem Kollegen**
-        if (tileY < 0 || tileY >= blocked.length || tileX < 0 || tileX >= blocked[0].length || blocked[tileY][tileX]) {
-            return pos; // Blockiert oder außerhalb der Map
-        }
+//        if (tileY < 0 || tileY >= blocked.length || tileX < 0 || tileX >= blocked[0].length || blocked[tileY][tileX]) {
+//            return pos; // Blockiert oder außerhalb der Map
+//        }
 
         // Bewegung ist erlaubt → Zielposition setzen
         pos.setX(targetX);

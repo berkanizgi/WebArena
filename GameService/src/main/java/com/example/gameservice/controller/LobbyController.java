@@ -3,6 +3,7 @@ package com.example.gameservice.controller;
 
 
 import com.example.gameservice.domain.Lobby;
+import com.example.gameservice.domain.Player;
 import com.example.gameservice.service.LobbyService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -32,6 +33,7 @@ public class LobbyController {
         Player owner = new Player(playerId);
         String lobbyId = UUID.randomUUID().toString();
         Lobby lobby = new Lobby(lobbyId, owner);
+        lobby.addPlayer(owner); // ← damit der Ersteller auch in der Liste ist
         lobbies.put(lobbyId, lobby);
 
         messagingTemplate.convertAndSend("/topic/lobby", Map.of("type", "LOBBY_CREATED", "lobby", lobby));
@@ -45,7 +47,7 @@ public class LobbyController {
 
         if (lobby != null) {
             lobby.getPlayers().stream()
-                    .filter(p -> p.getId().equals(playerId))
+                    .filter(p -> p.getPlayerId().equals(playerId))
                     .findFirst()
                     .ifPresent(p -> p.setReady(true));
 

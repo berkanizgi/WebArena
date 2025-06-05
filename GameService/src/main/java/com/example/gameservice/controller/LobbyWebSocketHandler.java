@@ -49,10 +49,12 @@ public class LobbyWebSocketHandler extends TextWebSocketHandler {
 
     private void broadcastLobbyUpdate(Lobby lobby) throws Exception {
         Map<String, Object> response = new HashMap<>();
-        response.put("type", "LOBBY_UPDATE");
+        response.put("type", "LOBBY_UPDATED");
         response.put("lobbyId", lobby.getId());
         response.put("status", lobby.getStatus().toString());
         response.put("players", lobby.getPlayerStates().keySet());
+        response.put("lobby", lobby); // <--- hinzufügen
+
 
         String jsonResponse = objectMapper.writeValueAsString(response);
 

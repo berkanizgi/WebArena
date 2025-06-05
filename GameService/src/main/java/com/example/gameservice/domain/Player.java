@@ -12,6 +12,13 @@ public class Player {
     @Column(unique = true, nullable = false)
     private String name;
 
+    @Column(unique = true, nullable = false)
+    private String username;
+
+    @Column(nullable = false)
+    private String passwordHash;
+
+
     private int xp = 0;
 
     private int wallet = 0;
@@ -20,10 +27,22 @@ public class Player {
     @JoinColumn(name = "character_id")
     private GameCharacter selectedCharacter;
 
+    private Boolean ready;
+
+    private Boolean host;
+
 
     public Player() {
         this.playerId = UUID.randomUUID().toString();
     }
+
+    public Player(String playerId) {
+        this.playerId = playerId;
+        this.name = "test";
+
+    }
+
+
 
     public Player(String name, GameCharacter defaultCharacter) {
         this.playerId = UUID.randomUUID().toString();
@@ -80,5 +99,37 @@ public class Player {
 
     public void removeFromWallet(int amount) {
         this.wallet = Math.max(0, this.wallet - amount);
+    }
+
+    public Boolean isReady() {
+        return ready;
+    }
+
+    public void setReady(Boolean ready) {
+        this.ready = ready;
+    }
+
+    public Boolean isHost() {
+        return host;
+    }
+
+    public void setHost(Boolean host) {
+        this.host = host;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 }

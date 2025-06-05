@@ -13,7 +13,7 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**")
+                registry.addMapping("/**")  // <-- Erlaubt ALLE Pfade, auch /api/.../.../xyz
                         .allowedOrigins("http://localhost:3000")
                         .allowedMethods("*");
             }

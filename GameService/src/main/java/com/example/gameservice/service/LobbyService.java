@@ -2,6 +2,7 @@ package com.example.gameservice.service;
 
 import com.example.gameservice.domain.Lobby;
 import com.example.gameservice.domain.LobbyStatus;
+import com.example.gameservice.domain.Player;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -16,12 +17,15 @@ public class LobbyService {
     private final Map<String, String> playerToLobby = new ConcurrentHashMap<>();
 
     public Lobby createLobby(String playerId) {
-        Lobby lobby = new Lobby(UUID.randomUUID().toString());
-        lobby.addPlayer(playerId);
+        Player owner = new Player(playerId);
+        owner.setReady(false); // ← optional explizit setzen
+        Lobby lobby = new Lobby(UUID.randomUUID().toString(), owner);
         lobbies.put(lobby.getId(), lobby);
         playerToLobby.put(playerId, lobby.getId());
         return lobby;
     }
+
+
 
     public Optional<Lobby> joinLobby(String playerId) {
         for (Lobby lobby : lobbies.values()) {
@@ -37,12 +41,18 @@ public class LobbyService {
     public Lobby toggleReady(String playerId) {
         String lobbyId = playerToLobby.get(playerId);
         if (lobbyId == null) return null;
+
         Lobby lobby = lobbies.get(lobbyId);
         if (lobby == null) return null;
 
-        lobby.toggleReady(playerId);
+        // Ready umschalten
+        lobby.getPlayers().stream()
+                .filter(p -> p.getPlayerId().equals(playerId))
+                .findFirst()
+                .ifPresent(p -> p.setReady(!p.isReady()));
 
-        if (lobby.allReady() && lobby.getPlayerStates().size() == 4) {
+        // Alle Spieler ready?
+        if (lobby.getPlayers().stream().allMatch(Player::isReady)) {
             lobby.setStatus(LobbyStatus.STARTED);
         } else {
             lobby.setStatus(LobbyStatus.WAITING);
@@ -50,6 +60,7 @@ public class LobbyService {
 
         return lobby;
     }
+
 
     public void removePlayer(String playerId) {
         String lobbyId = playerToLobby.remove(playerId);

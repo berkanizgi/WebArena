@@ -8,8 +8,8 @@ const GameCanvas = dynamic(() => import('@/phaser/GameCanvas'), {
 
 export default function Page() {
     return (
-        <div className="flex justify-center items-center w-screen h-screen bg-gray-100">
-            <GameCanvas />
+        <div className="flex justify-center items-center w-screen h-screen bg-[#111]">
+            <GameCanvas/>
         </div>
     );
 }

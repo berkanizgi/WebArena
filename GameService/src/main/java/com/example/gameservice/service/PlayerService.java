@@ -2,6 +2,7 @@ package com.example.gameservice.service;
 
 import com.example.gameservice.domain.Player;
 import com.example.gameservice.Repository.PlayerRepository;
+import com.example.gameservice.dto.PlayerDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,4 +34,20 @@ public class PlayerService {
     public Player getPlayerById(String id) {
         return playerRepository.findById(id).orElse(null);
     }
+
+
+    public PlayerDTO getPlayerDtoById(String id) {
+        Player player = playerRepository.findById(id).orElse(null);
+        if (player == null) return null;
+
+        return new PlayerDTO(
+                player.getPlayerId(),
+                player.getUsername(),
+                player.getName(),
+                player.getXp(),
+                player.getWallet(),
+                player.getSelectedCharacter() != null ? player.getSelectedCharacter().getCharacterId() : null
+        );
+    }
+
 }

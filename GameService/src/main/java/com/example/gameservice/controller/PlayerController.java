@@ -1,6 +1,7 @@
 package com.example.gameservice.controller;
 
 import com.example.gameservice.domain.Player;
+import com.example.gameservice.dto.PlayerDTO;
 import com.example.gameservice.service.PlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -28,8 +29,12 @@ public class PlayerController {
         return playerService.getNextPlayer();
     }
 
+
     @GetMapping("/{id}")
-    public Player getPlayerById(@PathVariable String id) {
-        return playerService.getPlayerById(id);
+    public PlayerDTO getPlayerById(@PathVariable String id) {
+        return playerService.getPlayerDtoById(id);
     }
+
+
+
 }

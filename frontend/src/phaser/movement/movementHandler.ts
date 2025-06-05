@@ -3,7 +3,7 @@ export function handlePlayerMovement(
     cursors: Phaser.Types.Input.Keyboard.CursorKeys,
     pointer: Phaser.Input.Pointer
 ): { aimDirection: 'down' | 'left' | 'right' | 'up'; moveX: number; moveY: number; rotation: number } {
-    const speed = 55;
+    const speed = 500;
     player.setVelocity(0);
 
     let moveX = 0;

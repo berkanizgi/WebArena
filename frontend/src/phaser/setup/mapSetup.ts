@@ -3,6 +3,7 @@ import Phaser from 'phaser';
 export function setupMap(scene: Phaser.Scene): {
     map: Phaser.Tilemaps.Tilemap;
     collisionLayer: Phaser.Tilemaps.TilemapLayer;
+    topLayer: Phaser.Tilemaps.TilemapLayer;
     spawnX: number;
     spawnY: number;
 } {
@@ -15,6 +16,8 @@ export function setupMap(scene: Phaser.Scene): {
     });
 
     let collisionLayer: Phaser.Tilemaps.TilemapLayer | undefined;
+    let topLayer: Phaser.Tilemaps.TilemapLayer | undefined;
+
     map.layers.forEach(layerData => {
         const layer = map.createLayer(layerData.name, tilesets, 0, 0);
         if (!layer) {
@@ -26,11 +29,17 @@ export function setupMap(scene: Phaser.Scene): {
             collisionLayer = layer;
             collisionLayer.setCollisionByExclusion([-1]);
         }
+
+        if (layerData.name === "Top") {
+            topLayer = layer;
+            topLayer.setDepth(100); // Hohe Tiefe, damit immer vor Spieler gerendert
+        }
     });
 
     if (!collisionLayer) {
         throw new Error("Collision Layer wurde nicht gefunden!");
     }
+    if (!topLayer) throw new Error("TopLayer wurde nicht gefunden!");
 
     // Kamera setzen
     scene.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
@@ -42,6 +51,7 @@ export function setupMap(scene: Phaser.Scene): {
         return {
             map,
             collisionLayer,
+            topLayer,
             spawnX: 100,
             spawnY: 100
         }; // Fallback
@@ -56,6 +66,7 @@ export function setupMap(scene: Phaser.Scene): {
     return {
         map,
         collisionLayer,
+        topLayer,
         spawnX,
         spawnY
     };

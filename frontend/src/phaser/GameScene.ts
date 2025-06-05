@@ -12,6 +12,7 @@ import { createProjectileGroup, updateProjectiles } from '@/phaser/setup/project
 import { handlePlayerMovement } from '@/phaser/movement/movementHandler';
 import { sendMovement } from '@/phaser/movement/movementSender';
 
+
 export default class GameScene extends Phaser.Scene {
     public player!: Phaser.Physics.Arcade.Sprite;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -30,7 +31,8 @@ export default class GameScene extends Phaser.Scene {
     public projectiles!: Phaser.GameObjects.Group;
     private cooldownBar!: Phaser.GameObjects.Graphics;
     private cooldownProgress = 1;
-    private collisionLayer!: Phaser.Tilemaps.TilemapLayer; // NEU
+    private collisionLayer!: Phaser.Tilemaps.TilemapLayer;
+    private topLayer!: Phaser.Tilemaps.TilemapLayer;
 
     constructor(config: Phaser.Types.Scenes.SettingsConfig & { skin: string; playerId: string }) {
         super(config);
@@ -59,8 +61,9 @@ export default class GameScene extends Phaser.Scene {
     create() {
         this.pointer = this.input.activePointer;
 
-        const { map, spawnX, spawnY, collisionLayer } = setupMap(this);
+        const { map, spawnX, spawnY, collisionLayer, topLayer } = setupMap(this);
         this.collisionLayer = collisionLayer;
+        this.topLayer = topLayer;
 
         const { player, cursors } = setupPlayer(this, spawnX, spawnY, this.skin);
         this.player = player;
@@ -104,6 +107,9 @@ export default class GameScene extends Phaser.Scene {
 
     update() {
         const { aimDirection, moveX, moveY, rotation } = handlePlayerMovement(this.player, this.cursors, this.pointer);
+
+        // Spieler Tiefe dynamisch an Y-Position anpassen
+        this.player.setDepth(Math.min(this.player.y, 99));
 
         updateProjectiles(this.projectiles, this.time.now, this.game.loop.delta);
 

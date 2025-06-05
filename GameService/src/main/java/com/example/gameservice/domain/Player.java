@@ -1,10 +1,13 @@
 package com.example.gameservice.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+
+import java.io.Serializable;
 import java.util.UUID;
 
-@Entity
-public class Player {
+@JsonIgnoreProperties({"wallet", "passwordHash"})@Entity
+public class Player implements Serializable {
 
     @Id
     private String playerId;
@@ -19,17 +22,13 @@ public class Player {
     private String passwordHash;
 
 
-    private int xp = 0;
-
-    private int wallet = 0;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "character_id")
-    private GameCharacter selectedCharacter;
-
     private Boolean ready;
 
     private Boolean host;
+
+    @OneToOne(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    private Wallet wallet;
+
 
 
     public Player() {
@@ -47,9 +46,7 @@ public class Player {
     public Player(String name, GameCharacter defaultCharacter) {
         this.playerId = UUID.randomUUID().toString();
         this.name = name;
-        this.selectedCharacter = defaultCharacter;
-        this.xp = 0;
-        this.wallet = 0;
+
     }
 
     public String getPlayerId() {
@@ -64,44 +61,11 @@ public class Player {
         this.name = name;
     }
 
-    public int getXp() {
-        return xp;
-    }
-
-    public void setXp(int xp) {
-        this.xp = xp;
-    }
-
-    public int getWallet() {
-        return wallet;
-    }
-
-    public void setWallet(int wallet) {
-        this.wallet = wallet;
-    }
-
-    public GameCharacter getSelectedCharacter() {
-        return selectedCharacter;
-    }
-
-    public void setSelectedCharacter(GameCharacter selectedCharacter) {
-        this.selectedCharacter = selectedCharacter;
-    }
-
-    // --- Hilfsmethoden (optional) ---
-    public void addXp(int amount) {
-        this.xp += amount;
-    }
-
-    public void addToWallet(int amount) {
-        this.wallet += amount;
-    }
-
-    public void removeFromWallet(int amount) {
-        this.wallet = Math.max(0, this.wallet - amount);
-    }
-
     public Boolean isReady() {
+        return ready;
+    }
+
+    public Boolean getReady() {
         return ready;
     }
 
@@ -131,5 +95,21 @@ public class Player {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public Wallet getWallet() {
+        return wallet;
+    }
+
+    public void setWallet(Wallet wallet) {
+        this.wallet = wallet;
+    }
+
+    public Boolean getHost() {
+        return host;
+    }
+
+    public void setPlayerId(String playerId) {
+        this.playerId = playerId;
     }
 }

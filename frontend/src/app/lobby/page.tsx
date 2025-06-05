@@ -6,9 +6,15 @@ import { Client, IMessage } from '@stomp/stompjs';
 import { router } from 'next/client';
 
 interface Player {
-    id: string;
+    playerId: string;
     ready: boolean;
     isHost: boolean;
+    name: string;}
+
+interface Wallet {
+    xp: number;
+    coins: number;
+    selectedCharacterId: string;
 }
 
 interface Lobby {
@@ -22,7 +28,7 @@ export default function LobbyPage() {
     const [lobby, setLobby] = useState<Lobby | null>(null);
     const [playerId, setPlayerId] = useState<string | null>(null);
     const [playerName, setPlayerName] = useState<string | null>(null);
-    const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
+    const [wallet, setWallet] = useState<Wallet | null>(null);
 
     // WebSocket verbinden
     useEffect(() => {
@@ -31,8 +37,11 @@ export default function LobbyPage() {
             webSocketFactory: () => socket,
             onConnect: () => {
                 console.log('✅ WebSocket verbunden');
+
                 stompClient.subscribe('/topic/lobby', (message: IMessage) => {
                     const data = JSON.parse(message.body);
+                    console.log('[WebSocket LOBBY_DATA]:', data);
+                    console.log('[Players]:', data.lobby.players);
                     if (data.type === 'LOBBY_CREATED' || data.type === 'LOBBY_UPDATED') {
                         setLobby(data.lobby);
                     }
@@ -56,7 +65,7 @@ export default function LobbyPage() {
         };
     }, []);
 
-    // Spielerinfos laden
+    // Spielerinfos + Wallet laden
     useEffect(() => {
         const idFromStorage = localStorage.getItem('playerId');
         if (!idFromStorage) {
@@ -71,11 +80,14 @@ export default function LobbyPage() {
             .then(res => res.json())
             .then(data => {
                 setPlayerName(data.username);
-                setSelectedCharacterId(data.selectedCharacterId);
+                setWallet({
+                    xp: data.wallet.xp,
+                    coins: data.wallet.coins,
+                    selectedCharacterId: data.wallet.selectedCharacterId
+                });
             });
     }, []);
 
-    // Methoden
     const setReady = () => {
         if (client && client.connected && lobby) {
             client.publish({
@@ -106,7 +118,7 @@ export default function LobbyPage() {
         }
     };
 
-    const me = playerId && lobby?.players.find(p => p.id === playerId!);
+    const me = lobby?.players.find(p => p.playerId === playerId);
 
     return (
         <div
@@ -140,33 +152,21 @@ export default function LobbyPage() {
                     <GameButton label="MISSIONS" />
                 </div>
 
-                {/* Main content */}
-                {/* Main content */}
-                <div style={{
-                    flex: 1,
-                    padding: '2rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'flex-end',        // ⬅️ NEU: Button nach unten
-                    marginBottom: '3rem',              // ⬅️ NEU: Abstand vom unteren Rand
-                }}>
+                {/* Center Info */}
+                <div style={{ flex: 1, padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     <p>👤 {playerName}</p>
-                    <p>🎭 Charakter-ID: {selectedCharacterId}</p>
-
+                    <p>🎭 Charakter-ID: {wallet?.selectedCharacterId}</p>
+                    <p>⭐ XP: {wallet?.xp}</p>
+                    <p>💰 Coins: {wallet?.coins}</p>
                     {me && (
-                        {me && (
-                            <GameButton
-                                label={me.ready ? '✅ Ready' : '❌ Not Ready'}
-                                onClick={setReady}
-                                styleOverride={{
-                                    marginTop: '2rem',
-                                    backgroundColor: me.ready ? '#4CAF50' : '#ff9800',
-                                }}
-                            />
-                        )}
-
-
+                        <GameButton
+                            label={me.ready ? '✅ Ready' : '❌ Not Ready'}
+                            onClick={setReady}
+                            styleOverride={{
+                                marginTop: '2rem',
+                                backgroundColor: me.ready ? '#4CAF50' : '#ff9800',
+                            }}
+                        />
                     )}
                 </div>
 

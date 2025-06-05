@@ -46,29 +46,28 @@ export default function LoginPage() {
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat',
                     position: 'relative',
-                    fontFamily: 'Bangers, cursive',
+                    fontFamily: '"Bangers", cursive',
                 }}
             >
-                {/* Login-Fenster */}
                 <div
                     style={{
                         position: 'absolute',
                         top: '50%',
-                        left: '46%',
+                        left: '50%',
                         transform: 'translate(-50%, -50%)',
-                        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         padding: '2rem',
                         borderRadius: '16px',
-                        width: '340px',
+                        width: '360px',
                         color: '#fff',
                         boxShadow: '0 0 20px rgba(0,0,0,0.6)',
                         border: '2px solid #fff',
-                        backdropFilter: 'blur(4px)',
+                        backdropFilter: 'blur(6px)',
                     }}
                 >
                     <h1
                         style={{
-                            fontSize: '2.5rem',
+                            fontSize: '2.8rem',
                             marginBottom: '1.5rem',
                             textAlign: 'center',
                             fontFamily: '"Luckiest Guy", cursive',
@@ -82,7 +81,7 @@ export default function LoginPage() {
                     {error && (
                         <p
                             style={{
-                                color: '#f44336',
+                                color: '#ff4d4f',
                                 marginBottom: '1rem',
                                 textAlign: 'center',
                                 fontWeight: 'bold',
@@ -99,11 +98,13 @@ export default function LoginPage() {
                         onChange={(e) => setUsername(e.target.value)}
                         style={{
                             width: '100%',
-                            padding: '0.6rem',
+                            padding: '0.75rem',
                             marginBottom: '1rem',
                             borderRadius: '8px',
-                            border: '1px solid #888',
-                            backgroundColor: '#f0f8ff',
+                            border: '1px solid #aaa',
+                            backgroundColor: '#222',
+                            color: '#fff',
+                            fontSize: '1rem',
                             fontFamily: 'monospace',
                         }}
                     />
@@ -114,11 +115,13 @@ export default function LoginPage() {
                         onChange={(e) => setPassword(e.target.value)}
                         style={{
                             width: '100%',
-                            padding: '0.6rem',
-                            marginBottom: '1rem',
+                            padding: '0.75rem',
+                            marginBottom: '1.5rem',
                             borderRadius: '8px',
-                            border: '1px solid #888',
-                            backgroundColor: '#f0f8ff',
+                            border: '1px solid #aaa',
+                            backgroundColor: '#222',
+                            color: '#fff',
+                            fontSize: '1rem',
                             fontFamily: 'monospace',
                         }}
                     />
@@ -126,7 +129,7 @@ export default function LoginPage() {
                         onClick={handleLogin}
                         style={{
                             width: '100%',
-                            padding: '0.6rem',
+                            padding: '0.75rem',
                             backgroundColor: '#2196F3',
                             color: '#fff',
                             border: 'none',
@@ -134,7 +137,16 @@ export default function LoginPage() {
                             fontWeight: 'bold',
                             fontFamily: '"Luckiest Guy", cursive',
                             cursor: 'pointer',
+                            fontSize: '1.1rem',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                            transition: 'background-color 0.2s',
                         }}
+                        onMouseOver={(e) =>
+                            ((e.target as HTMLButtonElement).style.backgroundColor = '#1a80d0')
+                        }
+                        onMouseOut={(e) =>
+                            ((e.target as HTMLButtonElement).style.backgroundColor = '#2196F3')
+                        }
                     >
                         Login
                     </button>

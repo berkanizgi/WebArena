@@ -1,8 +1,10 @@
 package com.example.gameservice.service;
 
+import com.example.gameservice.Repository.PlayerRepository;
 import com.example.gameservice.domain.Lobby;
 import com.example.gameservice.domain.LobbyStatus;
 import com.example.gameservice.domain.Player;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -12,18 +14,24 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class LobbyService {
+    @Autowired
+    public PlayerRepository playerRepository;
 
     private final Map<String, Lobby> lobbies = new ConcurrentHashMap<>();
     private final Map<String, String> playerToLobby = new ConcurrentHashMap<>();
 
     public Lobby createLobby(String playerId) {
-        Player owner = new Player(playerId);
-        owner.setReady(false); // ← optional explizit setzen
-        Lobby lobby = new Lobby(UUID.randomUUID().toString(), owner);
+        Player dbPlayer = playerRepository.findById(playerId).orElseThrow(() ->
+                new IllegalArgumentException("Player nicht gefunden: " + playerId)
+        );
+
+        dbPlayer.setReady(false);
+        Lobby lobby = new Lobby(UUID.randomUUID().toString(), dbPlayer);
         lobbies.put(lobby.getId(), lobby);
         playerToLobby.put(playerId, lobby.getId());
         return lobby;
     }
+
 
 
 

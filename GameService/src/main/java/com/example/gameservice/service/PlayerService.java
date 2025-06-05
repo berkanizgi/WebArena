@@ -1,12 +1,15 @@
 package com.example.gameservice.service;
 
+import com.example.gameservice.domain.GameCharacter;
 import com.example.gameservice.domain.Player;
 import com.example.gameservice.Repository.PlayerRepository;
+import com.example.gameservice.domain.Wallet;
 import com.example.gameservice.dto.PlayerDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PlayerService {
@@ -40,14 +43,29 @@ public class PlayerService {
         Player player = playerRepository.findById(id).orElse(null);
         if (player == null) return null;
 
-        return new PlayerDTO(
-                player.getPlayerId(),
-                player.getUsername(),
-                player.getName(),
-                player.getXp(),
-                player.getWallet(),
-                player.getSelectedCharacter() != null ? player.getSelectedCharacter().getCharacterId() : null
-        );
+        return new PlayerDTO(player);
+
     }
+
+    public Player registerNewPlayer(String username, String passwordHash, GameCharacter defaultCharacter) {
+        Player player = new Player();
+        player.setUsername(username);
+        player.setPasswordHash(passwordHash);
+        player.setName(username); // fallback
+
+        Wallet wallet = new Wallet(player, defaultCharacter);
+        player.setWallet(wallet);
+
+        return playerRepository.save(player); // durch Cascade wird Wallet mitgespeichert
+    }
+
+
+    public Optional<Player> getByUsername(String username) {
+        Player player = playerRepository.findByUsername(username);
+        return Optional.ofNullable(player);
+    }
+
+
+
 
 }

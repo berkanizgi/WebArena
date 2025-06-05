@@ -1,5 +1,6 @@
 package com.example.gameservice.domain;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import jakarta.persistence.*;
 
 import java.util.UUID;
@@ -79,5 +80,10 @@ public class Wallet {
 
     public void removeCoins(int amount) {
         this.coins = Math.max(0, this.coins - amount);
+    }
+
+    @JsonGetter("selectedCharacterId")
+    public String getSelectedCharacterId() {
+        return selectedCharacter != null ? selectedCharacter.getCharacterId() : null;
     }
 }

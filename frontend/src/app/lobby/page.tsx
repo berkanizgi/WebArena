@@ -24,20 +24,27 @@ export default function LobbyPage() {
     const [playerName, setPlayerName] = useState<string | null>(null);
     const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
 
-    // --- WebSocket Setup ---
+    // WebSocket verbinden
     useEffect(() => {
         const socket = new SockJS('http://localhost:8081/ws');
         const stompClient = new Client({
             webSocketFactory: () => socket,
             onConnect: () => {
+                console.log('✅ WebSocket verbunden');
                 stompClient.subscribe('/topic/lobby', (message: IMessage) => {
                     const data = JSON.parse(message.body);
-
                     if (data.type === 'LOBBY_CREATED' || data.type === 'LOBBY_UPDATED') {
-                        setLobby(data.lobby); // wichtig: du brauchst das komplette `lobby`-Objekt
+                        setLobby(data.lobby);
                     }
                 });
 
+                const storedId = localStorage.getItem('playerId');
+                if (storedId) {
+                    stompClient.publish({
+                        destination: '/app/joinLobby',
+                        body: JSON.stringify({ playerId: storedId }),
+                    });
+                }
             },
         });
 
@@ -45,11 +52,11 @@ export default function LobbyPage() {
         setClient(stompClient);
 
         return () => {
-            client?.deactivate();
+            stompClient.deactivate();
         };
     }, []);
 
-    // --- Player Info aus localStorage ---
+    // Spielerinfos laden
     useEffect(() => {
         const idFromStorage = localStorage.getItem('playerId');
         if (!idFromStorage) {
@@ -68,15 +75,7 @@ export default function LobbyPage() {
             });
     }, []);
 
-    const createLobby = () => {
-        if (client && client.connected) {
-            client.publish({
-                destination: '/app/createLobby',
-                body: JSON.stringify({ playerId }),
-            });
-        }
-    };
-
+    // Methoden
     const setReady = () => {
         if (client && client.connected && lobby) {
             client.publish({
@@ -106,6 +105,8 @@ export default function LobbyPage() {
             console.error('Fehler beim Start:', err);
         }
     };
+
+    const me = playerId && lobby?.players.find(p => p.id === playerId!);
 
     return (
         <div
@@ -139,80 +140,54 @@ export default function LobbyPage() {
                     <GameButton label="MISSIONS" />
                 </div>
 
-                {/* Main Content */}
-                <div style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
+                {/* Main content */}
+                {/* Main content */}
+                <div style={{
+                    flex: 1,
+                    padding: '2rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'flex-end',        // ⬅️ NEU: Button nach unten
+                    marginBottom: '3rem',              // ⬅️ NEU: Abstand vom unteren Rand
+                }}>
                     <p>👤 {playerName}</p>
                     <p>🎭 Charakter-ID: {selectedCharacterId}</p>
 
-                    {!lobby && (
-                        <button
-                            onClick={createLobby}
-                            style={{
-                                padding: '1rem 2rem',
-                                fontSize: '1.5rem',
-                                backgroundColor: '#673ab7',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '20px',
-                                marginTop: '1rem',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            ➕ Create Lobby
-                        </button>
-                    )}
-
-                    {lobby && (
-                        <div
-                            style={{
-                                marginTop: '2rem',
-                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                padding: '1rem',
-                                borderRadius: '10px',
-                                maxWidth: '500px',
-                            }}
-                        >
-                            <h2>Lobby ID: {lobby.id}</h2>
-                            <p>Status: {lobby.status}</p>
-                            <p>🛠 Aktueller Status: {lobby.status}</p>
-
-                            <p>Ich bin: {playerId}</p>
-                            <ul>
-                                {lobby.players.map((p) => (
-                                    <li key={p.id}>
-                                        {p.id} {p.isHost && '(Host)'} – {p.ready ? '✅' : '❌'}
-                                    </li>
-                                ))}
-                            </ul>
-
-                            <button
+                    {me && (
+                        {me && (
+                            <GameButton
+                                label={me.ready ? '✅ Ready' : '❌ Not Ready'}
                                 onClick={setReady}
-                                style={{
-                                    marginTop: '1rem',
-                                    padding: '0.5rem 1rem',
-                                    backgroundColor: '#ff9800',
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: '10px',
-                                    cursor: 'pointer',
+                                styleOverride={{
+                                    marginTop: '2rem',
+                                    backgroundColor: me.ready ? '#4CAF50' : '#ff9800',
                                 }}
-                            >
-                                ✅ Ready
-                            </button>
-                        </div>
+                            />
+                        )}
+
+
                     )}
                 </div>
 
                 {/* Right Buttons */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '2rem', alignItems: 'flex-end' }}>
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '1rem',
+                        padding: '2rem',
+                        alignItems: 'flex-end',
+                    }}
+                >
                     <GameButton label="TUTORIAL" />
                     <GameButton
                         label="PLAY"
                         styleOverride={{
-                            backgroundColor: lobby?.status === 'STARTED' ? '#4CAF50' : '#777',
-                            cursor: lobby?.status === 'STARTED' ? 'pointer' : 'not-allowed',
+                            backgroundColor: me?.ready ? '#4CAF50' : '#777',
+                            cursor: me?.ready ? 'pointer' : 'not-allowed',
                         }}
-                        onClick={lobby?.status === 'STARTED' ? startGameSession : undefined}
+                        onClick={me?.ready ? startGameSession : undefined}
                     />
                 </div>
             </div>

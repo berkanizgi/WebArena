@@ -28,15 +28,9 @@ public class LobbyService {
 
 
     public Optional<Lobby> joinLobby(String playerId) {
-        for (Lobby lobby : lobbies.values()) {
-            if (lobby.getStatus() == LobbyStatus.WAITING && !lobby.isFull()) {
-                lobby.addPlayer(playerId);
-                playerToLobby.put(playerId, lobby.getId());
-                return Optional.of(lobby);
-            }
-        }
-        return Optional.of(createLobby(playerId));
+        return Optional.of(createLobby(playerId)); // Jeder Spieler bekommt sofort eigene Lobby
     }
+
 
     public Lobby toggleReady(String playerId) {
         String lobbyId = playerToLobby.get(playerId);

@@ -1,5 +1,3 @@
-// src/services/ShopService.ts
-
 const BASE_URL = 'http://localhost:8083/api/shop';
 
 export interface CharacterItem {
@@ -7,28 +5,18 @@ export interface CharacterItem {
     name: string;
     priceCoins: number;
     priceShards: number;
-    category: string;
-    baseHp: number;
+    baseHealth: number;
     baseAttack: number;
-    baseSpeed: number;
+    speed: number;
+    rare: boolean; // <-- Boolean!
 }
 
-export interface UpgradeItem {
-    id: number;
-    name: string;
-    priceCoins: number;
-    priceShards: number;
-    category: string;
-    bonusType: string;
-    bonusValue: number;
-}
+export type ShopItem = CharacterItem;
 
-export type ShopItem = CharacterItem | UpgradeItem;
-
-export async function fetchShopItems(category?: string): Promise<ShopItem[]> {
+export async function fetchShopItems(rare?: boolean): Promise<ShopItem[]> {
     let url = `${BASE_URL}/items`;
-    if (category) {
-        url += `?category=${category}`;
+    if (rare !== undefined) {
+        url += `?rare=${rare}`; // rare=true oder rare=false in der URL
     }
 
     const response = await fetch(url, { cache: 'no-store' });

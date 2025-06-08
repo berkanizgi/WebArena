@@ -1,17 +1,17 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { fetchShopItems, ShopItem } from '../../services/ShopService';
+import { fetchShopItems, ShopItem } from '@/services/ShopService';
 
 const ShopPage = () => {
     const [shopItems, setShopItems] = useState<ShopItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const loadItems = async (category?: string) => {
+    const loadItems = async (rare?: boolean) => {
         try {
             setLoading(true);
-            const items = await fetchShopItems(category);
+            const items = await fetchShopItems(rare);
             setShopItems(items);
         } catch (err: any) {
             setError(err.message);
@@ -40,16 +40,16 @@ const ShopPage = () => {
                     Alle
                 </button>
                 <button
-                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                    onClick={() => loadItems('character')}
+                    className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded"
+                    onClick={() => loadItems(true)}
                 >
-                    Charaktere
+                    Rare Characters
                 </button>
                 <button
-                    className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
-                    onClick={() => loadItems('upgrade')}
+                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                    onClick={() => loadItems(false)}
                 >
-                    Upgrades
+                    Normal Characters
                 </button>
             </div>
 
@@ -58,27 +58,17 @@ const ShopPage = () => {
                 {shopItems.map((item) => (
                     <div
                         key={item.id}
-                        className="border border-gray-700 rounded-lg p-6 shadow-lg bg-gray-800 hover:scale-105 transform transition"
+                        className={`border ${item.rare ? 'border-yellow-400' : 'border-gray-700'} rounded-lg p-6 shadow-lg bg-gray-800 hover:scale-105 transform transition`}
                     >
                         <h3 className="text-2xl font-bold mb-4">{item.name}</h3>
                         <p><strong>Coins:</strong> {item.priceCoins}</p>
                         <p><strong>Shards:</strong> {item.priceShards}</p>
-                        <p><strong>Category:</strong> {item.category}</p>
-
-                        {'baseHp' in item && (
-                            <div className="mt-4">
-                                <p><strong>HP:</strong> {item.baseHp}</p>
-                                <p><strong>Attack:</strong> {item.baseAttack}</p>
-                                <p><strong>Speed:</strong> {item.baseSpeed}</p>
-                            </div>
-                        )}
-
-                        {'bonusType' in item && (
-                            <div className="mt-4">
-                                <p><strong>Bonus:</strong> {item.bonusType}</p>
-                                <p><strong>Value:</strong> {item.bonusValue}</p>
-                            </div>
-                        )}
+                        <p><strong>Rare:</strong> {item.rare ? 'Yes' : 'No'}</p>
+                        <div className="mt-4">
+                            <p><strong>HP:</strong> {item.baseHealth}</p>
+                            <p><strong>Attack:</strong> {item.baseAttack}</p>
+                            <p><strong>Speed:</strong> {item.speed}</p>
+                        </div>
                     </div>
                 ))}
             </div>

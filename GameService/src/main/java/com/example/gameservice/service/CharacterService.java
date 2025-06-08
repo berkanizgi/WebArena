@@ -4,6 +4,7 @@ import com.example.gameservice.Repository.CharacterRepository;
 import com.example.gameservice.domain.CharacterPosition;
 import com.example.gameservice.domain.GameCharacter;
 import com.example.gameservice.dto.CharacterPositionDTO;
+import com.example.gameservice.dto.GameCharacterDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -53,8 +54,6 @@ public class CharacterService {
         usedSkins.add(skin);
     }
 
-
-
     public void releaseCharacter(String skin) {
         usedSkins.remove(skin);
     }
@@ -63,9 +62,21 @@ public class CharacterService {
         return usedSkins.contains(skin);
     }
 
-    public List<GameCharacter> getAllCharacters() {
-        return characterRepository.findAll();
+    public List<GameCharacterDTO> getAllCharacters() {
+        List<GameCharacter> gameCharacters = characterRepository.findAll();
+        return gameCharacters.stream()
+                .map(character -> new GameCharacterDTO(
+                        character.getCharacterId(),
+                        character.getName(),
+                        character.getSkin(),
+                        character.getBaseHealth(),
+                        character.getBaseAttack(),
+                        character.getSpeed(),
+                        character.getRole(),
+                        character.getDescription(),
+                        character.getRare()
+                ))
+                .toList(); // oder .collect(Collectors.toList()) wenn du Java 8-11 nutzt
     }
-
 }
 

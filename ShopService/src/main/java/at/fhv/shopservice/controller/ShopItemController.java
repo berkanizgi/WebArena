@@ -1,5 +1,6 @@
 package at.fhv.shopservice.controller;
 
+import at.fhv.shopservice.dto.CharacterWithPriceDTO;
 import at.fhv.shopservice.service.ShopItemService;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,13 +17,8 @@ public class ShopItemController {
         this.shopItemService = shopItemService;
     }
 
-    // Alle Shop Items
     @GetMapping("/items")
-    public List<Object> getAllShopItems(@RequestParam(required = false) String category) {
-        if (category != null) {
-            return shopItemService.getShopItemsByCategory(category);
-        }
+    public List<CharacterWithPriceDTO> getAllShopItems(@RequestParam(required = false) Boolean rare){
         return shopItemService.getAllShopItems();
     }
 }
-

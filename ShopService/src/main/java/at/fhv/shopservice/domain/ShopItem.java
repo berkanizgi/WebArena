@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED) // JOINED = separate Tabellen für Subklassen
+@DiscriminatorColumn(name = "dtype")
 public abstract class ShopItem {
 
     @Id
@@ -18,5 +19,25 @@ public abstract class ShopItem {
     // Optional: Kategorie für einfacheres Filtern im Frontend ("character", "upgrade", etc.)
     private String category;
 
+    public Long getId() {
+
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getPriceCoins() {
+        return priceCoins;
+    }
+
+    public int getPriceShards() {
+        return priceShards;
+    }
+
+    public String getCategory() {
+        return category;
+    }
 }
 

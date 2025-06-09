@@ -82,11 +82,12 @@ export default function LobbyPage() {
             .then((res) => res.json())
             .then((data) => {
                 setPlayerName(data.username);
-                setWallet({
+                const walletData = {
                     xp: data.wallet.xp,
                     coins: data.wallet.coins,
                     selectedCharacterId: data.wallet.selectedCharacterId,
-                });
+                };
+                setWallet(walletData);
             });
     }, []);
 
@@ -117,6 +118,15 @@ export default function LobbyPage() {
             window.location.href = `/loading?playerId=${playerId}&sessionId=${sessionId}`;
         } catch (err) {
             console.error('Fehler beim Start:', err);
+        }
+    };
+
+    const goToShop = () => {
+        if (playerId && playerName && wallet) {
+            localStorage.setItem('shopPlayerId', playerId);
+            localStorage.setItem('shopPlayerName',playerName)
+            localStorage.setItem('shopWallet', JSON.stringify(wallet));
+            window.location.href = '/shop';
         }
     };
 
@@ -201,7 +211,7 @@ export default function LobbyPage() {
                     }}
                 >
                     <GameButton label="CHARACTERS" />
-                    <GameButton label="SHOP" />
+                    <GameButton label="SHOP" onClick={goToShop} />
                     <GameButton label="MISSIONS" />
                 </div>
 
@@ -222,7 +232,6 @@ export default function LobbyPage() {
                             filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.8))',
                         }}
                     />
-
                 )}
 
                 {/* === READY BUTTON UNTEN MITTE === */}

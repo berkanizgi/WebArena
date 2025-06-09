@@ -1,9 +1,8 @@
 package com.example.gameservice.service;
 
 import com.example.gameservice.Repository.CharacterRepository;
-import com.example.gameservice.domain.CharacterPosition;
+import com.example.gameservice.Repository.OwnedCharacterRepository;
 import com.example.gameservice.domain.GameCharacter;
-import com.example.gameservice.dto.CharacterPositionDTO;
 import com.example.gameservice.dto.GameCharacterDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +17,9 @@ public class CharacterService {
 
     @Autowired
     private MovementService movementService;
+
+    @Autowired
+    private OwnedCharacterRepository ownedCharacterRepository;
 
     // Neue In-Memory-Liste der verwendeten Skins
     private Set<String> usedSkins = new HashSet<>();
@@ -77,6 +79,10 @@ public class CharacterService {
                         character.getRare()
                 ))
                 .toList(); // oder .collect(Collectors.toList()) wenn du Java 8-11 nutzt
+    }
+
+    public List<String> getAllOwnedCharacter(String playerId) {
+        return ownedCharacterRepository.findCharacterIdsByPlayerId(playerId);
     }
 }
 

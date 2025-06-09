@@ -26,6 +26,11 @@ public class CharacterController {
         return characterService.getAllCharacters();
     }
 
+    @GetMapping("/{playerId}/owned-characters")
+    public List<String> getOwnedCharacters(@PathVariable String playerId) {
+        return characterService.getAllOwnedCharacter(playerId);
+    }
+
     @GetMapping("/next-available")
     public ResponseEntity<GameCharacter> getNextAvailableCharacter(@RequestParam String playerId) {
         GameCharacter character = characterService.assignNextAvailableCharacter(playerId);

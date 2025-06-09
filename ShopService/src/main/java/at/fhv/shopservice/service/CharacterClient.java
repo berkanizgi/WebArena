@@ -2,6 +2,7 @@ package at.fhv.shopservice.service;
 
 import at.fhv.shopservice.dto.GameCharacterDTO;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;

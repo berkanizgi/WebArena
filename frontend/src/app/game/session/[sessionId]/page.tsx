@@ -1,8 +1,18 @@
-export default function GameSessionPage({ params }: { params: { sessionId: string } }) {
-    return (
-        <div>
-            <h1>Game Session gestartet!</h1>
-            <p>Session ID: {params.sessionId}</p>
-        </div>
-    );
+import GameClientWrapper from './GameClientWrapper';
+
+export default async function GameSessionPage({ params, searchParams }: {
+    params: Promise<{ sessionId: string }>;
+    searchParams: Promise<{ playerId?: string }>;
+}) {
+    const resolvedParams = await params;
+    const resolvedSearchParams = await searchParams;
+
+    const sessionId = resolvedParams.sessionId;
+    const playerId = resolvedSearchParams.playerId;
+
+    if (!sessionId || !playerId) {
+        return <div>Session nicht gefunden.</div>;
+    }
+
+    return <GameClientWrapper sessionId={sessionId} playerId={playerId} />;
 }

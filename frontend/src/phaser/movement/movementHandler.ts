@@ -1,13 +1,11 @@
 export function handlePlayerMovement(
     player: Phaser.Physics.Arcade.Sprite,
     cursors: Phaser.Types.Input.Keyboard.CursorKeys,
-    pointer: Phaser.Input.Pointer
+    pointer: Phaser.Input.Pointer,
+    speed: number
 ): { aimDirection: 'down' | 'left' | 'right' | 'up'; moveX: number; moveY: number; rotation: number } {
-    const speed = 60;
     player.setVelocity(0);
-
-    let moveX = 0;
-    let moveY = 0;
+    let moveX = 0, moveY = 0;
 
     if (cursors.left.isDown) moveX -= 1;
     if (cursors.right.isDown) moveX += 1;
@@ -15,8 +13,7 @@ export function handlePlayerMovement(
     if (cursors.down.isDown) moveY += 1;
 
     player.setVelocity(moveX * speed, moveY * speed);
-
-    const dx = pointer.worldX - player.x;
+const dx = pointer.worldX - player.x;
     const dy = pointer.worldY - player.y;
     const angle = Phaser.Math.RadToDeg(Math.atan2(dy, dx));
     const normalized = (angle + 360) % 360;

@@ -42,6 +42,8 @@ export default function LoadingPage() {
         return () => clearInterval(interval);
     }, []);
 
+    const [countdown, setCountdown] = useState<number | null>(null);
+
     useEffect(() => {
         const socket = new SockJS('http://localhost:8081/ws');
         const stompClient = new Client({
@@ -51,6 +53,12 @@ export default function LoadingPage() {
                     const data = JSON.parse(message.body);
                     if (data.type === 'PLAYER_JOINED') {
                         setPlayers(prev => [...prev, data.player]);
+                    }
+                    if (data.type === 'COUNTDOWN') {
+                        setCountdown(data.value);
+                    }
+                    if (data.type === 'START_GAME' && data.playerId === playerId) {
+                        window.location.href = `/game/session/${sessionId}?playerId=${playerId}`;
                     }
                 });
             },
@@ -160,6 +168,14 @@ export default function LoadingPage() {
                         </div>
                     ))}
                 </div>
+
+                {/* Countdown-Anzeige */}
+                {countdown !== null && (
+                    <div style={{ fontSize: '2rem', marginTop: '2rem', color: '#FFD700' }}>
+                        🚀 Spiel startet in {countdown} Sekunden ...
+                    </div>
+                )}
+
 
                 {/* TIPP UNTEN */}
                 <div style={{

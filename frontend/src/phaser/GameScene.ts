@@ -33,15 +33,35 @@ export default class GameScene extends Phaser.Scene {
     private cooldownProgress = 1;
     private collisionLayer!: Phaser.Tilemaps.TilemapLayer;
     private topLayer!: Phaser.Tilemaps.TilemapLayer;
+    public baseAttack!: number;
+    public baseHealth!: number;
+    public speed!: number;
+    public characterId!: string;
 
-    constructor(config: Phaser.Types.Scenes.SettingsConfig & { skin: string; playerId: string }) {
+
+
+
+    constructor(config: Phaser.Types.Scenes.SettingsConfig & {
+        skin: string;
+        playerId: string;
+        baseAttack: number;
+        baseHealth: number;
+        speed: number;
+        characterId: string; // < NEU
+
+    }) {
         super(config);
         this.skin = config.skin;
+        this.characterId = config.characterId; // < NEU
         this.playerId = config.playerId;
+        this.baseAttack = config.baseAttack;
+        this.baseHealth = config.baseHealth;
+        this.speed = config.speed;
     }
 
+
     preload() {
-        this.load.tilemapTiledJSON('map', 'map/WebArenaMap.json');
+        this.load.tilemapTiledJSON('map', '/map/WebArenaMap.json');
 
         const tilesets = [
             'Set 1.0', 'Set 1.1', 'Set 1.2', 'Set 1.3',
@@ -49,13 +69,13 @@ export default class GameScene extends Phaser.Scene {
             'Set 3.1', 'Set 3.3', 'Set 4.01', 'Set 4.04', 'Set 4.4', 'Set 4.5'
         ];
 
-        tilesets.forEach((set) => this.load.image(set, `map/Tiles/${set}.png`));
-        this.load.image('big_waterfall', 'map/Tiles/Waterfalls/Big waterfall sheet.png');
+        tilesets.forEach((set) => this.load.image(set, `/map/Tiles/${set}.png`));
+        this.load.image('big_waterfall', '/map/Tiles/Waterfalls/Big waterfall sheet.png');
 
-        this.load.spritesheet('green_asha', 'map/Tiles/character/green/green_asha_walk.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('black_asha', 'map/Tiles/character/black/black_asha_walk.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('red_asha', 'map/Tiles/character/red/red_asha_walk.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('blue_asha', 'map/Tiles/character/blue/blue_asha_walk.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('green_asha', '/map/Tiles/character/green/green_asha_walk.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('black_asha', '/map/Tiles/character/black/black_asha_walk.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('red_asha', '/map/Tiles/character/red/red_asha_walk.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('blue_asha', '/map/Tiles/character/blue/blue_asha_walk.png', { frameWidth: 32, frameHeight: 32 });
     }
 
     create() {
@@ -106,7 +126,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     update() {
-        const { aimDirection, moveX, moveY, rotation } = handlePlayerMovement(this.player, this.cursors, this.pointer);
+        const { aimDirection, moveX, moveY, rotation } = handlePlayerMovement(this.player, this.cursors, this.pointer, this.speed);
 
         // Spieler Tiefe dynamisch an Y-Position anpassen
         this.player.setDepth(Math.min(this.player.y, 99));
@@ -124,8 +144,9 @@ export default class GameScene extends Phaser.Scene {
             rotation,
             moveX,
             moveY,
-            this.skin
+            this.characterId // NEU: characterId mitgeben, nicht this.skin
         );
+
 
         const now = this.time.now;
         const elapsed = now - this.lastAttackTime;

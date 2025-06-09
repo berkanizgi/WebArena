@@ -41,12 +41,11 @@ public class MovementService {
         CharacterPosition pos = positions.computeIfAbsent(
                 request.getPlayerId(),
                 id -> {
-                    GameCharacter character = characterRepository.findBySkin(request.getSkin()).orElse(null);
+                    GameCharacter character = characterRepository.findById(request.getCharacterId()).orElse(null); // ✅ neu
                     if (character == null) {
-                        System.out.println("[ERROR] Character mit Skin '" + request.getSkin() + "' nicht gefunden!");
+                        System.out.println("[ERROR] Character mit ID '" + request.getCharacterId() + "' nicht gefunden!");
                         return null;
                     }
-                    // Startposition (z.B. Spawn-Point)
                     return new CharacterPosition(id, character, request.getX(), request.getY());
                 }
         );

@@ -4,13 +4,13 @@ import type { CharacterPositionDTO, AttackEventDTO } from '../types';
 import Projectile from '@/phaser/Projectile';
 import { setupAnimations } from '@/phaser/setup/animationSetup';
 
-const initializedSkins = new Set<string>(); // optional: cache zum Verhindern mehrfacher setupAnimations
+const initializedSkins = new Set<string>();
 
 export function setupWebSocket(scene: GameScene) {
     scene.stompClient.onConnect = () => {
         scene.stompClient.subscribe('/topic/movement', (message: IMessage) => {
             const data: CharacterPositionDTO = JSON.parse(message.body);
-          //  console.log('[WebSocket][Movement] Empfangene Daten:', data);
+            if (!data || !data.playerId) return;
             if (data.playerId === scene.playerId) return;
             if (!data.skin) {
                 console.warn('[WebSocket] Fehlende skin bei Movement:', data);
@@ -25,41 +25,28 @@ export function setupWebSocket(scene: GameScene) {
 
             const animKey = `${data.skin}_${data.direction}`;
             const idleFrames = { down: 0, left: 24, right: 8, up: 16 };
-
             const existingEntry = scene.otherPlayers.get(data.playerId);
+
             if (existingEntry) {
                 const sprite = existingEntry.sprite;
-                const isMoving = !!data.isMoving;
                 sprite.setPosition(data.x, data.y);
+                const isMoving = !!data.isMoving;
 
-                if (isMoving) {
-                    if (scene.anims.exists(animKey)) {
-                        sprite.anims.play(animKey, true);
-                    }
+                if (isMoving && scene.anims.exists(animKey)) {
+                    sprite.anims.play(animKey, true);
                 } else {
                     sprite.anims.stop();
                     sprite.setFrame(idleFrames[data.direction as 'down' | 'left' | 'right' | 'up']);
                 }
 
-
                 existingEntry.lastX = data.x;
                 existingEntry.lastY = data.y;
                 existingEntry.lastDirection = data.direction;
-
-
             } else {
                 const newSprite = scene.physics.add.sprite(data.x, data.y, data.skin);
-                if (scene.anims.exists(animKey)) {
-                    newSprite.anims.play(animKey, true);
-                } else {
-                    console.warn('[WebSocket] Animation nicht gefunden (neuer Spieler):', animKey);
-                }
                 newSprite.setOrigin(0.5, 0.5);
-                if (newSprite.body) {
-                    newSprite.body.setSize(16, 16);
-                }
-
-
+                if (newSprite.body) newSprite.body.setSize(16, 16);
+                if (scene.anims.exists(animKey)) newSprite.anims.play(animKey, true);
                 scene.otherPlayers.set(data.playerId, {
                     sprite: newSprite,
                     lastX: data.x,
@@ -80,21 +67,15 @@ export function setupWebSocket(scene: GameScene) {
                 data.dirY,
                 data.playerId
             );
-
             scene.projectiles.add(projectile);
         });
 
         scene.stompClient.subscribe('/topic/health', (message: IMessage) => {
-            const data = JSON.parse(message.body); // { playerId, newHealth }
-
+            const data = JSON.parse(message.body);
             if (data.playerId === scene.playerId) {
-                // DU SELBST wurdest getroffen
                 scene.player.setTint(0xff0000);
                 scene.time.delayedCall(200, () => scene.player.clearTint());
-
-                // TODO: z.B. HP-Anzeige, Soundeffekt usw.
             } else {
-                // ANDERER Spieler wurde getroffen
                 const entry = scene.otherPlayers.get(data.playerId);
                 if (entry) {
                     entry.sprite.setTint(0xff0000);
@@ -103,15 +84,18 @@ export function setupWebSocket(scene: GameScene) {
             }
         });
 
+        // ✅ fetch() OHNE Timeout, direkt bei onConnect – aber NUR wenn playerId gesetzt
+        if (!scene.playerId) {
+            console.warn('[WebSocket] Kein playerId bei fetch -> Abbruch');
+            return;
+        }
 
-
-
+        console.log('[WebSocket] Fetching initial players after connect...');
 
         fetch('http://localhost:8081/api/positions')
             .then(res => res.json())
             .then((players: CharacterPositionDTO[]) => {
                 players.forEach(p => {
-
                     if (p.playerId === scene.playerId) return;
                     if (!p.skin) {
                         console.warn('[Fetch] Fehlende skin bei Player:', p.playerId);
@@ -122,20 +106,12 @@ export function setupWebSocket(scene: GameScene) {
                     const animKey = `${p.skin}_${direction}`;
                     const other = scene.physics.add.sprite(p.x, p.y, p.skin);
                     other.setOrigin(0.5, 0.5);
-                    if (other.body) {
-                        other.body.setSize(16, 16);
-                    }
+                    if (other.body) other.body.setSize(16, 16);
 
                     if (!initializedSkins.has(p.skin)) {
                         setupAnimations(scene, p.skin);
                         initializedSkins.add(p.skin);
                         console.log(`[Fetch] Animations für Skin '${p.skin}' geladen`);
-                    }
-
-                    if (scene.anims.exists(animKey)) {
-                 //       other.anims.play(animKey, true);
-                    } else {
-                        console.warn('[Fetch] Animation nicht gefunden:', animKey);
                     }
 
                     scene.otherPlayers.set(p.playerId, {

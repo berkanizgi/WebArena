@@ -6,23 +6,30 @@ import java.util.List;
 
 public class GameSession {
     private final String id;
-    private final List<Player> players = new ArrayList<>();
+    private final List<SessionPlayer> sessionPlayers = new ArrayList<>();
     private boolean started = false;
 
     public GameSession(String id) {
         this.id = id;
     }
 
-    public void addPlayer(Player player) {
-        players.add(player);
+    public void addSessionPlayer(SessionPlayer sessionPlayer) {
+        sessionPlayers.add(sessionPlayer);
+    }
+
+    public List<SessionPlayer> getSessionPlayers() {
+        return sessionPlayers;
+    }
+
+    public SessionPlayer getByPlayerId(String playerId) {
+        return sessionPlayers.stream()
+                .filter(p -> p.getPlayerId().equals(playerId))
+                .findFirst()
+                .orElse(null);
     }
 
     public String getId() {
         return id;
-    }
-
-    public List<Player> getPlayers() {
-        return players;
     }
 
     public boolean isStarted() {

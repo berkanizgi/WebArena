@@ -1,5 +1,11 @@
 import { Client as StompClient } from '@stomp/stompjs';
 
+const skinMap: Record<string, string> = {
+    c1: 'green_asha',
+    c2: 'red_asha',
+    c3: 'black_asha',
+    c4: 'blue_asha'
+};
 export function sendMovement(
     stompClient: StompClient,
     playerId: string,
@@ -9,26 +15,25 @@ export function sendMovement(
     rotation: number,
     moveX: number,
     moveY: number,
-    skin: string
+    characterId: string
 ) {
     if (!stompClient || !stompClient.connected) return;
 
     const isMoving = moveX !== 0 || moveY !== 0;
-    // Hier schicken wir auch Movement, selbst wenn Spieler stillsteht
+
     const payload = {
         playerId,
         x,
         y,
         direction,
         rotation,
-        skin,
+        characterId,
         isMoving
     };
-
-    console.log('[sendMovement] Sende Movement:', payload);
 
     stompClient.publish({
         destination: '/app/move',
         body: JSON.stringify(payload)
     });
 }
+

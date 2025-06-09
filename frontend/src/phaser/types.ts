@@ -15,11 +15,15 @@ export interface AttackEventDTO {
     dirX: number;
     dirY: number;
 }
-export interface GameCharacterDTO {
+
+export interface SessionPlayerDTO {
+    playerId: string;
     characterId: string;
-    name: string;
-    skin: string;
+    characterName: string;
     baseHealth: number;
     baseAttack: number;
+    speed: number;
+    skin: string;
 }
+
 

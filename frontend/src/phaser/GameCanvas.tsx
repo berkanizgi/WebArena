@@ -3,69 +3,87 @@
 import { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import GameScene from './GameScene';
-import { GameCharacterDTO } from './types'; // ← falls types.ts im gleichen Ordner liegt
+import { SessionPlayerDTO } from './types';
 
-export default function GameCanvas() {
+export default function GameCanvas({ playerId, sessionId }: { playerId: string; sessionId: string }) {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const gameRef = useRef<Phaser.Game | null>(null);
 
-    const [character, setCharacter] = useState<GameCharacterDTO | null>(null);
-    const [playerId, setPlayerId] = useState<string | null>(null);
+    const skinMap: Record<string, string> = {
+        c1: 'black_asha',
+        c2: 'green_asha',
+        c3: 'red_asha',
+        c4: 'blue_asha'
+    };
+
+    const [sessionPlayer, setSessionPlayer] = useState<SessionPlayerDTO | null>(null);
 
     useEffect(() => {
-        const id = crypto.randomUUID();
-        setPlayerId(id);
-    }, []);
-
-    useEffect(() => {
-        if (!playerId) return;
-
-        async function fetchCharacter() {
-            const res = await fetch(`http://localhost:8081/api/characters/next-available?playerId=${playerId}`);
-
-            if (res.status === 409) {
-                alert('Alle Charaktere sind bereits im Spiel!');
-                return;
-            }
-
+        async function fetchSessionPlayer() {
+            const res = await fetch(`http://localhost:8081/api/game-session/${sessionId}/me?playerId=${playerId}`);
             const data = await res.json();
-            setCharacter(data);
-
-            await fetch('http://localhost:8081/api/characters/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ playerId: playerId, skin: data.skin })
-            });
+            console.log("[CLIENT] SessionPlayer geladen:", data);
+            setSessionPlayer(data);
         }
 
-        fetchCharacter();
-    }, [playerId]);
+        fetchSessionPlayer();
+    }, [playerId, sessionId]);
 
     useEffect(() => {
-        if (!containerRef.current || gameRef.current || !character || !playerId) return;
+        if (!containerRef.current || gameRef.current || !sessionPlayer) return;
+
+        const config = {
+            key: 'main',
+            playerId: sessionPlayer.playerId,
+            skin: skinMap[sessionPlayer.characterId],
+            characterId: sessionPlayer.characterId,
+            baseAttack: sessionPlayer.baseAttack,
+            baseHealth: sessionPlayer.baseHealth,
+            speed: sessionPlayer.speed,
+        };
+
+        console.log("[GameCanvas] Konfiguration für GameScene:", config);
 
         gameRef.current = new Phaser.Game({
             type: Phaser.AUTO,
             width: 960,
             height: 640,
             parent: containerRef.current,
-            scene: [new GameScene({ key: 'main', skin: character.skin, playerId })],
+            scene: [new GameScene(config)],
             physics: {
                 default: 'arcade',
                 arcade: { debug: false },
             },
-            audio: {
-                noAudio: true,
-            },
+            audio: { noAudio: true },
         });
 
         return () => {
             gameRef.current?.destroy(true);
             gameRef.current = null;
         };
-    }, [character, playerId]);
+    }, [sessionPlayer]);
 
-    if (!character || !playerId) return <div>Lade deinen Charakter...</div>;
+    if (!sessionPlayer) return <div>Lade deine Sessiondaten...</div>;
 
-    return <div ref={containerRef} />;
+    // ✅ Zentriert in der Mitte, wie bei Lobby
+    return (
+        <div
+            style={{
+                width: '100vw',
+                height: '100vh',
+                backgroundColor: '#111',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+            }}
+        >
+            <div
+                ref={containerRef}
+                style={{
+                    width: '960px',
+                    height: '640px',
+                }}
+            />
+        </div>
+    );
 }

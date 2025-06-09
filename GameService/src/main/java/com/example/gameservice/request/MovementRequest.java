@@ -1,67 +1,34 @@
 package com.example.gameservice.request;
-
 public class MovementRequest {
     private String playerId;
-    private String direction; //e.g. "UP" "DOWN" usw.
+    private String direction;
     private int rotation;
     private int x;
     private int y;
-    private String skin;
+    private String characterId;
     private Boolean isMoving;
 
-    public MovementRequest(){}
+    public MovementRequest() {}
 
-    public String getPlayerId() {
-        return playerId;
-    }
+    public String getPlayerId() { return playerId; }
+    public void setPlayerId(String playerId) { this.playerId = playerId; }
 
-    public void setPlayerId(String playerId) {
-        this.playerId = playerId;
-    }
+    public String getDirection() { return direction; }
+    public void setDirection(String direction) { this.direction = direction; }
 
-    public String getDirection() {
-        return direction;
-    }
+    public int getRotation() { return rotation; }
+    public void setRotation(int rotation) { this.rotation = rotation; }
 
-    public void setDirection(String direction) {
-        this.direction = direction;
-    }
+    public int getX() { return x; }
+    public void setX(int x) { this.x = x; }
 
-    public int getRotation() {
-        return rotation;
-    }
+    public int getY() { return y; }
+    public void setY(int y) { this.y = y; }
 
-    public void setRotation(int rotation){
-        this.rotation = rotation;
-    }
+    public String getCharacterId() { return characterId; } // ⬅️ neu
+    public void setCharacterId(String characterId) { this.characterId = characterId; } // ⬅️ neu
 
-    public int getX() {
-        return x;
-    }
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public int getY() {
-        return y;
-    }
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    public String getSkin() {
-        return skin;
-    }
-
-    public void setSkin(String skin) {
-        this.skin = skin;
-    }
-
-    public Boolean getIsMoving() {
-        return isMoving;
-    }
-
-    public void setIsMoving(Boolean moving) {
-        isMoving = moving;
-    }
+    public Boolean getIsMoving() { return isMoving; }
+    public void setIsMoving(Boolean isMoving) { this.isMoving = isMoving; }
 }
+

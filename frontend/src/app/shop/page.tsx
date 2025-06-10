@@ -1,21 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { fetchShopItems, fetchOwnedCharacters, buyCharacter } from '@/services/ShopService';
-
-export interface CharacterItem {
-    characterId: string;
-    name: string;
-    skin: string;
-    baseHealth: number;
-    baseAttack: number;
-    speed: number;
-    role: string;
-    description: string;
-    rare: boolean;
-    priceCoins: number;
-    priceShards: number;
-}
+import { fetchShopItems, fetchOwnedCharacters, buyCharacter, fetchWallet ,CharacterItem } from '@/services/ShopService';
 
 interface Wallet {
     xp: number;
@@ -29,7 +15,6 @@ const characterImageMap: Record<string, string> = {
     red_asha: '/lobby/red_char_lobby.png',
     blue_asha: '/lobby/blue_char_lobby.png',
 };
-
 
 const ShopPage = () => {
     const [shopItems, setShopItems] = useState<CharacterItem[]>([]);
@@ -58,9 +43,12 @@ const ShopPage = () => {
             setLoading(true);
             const items = await fetchShopItems();
             const owned = await fetchOwnedCharacters(playerId);
+            const freshWallet = await fetchWallet(playerId);    // <-- DAS IST NEU!
             setShopItems(items);
             setOwnedCharacterIds(owned);
             setFilteredItems(items);
+            setWallet(freshWallet);   // <-- Wallet frisch setzen
+            localStorage.setItem('shopWallet', JSON.stringify(freshWallet)); // Optional, falls du es brauchst
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -68,12 +56,13 @@ const ShopPage = () => {
         }
     };
 
+
     const handleBuy = async (characterId: string) => {
         if (!playerId) return;
         try {
             await buyCharacter(playerId, characterId);
             alert('Purchase successful!');
-            await loadShopData(playerId);  // reload after purchase!
+            await loadShopData(playerId);  // <-- lädt jetzt auch Wallet frisch!
         } catch (err) {
             alert('Purchase failed: ' + err);
         }
@@ -155,7 +144,7 @@ const ShopPage = () => {
                             {/* Character Image */}
                             <div className="flex justify-center mb-4">
                                 <img
-                                    src={characterImageMap[item.skin] || '/lobby/default.png'}   // <-- Mapping benutzen!
+                                    src={characterImageMap[item.skin] || '/lobby/default.png'}
                                     alt={item.name}
                                     className="w-32 h-32 object-contain"
                                 />

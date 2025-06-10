@@ -2,6 +2,7 @@ package com.example.gameservice.controller;
 
 import com.example.gameservice.Repository.CharacterRepository;
 import com.example.gameservice.domain.GameCharacter;
+import com.example.gameservice.dto.GameCharacterDTO;
 import com.example.gameservice.request.RegisterRequest;
 import com.example.gameservice.service.CharacterService;
 import com.example.gameservice.service.MovementService;
@@ -18,17 +19,16 @@ import java.util.Optional;
 public class CharacterController {
 
     @Autowired
-    private CharacterService characterService;
-
-    @Autowired
-    private MovementService movementService;
-
-    @Autowired
-    private CharacterRepository characterRepository;
+    private CharacterService characterService;;
 
     @GetMapping
-    public List<GameCharacter> getAllCharacters() {
+    public List<GameCharacterDTO> getAllCharacters() {
         return characterService.getAllCharacters();
+    }
+
+    @GetMapping("/{playerId}/owned-characters")
+    public List<String> getOwnedCharacters(@PathVariable String playerId) {
+        return characterService.getAllOwnedCharacter(playerId);
     }
 
     @GetMapping("/next-available")

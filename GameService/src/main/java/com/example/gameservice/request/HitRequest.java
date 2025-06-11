@@ -3,6 +3,7 @@ package com.example.gameservice.request;
 public class HitRequest {
     private String shooterId;
     private String targetId;
+    private String sessionId;
 
     public HitRequest() {}
 
@@ -26,4 +27,7 @@ public class HitRequest {
     public void setTargetId(String targetId) {
         this.targetId = targetId;
     }
+
+    public String getSessionId() { return sessionId; }
+    public void setSessionId(String sessionId) { this.sessionId = sessionId; }
 }

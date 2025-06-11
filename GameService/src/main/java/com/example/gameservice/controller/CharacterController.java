@@ -40,14 +40,14 @@ public class CharacterController {
         return ResponseEntity.ok(character);
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<Void> registerPlayer(@RequestBody RegisterRequest request) {
-        boolean success = characterService.registerCharacter(request.getPlayerId(), request.getSkin());
-        if (!success) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
-        return ResponseEntity.ok().build();
-    }
+//    @PostMapping("/register")
+//    public ResponseEntity<Void> registerPlayer(@RequestBody RegisterRequest request) {
+//        boolean success = characterService.registerCharacter(request.getPlayerId(), request.getSkin());
+//        if (!success) {
+//            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+//        }
+//        return ResponseEntity.ok().build();
+//    }
 
     @PostMapping("/unregister")
     public ResponseEntity<Void> unregisterPlayer(@RequestBody RegisterRequest request) {

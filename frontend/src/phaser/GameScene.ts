@@ -11,6 +11,8 @@ import { createCooldownBar, updateCooldownBar } from '@/phaser/setup/cooldownSet
 import { createProjectileGroup, updateProjectiles } from '@/phaser/setup/projectileSetup';
 import { handlePlayerMovement } from '@/phaser/movement/movementHandler';
 import { sendMovement } from '@/phaser/movement/movementSender';
+import { createHealthBar, updateHealthBar } from '@/phaser/setup/healthBarSetup';
+
 
 
 export default class GameScene extends Phaser.Scene {
@@ -37,6 +39,21 @@ export default class GameScene extends Phaser.Scene {
     public baseHealth!: number;
     public speed!: number;
     public characterId!: string;
+    public sessionId!: string;
+    public currentHealth!: number;
+    public healthBar!: Phaser.GameObjects.Graphics;
+    // Typ ergänzen
+    public healthBarGraphics!: Phaser.GameObjects.Graphics;
+    public healthBarText!: Phaser.GameObjects.Text;
+    private displayedHealth!: number; // für Animation
+    public otherPlayerHealth = new Map<string, {
+        currentHealth: number;
+        baseHealth: number;
+        bar: Phaser.GameObjects.Graphics;
+        text: Phaser.GameObjects.Text;
+        displayedHealth: number;
+    }>();
+
 
 
 
@@ -48,6 +65,8 @@ export default class GameScene extends Phaser.Scene {
         baseHealth: number;
         speed: number;
         characterId: string; // < NEU
+        sessionId: string;
+
 
     }) {
         super(config);
@@ -57,6 +76,7 @@ export default class GameScene extends Phaser.Scene {
         this.baseAttack = config.baseAttack;
         this.baseHealth = config.baseHealth;
         this.speed = config.speed;
+        this.sessionId = config.sessionId;
     }
 
 
@@ -96,6 +116,13 @@ export default class GameScene extends Phaser.Scene {
         setupAnimations(this, this.skin);
         setupCamera(this, this.player);
 
+
+        const { bar, text } = createHealthBar(this);
+        this.healthBarGraphics = bar;
+        this.healthBarText = text;
+        this.currentHealth = this.baseHealth;
+        this.displayedHealth = this.baseHealth;
+
         this.projectiles = createProjectileGroup(this);
         this.cooldownBar = createCooldownBar(this);
 
@@ -114,12 +141,16 @@ export default class GameScene extends Phaser.Scene {
             const normY = dy / distance;
 
             sendAttack(this.stompClient, {
+                sessionId: this.sessionId,
                 playerId: this.playerId,
                 playerX: this.player.x,
                 playerY: this.player.y,
                 dirX: normX,
                 dirY: normY
             });
+
+
+
         });
 
         setupWebSocket(this);
@@ -144,7 +175,8 @@ export default class GameScene extends Phaser.Scene {
             rotation,
             moveX,
             moveY,
-            this.characterId // NEU: characterId mitgeben, nicht this.skin
+            this.characterId, // NEU: characterId mitgeben, nicht this.skin
+            this.sessionId
         );
 
 
@@ -153,5 +185,25 @@ export default class GameScene extends Phaser.Scene {
         this.cooldownProgress = Phaser.Math.Clamp(elapsed / this.cooldown, 0, 1);
 
         updateCooldownBar(this.cooldownBar, this.player, this.cooldownProgress);
+
+        const smoothing = 0.1; // smooth 10%
+        this.displayedHealth += (this.currentHealth - this.displayedHealth) * smoothing;
+        updateHealthBar(this.healthBarGraphics, this.healthBarText, this.player, this.displayedHealth, this.baseHealth);
+        this.otherPlayerHealth.forEach((healthData, playerId) => {
+            const entry = this.otherPlayers.get(playerId);
+            if (!entry) return;
+
+            // Smoothe Darstellung
+            healthData.displayedHealth += (healthData.currentHealth - healthData.displayedHealth) * 0.1;
+
+            updateHealthBar(
+                healthData.bar,
+                healthData.text,
+                entry.sprite,
+                healthData.displayedHealth,
+                healthData.baseHealth
+            );
+        });
+
     }
 }

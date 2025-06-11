@@ -50,19 +50,34 @@ public class GameSessionService {
     }
 
     public void maybeStartCountdown(GameSession session, SimpMessagingTemplate messagingTemplate) {
-        if (session.getSessionPlayers().size() == 2 && !session.isStarted()) {
-            session.setStarted(true); // ← Timer nur einmal starten
-            new Thread(() -> {
+        synchronized (session) {
+            if (session.isStarted()) return;
+
+            // Wenn bereits ein Countdown läuft → abbrechen
+            if (session.getCountdownThread() != null && session.getCountdownThread().isAlive()) {
+                session.getCountdownThread().interrupt(); // Thread stoppen
+            }
+
+            Thread countdownThread = new Thread(() -> {
                 try {
-                    for (int i = 10; i >= 0; i--) {
+                    int countdown = 10;
+                    while (countdown >= 0) {
                         messagingTemplate.convertAndSend("/topic/session/" + session.getId(), Map.of(
                                 "type", "COUNTDOWN",
-                                "value", i
+                                "value", countdown
                         ));
                         Thread.sleep(1000);
+
+                        // Wenn jemand NEU gejoined ist → Countdown neu starten
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+
+                        countdown--;
                     }
 
-                    // Nach Countdown → Spielstart pushen
+                    // Nach Countdown → Spiel starten
+                    session.setStarted(true);
                     for (SessionPlayer player : session.getSessionPlayers()) {
                         messagingTemplate.convertAndSend("/topic/session/" + session.getId(), Map.of(
                                 "type", "START_GAME",
@@ -70,10 +85,15 @@ public class GameSessionService {
                                 "sessionId", session.getId()
                         ));
                     }
+
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    // Abgebrochen weil neuer Spieler dazukam
                 }
-            }).start();
+            });
+
+            session.setCountdownThread(countdownThread);
+            countdownThread.start();
         }
     }
+
 }

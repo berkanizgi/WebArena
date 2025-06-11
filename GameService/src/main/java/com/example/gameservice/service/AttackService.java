@@ -28,7 +28,7 @@ public class AttackService {
     @Async
     public void processAttack(AttackRequest request) {
         // ❗ aktuelle Position vom Spieler aus dem MovementService holen!
-        CharacterPosition character = movementService.getCharacterPosition(request.getPlayerId());
+        CharacterPosition character = movementService.getCharacterPosition(request.getSessionId(), request.getPlayerId());
         if (character == null) {
             System.out.println("Spieler nicht gefunden: " + request.getPlayerId());
             return;
@@ -77,8 +77,9 @@ public class AttackService {
 
 
     public void processHit(HitRequest request) {
-        CharacterPosition shooter = movementService.getCharacterPosition(request.getShooterId());
-        CharacterPosition target = movementService.getCharacterPosition(request.getTargetId());
+        CharacterPosition shooter = movementService.getCharacterPosition(request.getSessionId(), request.getShooterId());
+        CharacterPosition target = movementService.getCharacterPosition(request.getSessionId(), request.getTargetId());
+
 
         if (shooter == null || target == null) {
             System.out.println("Ungültiger Hit: Spieler nicht gefunden");

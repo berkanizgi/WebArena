@@ -8,6 +8,8 @@ public class GameSession {
     private final String id;
     private final List<SessionPlayer> sessionPlayers = new ArrayList<>();
     private boolean started = false;
+    private transient Thread countdownThread;
+
 
     public GameSession(String id) {
         this.id = id;
@@ -39,4 +41,14 @@ public class GameSession {
     public void setStarted(boolean started) {
         this.started = started;
     }
+
+
+    public Thread getCountdownThread() {
+        return countdownThread;
+    }
+
+    public void setCountdownThread(Thread thread) {
+        this.countdownThread = thread;
+    }
+
 }

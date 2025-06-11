@@ -1,6 +1,7 @@
 import { Client as StompClient } from '@stomp/stompjs';
 
 export interface AttackPayload {
+    sessionId: string;
     playerId: string;
     playerX: number;
     playerY: number;

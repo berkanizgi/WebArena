@@ -1,5 +1,6 @@
 package com.example.gameservice.request;
 public class MovementRequest {
+    private String sessionId;
     private String playerId;
     private String direction;
     private int rotation;
@@ -30,5 +31,13 @@ public class MovementRequest {
 
     public Boolean getIsMoving() { return isMoving; }
     public void setIsMoving(Boolean isMoving) { this.isMoving = isMoving; }
+
+    public String getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
 }
 

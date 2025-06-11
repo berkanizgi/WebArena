@@ -52,7 +52,8 @@ export default class Projectile extends Phaser.GameObjects.Ellipse {
                         destination: '/app/hit',
                         body: JSON.stringify({
                             shooterId: this.shooterId,
-                            targetId: playerId
+                            targetId: playerId,
+                            sessionId: this.sceneRef.sessionId
                         })
                     });
                 }

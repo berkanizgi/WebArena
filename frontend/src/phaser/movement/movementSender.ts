@@ -15,7 +15,8 @@ export function sendMovement(
     rotation: number,
     moveX: number,
     moveY: number,
-    characterId: string
+    characterId: string,
+    sessionId: string
 ) {
     if (!stompClient || !stompClient.connected) return;
 
@@ -28,7 +29,8 @@ export function sendMovement(
         direction,
         rotation,
         characterId,
-        isMoving
+        isMoving,
+        sessionId
     };
 
     stompClient.publish({

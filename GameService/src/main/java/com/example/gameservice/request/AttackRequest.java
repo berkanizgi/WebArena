@@ -1,6 +1,7 @@
 package com.example.gameservice.request;
 
 public class AttackRequest {
+    private String sessionId;
     private String playerId;
     private double playerX;
     private double playerY;
@@ -23,4 +24,7 @@ public class AttackRequest {
 
     public double getDirY() { return dirY; }
     public void setDirY(double dirY) { this.dirY = dirY; }
+
+    public String getSessionId() { return sessionId; }
+    public void setSessionId(String sessionId) { this.sessionId = sessionId; }
 }

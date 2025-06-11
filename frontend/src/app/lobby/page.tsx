@@ -188,7 +188,7 @@ export default function LobbyPage() {
                         gap: '1rem',
                     }}
                 >
-                    <GameButton label="TUTORIAL" />
+                    <GameButton label="Multiplayer" />
                     <GameButton
                         label="PLAY"
                         styleOverride={{

@@ -40,6 +40,8 @@ export default function GameCanvas({ playerId, sessionId }: { playerId: string; 
             baseAttack: sessionPlayer.baseAttack,
             baseHealth: sessionPlayer.baseHealth,
             speed: sessionPlayer.speed,
+            sessionId: sessionId
+
         };
 
         console.log("[GameCanvas] Konfiguration für GameScene:", config);

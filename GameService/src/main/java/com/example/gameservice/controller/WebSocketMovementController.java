@@ -7,6 +7,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -25,12 +26,14 @@ public class WebSocketMovementController {
 
     @MessageMapping("/move")
     public void moveCharacterViaWebSocket(MovementRequest request) {
-        movementService.moveAndBroadcast(request);
+
+        movementService.moveAndBroadcast(request.getSessionId(), request);
+
     }
 
     @GetMapping("/positions")
-    public List<CharacterPositionDTO> getAllPositions() {
-        List<CharacterPositionDTO> all = movementService.getAllPositions();
-        return all;
+    public List<CharacterPositionDTO> getAllPositions(@RequestParam String sessionId) {
+        return movementService.getAllPositions(sessionId);
     }
+
 }

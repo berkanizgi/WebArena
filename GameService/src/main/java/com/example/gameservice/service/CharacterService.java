@@ -34,23 +34,23 @@ public class CharacterService {
         }
         return null;
     }
-
-    public boolean registerCharacter(String playerId, String skin) {
-        Optional<GameCharacter> optional = characterRepository.findBySkin(skin);
-
-        if (optional.isEmpty()) {
-            return false;
-        }
-
-        GameCharacter character = optional.get();
-        if (isInUse(character.getSkin())) {
-            return false;
-        }
-
-        markInUse(character.getSkin());
-        movementService.registerInitialCharacter(playerId, character);
-        return true;
-    }
+//
+//    public boolean registerCharacter(String playerId, String skin) {
+//        Optional<GameCharacter> optional = characterRepository.findBySkin(skin);
+//
+//        if (optional.isEmpty()) {
+//            return false;
+//        }
+//
+//        GameCharacter character = optional.get();
+//        if (isInUse(character.getSkin())) {
+//            return false;
+//        }
+//
+//        markInUse(character.getSkin());
+//        movementService.registerInitialCharacter(playerId, character);
+//        return true;
+//    }
 
     public void markInUse(String skin) {
         usedSkins.add(skin);

@@ -19,10 +19,8 @@ import java.util.stream.Collectors;
 @Service
 public class MovementService {
 
-    private final Map<String, CharacterPosition> positions = new ConcurrentHashMap<>();
-
+    private final Map<String, Map<String, CharacterPosition>> sessionPositions = new ConcurrentHashMap<>();
     private final SimpMessagingTemplate messagingTemplate;
-
     private final boolean[][] blocked = new CollisionMapLoader().loadCollisionMap();
 
     @Autowired
@@ -32,39 +30,31 @@ public class MovementService {
         this.messagingTemplate = messagingTemplate;
     }
 
+    public CharacterPosition moveCharacter(String sessionId, MovementRequest request) {
+        Map<String, CharacterPosition> positions = sessionPositions.computeIfAbsent(sessionId, id -> new ConcurrentHashMap<>());
 
-    public CharacterPosition getCharacterPosition(String playerId) {
-        return positions.get(playerId);
-    }
-
-    public CharacterPosition moveCharacter(MovementRequest request) {
         CharacterPosition pos = positions.computeIfAbsent(
                 request.getPlayerId(),
                 id -> {
-                    GameCharacter character = characterRepository.findById(request.getCharacterId()).orElse(null); // ✅ neu
-                    if (character == null) {
-                        System.out.println("[ERROR] Character mit ID '" + request.getCharacterId() + "' nicht gefunden!");
-                        return null;
-                    }
+                    GameCharacter character = characterRepository.findById(request.getCharacterId()).orElse(null);
+                    if (character == null) return null;
                     return new CharacterPosition(id, character, request.getX(), request.getY());
                 }
         );
         if (pos == null) return null;
 
-        // Neue Zielkoordinaten (du willst weiterhin absolute Bewegung):
         int targetX = request.getX();
         int targetY = request.getY();
 
-        int tileSize = 32; // ODER 16! Je nach eurer Map. (Bitte ggf. angleichen!)
+        int tileSize = 32;
         int tileX = targetX / tileSize;
         int tileY = targetY / tileSize;
 
-        // **Hier: Kollision + Grenzen prüfen wie bei deinem Kollegen**
-//        if (tileY < 0 || tileY >= blocked.length || tileX < 0 || tileX >= blocked[0].length || blocked[tileY][tileX]) {
-//            return pos; // Blockiert oder außerhalb der Map
-//        }
+        // Optional: Mapgrenzen/Kollision
+        // if (tileY < 0 || tileY >= blocked.length || tileX < 0 || tileX >= blocked[0].length || blocked[tileY][tileX]) {
+        //     return pos;
+        // }
 
-        // Bewegung ist erlaubt → Zielposition setzen
         pos.setX(targetX);
         pos.setY(targetY);
         pos.setDirection(request.getDirection());
@@ -74,44 +64,38 @@ public class MovementService {
         return pos;
     }
 
-
-
-    public void moveAndBroadcast(MovementRequest request) {
-        CharacterPosition updated = moveCharacter(request);
-        if (updated == null) {
-            return;
+    public void moveAndBroadcast(String sessionId, MovementRequest request) {
+        CharacterPosition updated = moveCharacter(sessionId, request);
+        if (updated == null) return;
+        if (sessionId == null) {
+            System.err.println("[ERROR] sessionId ist null in moveAndBroadcast");
         }
 
-        messagingTemplate.convertAndSend("/topic/movement", new CharacterPositionDTO(updated));
+
+        messagingTemplate.convertAndSend("/topic/movement/" + sessionId, new CharacterPositionDTO(updated));
     }
 
-    public List<CharacterPositionDTO> getAllPositions() {
-        return positions.values().stream()
-                .map(CharacterPositionDTO::new)
-                .collect(Collectors.toList());
-    }
-    public void registerInitialCharacter(String playerId, GameCharacter character) {
-        CharacterPosition newPos = new CharacterPosition(playerId, character, 100, 100);
-        positions.put(playerId, newPos);
+    public List<CharacterPositionDTO> getAllPositions(String sessionId) {
+        Map<String, CharacterPosition> positions = sessionPositions.get(sessionId);
+        if (positions == null) return List.of();
+        return positions.values().stream().map(CharacterPositionDTO::new).collect(Collectors.toList());
     }
 
+    public void registerInitialCharacter(String sessionId, String playerId, GameCharacter character) {
+        Map<String, CharacterPosition> positions = sessionPositions.computeIfAbsent(sessionId, id -> new ConcurrentHashMap<>());
+        positions.put(playerId, new CharacterPosition(playerId, character, 100, 100));
+    }
 
-    public Collection<CharacterPosition> getAllRawPositions() {
-        return positions.values();
+    public Collection<CharacterPosition> getAllRawPositions(String sessionId) {
+        Map<String, CharacterPosition> positions = sessionPositions.get(sessionId);
+        return positions != null ? positions.values() : List.of();
+    }
+
+    public CharacterPosition getCharacterPosition(String sessionId, String playerId) {
+        Map<String, CharacterPosition> positions = sessionPositions.get(sessionId);
+        if (positions == null) return null;
+        return positions.get(playerId);
     }
 
 
-
-//    public void updateRotation(MovementRequest request) {
-//        CharacterPosition pos = positions.computeIfAbsent(
-//                request.getCharacterId(),
-//                id -> characterRepository.findById(id).orElse(null)
-//        );
-//        if (pos != null) {
-//            pos.setRotation(request.getRotation());
-//            CharacterPositionDTO dto = new CharacterPositionDTO(pos);
-//            messagingTemplate.convertAndSend("/topic/movement", dto);
-//        }
-//    }
 }
-

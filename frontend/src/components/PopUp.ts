@@ -1,5 +1,4 @@
 'use client';
-
 import Phaser from 'phaser';
 
 export function showPopup(scene: Phaser.Scene, message: string, onConfirm: () => void) {
@@ -8,30 +7,36 @@ export function showPopup(scene: Phaser.Scene, message: string, onConfirm: () =>
     const centerY = cam.scrollY + cam.height / 2;
 
     scene.physics.pause();
+
     const container = scene.add.container(centerX, centerY).setDepth(1000).setScale(0).setAlpha(0);
 
+    // 🎨 Hintergrundbox (etwas breiter)
+    const boxWidth = 200;
+    const boxHeight = 80;
     const graphics = scene.add.graphics();
-    graphics.fillStyle(0x223355, 0.95);
-    graphics.fillRoundedRect(-80, -45, 160, 90, 16);
-    graphics.lineStyle(2, 0xffffff);
-    graphics.strokeRoundedRect(-80, -45, 160, 90, 16);
+    graphics.fillStyle(0x1a2948, 0.98);
+    graphics.fillRoundedRect(-boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight, 18);
+    graphics.lineStyle(3, 0xffcc00);
+    graphics.strokeRoundedRect(-boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight, 18);
 
+    // 🏆 Scharfer, einzeiliger Text
     const popupText = scene.add.text(0, -15, message, {
-        fontFamily: 'Arial',
-        fontSize: '16px',
-        color: '#ffffff',
+        fontFamily: 'Verdana',
+        fontSize: '14px',
+        color: '#ffeb3b',
+        fontStyle: 'bold',
         align: 'center',
-        resolution: 2
+        wordWrap: { width: boxWidth - 20, useAdvancedWrap: true }
     }).setOrigin(0.5);
 
+    // 🔘 Klarer, lesbarer Button
     const button = scene.add.text(0, 20, 'Zurück zur Lobby', {
         fontFamily: 'Arial',
-        fontSize: '12px',
+        fontSize: '11px',
         backgroundColor: '#0077cc',
         color: '#ffffff',
-        padding: { x: 8, y: 4 },
-        resolution: 2
-    }).setOrigin(0.5).setInteractive();
+        padding: { x: 10, y: 4 }
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
     button.on('pointerdown', () => {
         container.destroy();
@@ -48,6 +53,7 @@ export function showPopup(scene: Phaser.Scene, message: string, onConfirm: () =>
 
     container.add([graphics, popupText, button]);
 
+    // ✨ Animation ohne Auflösungsverlust
     scene.tweens.add({
         targets: container,
         scale: 1,

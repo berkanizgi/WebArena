@@ -7,6 +7,8 @@ public class SessionPlayer {
     private int baseHealth;
     private int baseAttack;
     private int speed;
+    private boolean isDead = false;
+
 
     public SessionPlayer(String playerId, String characterId, String characterName, int baseHealth, int baseAttack, int speed) {
         this.playerId = playerId;
@@ -64,5 +66,14 @@ public class SessionPlayer {
     public void setSpeed(int speed) {
         this.speed = speed;
     }
+
+    public boolean isDead() {
+        return isDead;
+    }
+
+    public void setDead(boolean dead) {
+        isDead = dead;
+    }
+
     // Getter + Setter
 }

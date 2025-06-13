@@ -5,6 +5,9 @@ import com.example.gameservice.dto.AttackEventDTO;
 import com.example.gameservice.dto.HealthUpdateDTO;
 import com.example.gameservice.request.AttackRequest;
 import com.example.gameservice.request.HitRequest;
+import com.example.gameservice.session.GameSession;
+import com.example.gameservice.session.SessionPlayer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -16,6 +19,9 @@ public class AttackService {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final MovementService movementService; // ← MovementService wird hier genutzt!
+
+    @Autowired
+    private GameSessionService gameSessionService;
 
     @Value("${attack.cooldown.millis}")
     private long cooldownMillis;
@@ -89,6 +95,47 @@ public class AttackService {
         int damage = shooter.getCharacter().getBaseAttack();
         int newHealth = Math.max(0, target.getCurrentHealth() - damage);
         target.setCurrentHealth(newHealth);
+
+
+        if (newHealth <= 0) {
+            System.out.println("[DEBUG] Spieler " + target.getPlayerId() + " ist tot. Suche Session & markiere isDead.");
+
+            GameSession session = gameSessionService.getSession(request.getSessionId());
+            if (session != null) {
+                SessionPlayer targetPlayer = session.getByPlayerId(request.getTargetId());
+                if (targetPlayer != null) {
+                    targetPlayer.setDead(true);
+                    System.out.println("[DEBUG] Markiere isDead = true für Spieler: " + targetPlayer.getPlayerId());
+
+                    long aliveCount = session.getSessionPlayers().stream()
+                            .filter(p -> !p.isDead())
+                            .count();
+
+                    if (aliveCount == 1) {
+                        SessionPlayer winner = session.getSessionPlayers().stream()
+                                .filter(p -> !p.isDead())
+                                .findFirst()
+                                .orElse(null);
+
+                        if (winner != null) {
+                            System.out.println("[DEBUG] SPIEL GEWONNEN von: " + winner.getPlayerId());
+                            messagingTemplate.convertAndSend(
+                                    "/topic/victory/" + winner.getPlayerId(),
+                                    "YOU_WIN"
+                            );
+
+                        }
+                    }
+                } else {
+                    System.out.println("[DEBUG] SessionPlayer NICHT gefunden in Session!");
+                }
+            } else {
+                System.out.println("[DEBUG] Session NICHT gefunden mit ID: " + request.getSessionId());
+            }
+        }
+
+
+
 
         System.out.println( shooter.getPlayerId() + " trifft " + target.getPlayerId() + " für " + damage + " Schaden (HP: " + newHealth + ")");
 

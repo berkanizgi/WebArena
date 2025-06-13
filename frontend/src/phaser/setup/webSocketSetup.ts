@@ -4,6 +4,10 @@ import type { CharacterPositionDTO, AttackEventDTO } from '../types';
 import Projectile from '@/phaser/Projectile';
 import { setupAnimations } from '@/phaser/setup/animationSetup';
 import {createHealthBar, updateHealthBar} from "@/phaser/setup/healthBarSetup";
+import { showPopup } from '@/components/PopUp';
+import { checkWinCondition } from '@/components/WinCheck';
+
+
 
 const initializedSkins = new Set<string>();
 
@@ -58,6 +62,33 @@ export function setupWebSocket(scene: GameScene) {
             }
         });
 
+        scene.stompClient.subscribe(`/topic/victory/${scene.playerId}`, (message) => {
+            console.log("[WebSocket] Sieg empfangen:", message.body);
+            scene.time.delayedCall(200, () => {
+                if (scene.player) {
+                    scene.cameras.main.centerOn(scene.player.x, scene.player.y);
+                } else {
+                    console.warn("[Popup] scene.player noch nicht vorhanden beim Sieg.");
+                    scene.cameras.main.centerOn(400, 300);
+                }
+
+                showPopup(scene, "🏆 Du hast gewonnen!", () => {
+                    const playerId = scene.playerId;
+                    if (playerId) {
+                        localStorage.setItem('playerId', playerId); // falls nicht gesetzt
+                        window.location.href = "/lobby";
+                    } else {
+                        console.warn('Keine PlayerId beim Zurückspringen – leite zu Login.');
+                        window.location.href = "/login";
+                    }
+                });
+
+            });
+        });
+
+
+
+
         scene.stompClient.subscribe('/topic/attacks', (message: IMessage) => {
             const data: AttackEventDTO = JSON.parse(message.body);
             const projectile = new Projectile(
@@ -72,6 +103,7 @@ export function setupWebSocket(scene: GameScene) {
         });
         scene.stompClient.subscribe('/topic/health', (message: IMessage) => {
             const data = JSON.parse(message.body);
+            console.log("[Health] WebSocket empfangen:", data);
             const isSelf = data.playerId === scene.playerId;
 
             if (isSelf) {
@@ -79,10 +111,21 @@ export function setupWebSocket(scene: GameScene) {
 
                 if (scene.currentHealth <= 0) {
                     scene.player.setTint(0x000000);
-                    scene.physics.pause(); // ❄️ Bewegung stoppen
-                    alert("💀 Du bist gestorben!");
+                    scene.physics.pause();
+                    showPopup(scene, "Du bist leider gestorben!", () => {
+                        const playerId = scene.playerId;
+                        if (playerId) {
+                            localStorage.setItem('playerId', playerId);
+                            window.location.href = "/lobby";
+                        } else {
+                            console.warn('Keine PlayerId beim Zurückspringen – leite zu Login.');
+                            window.location.href = "/login";
+                        }
+                    });
                     return;
                 }
+
+
                 updateHealthBar(scene.healthBarGraphics, scene.healthBarText, scene.player, scene.currentHealth, scene.baseHealth);
                 scene.player.setTint(0xff0000);
                 scene.time.delayedCall(200, () => scene.player.clearTint());
@@ -91,16 +134,20 @@ export function setupWebSocket(scene: GameScene) {
                 const healthData = scene.otherPlayerHealth.get(data.playerId);
                 if (!entry || !healthData) return;
 
-                healthData.currentHealth = data.health;
-
                 if (healthData.currentHealth <= 0) {
-                    entry.sprite.destroy();
-                    scene.otherPlayers.delete(data.playerId);
-                    scene.otherPlayerHealth.delete(data.playerId);
-                    console.log(`[Game] Spieler ${data.playerId} ist gestorben`);
-                    checkWinCondition(scene); // ⬅ Schritt 2
-                    return;
+                    console.log(`[Game] Spieler ${data.playerId} ist gestorben – prüfe Siegbedingung`);
+
+                    // 🕒 Delay damit z. B. Death-Animation durchlaufen kann
+                    scene.time.delayedCall(200, () => {
+                        checkWinCondition(scene); // ZUERST prüfen
+                        entry.sprite.destroy();   // DANN erst Gegner "entfernen"
+                        scene.otherPlayers.delete(data.playerId);
+                        scene.otherPlayerHealth.delete(data.playerId);
+                    });
                 }
+
+
+
 
                 healthData.currentHealth = data.health;
                 healthData.displayedHealth += (healthData.currentHealth - healthData.displayedHealth) * 0.1;
@@ -169,36 +216,6 @@ export function setupWebSocket(scene: GameScene) {
 
             });
     };
-    function checkWinCondition(scene: GameScene) {
-        if (scene.otherPlayers.size === 0 && scene.currentHealth > 0) {
-            alert("🏆 Du hast gewonnen!");
-            // Optional: zur Lobby zurückleiten oder Spiel neustarten
-            window.location.href = "/lobby";
-        }
-    }
-    function showPopup(scene: Phaser.Scene, message: string, onConfirm: () => void) {
-        const popupBg = scene.add.rectangle(scene.cameras.main.centerX, scene.cameras.main.centerY, 300, 150, 0x000000, 0.8).setDepth(1000);
-        const popupText = scene.add.text(scene.cameras.main.centerX, scene.cameras.main.centerY - 30, message, {
-            fontSize: '18px',
-            color: '#ffffff',
-            align: 'center',
-        }).setOrigin(0.5).setDepth(1001);
-
-        const button = scene.add.text(scene.cameras.main.centerX, scene.cameras.main.centerY + 30, 'Zurück zur Lobby', {
-            fontSize: '16px',
-            backgroundColor: '#0055aa',
-            color: '#ffffff',
-            padding: { x: 10, y: 5 },
-        }).setOrigin(0.5).setInteractive().setDepth(1001);
-
-        button.on('pointerdown', () => {
-            popupBg.destroy();
-            popupText.destroy();
-            button.destroy();
-            onConfirm();
-        });
-    }
-
 
 
     scene.stompClient.activate();

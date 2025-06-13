@@ -1,5 +1,6 @@
 package com.example.gameservice.service;
 
+import com.example.gameservice.Repository.GameCharacterRepository;
 import com.example.gameservice.domain.GameCharacter;
 import com.example.gameservice.domain.Player;
 import com.example.gameservice.Repository.PlayerRepository;
@@ -63,6 +64,27 @@ public class PlayerService {
     public Optional<Player> getByUsername(String username) {
         Player player = playerRepository.findByUsername(username);
         return Optional.ofNullable(player);
+    }
+
+    @Autowired
+    private GameCharacterRepository gameCharacterRepository;
+
+    public boolean updateSelectedCharacter(String playerId, String characterId) {
+        Optional<Player> optionalPlayer = playerRepository.findById(playerId);
+        Optional<GameCharacter> optionalCharacter = gameCharacterRepository.findById(characterId);
+
+        if (optionalPlayer.isPresent() && optionalCharacter.isPresent()) {
+            Player player = optionalPlayer.get();
+            GameCharacter character = optionalCharacter.get();
+
+            player.setSelectedCharacter(character);
+            player.setCharacter(character); // <- DAS HINZUFÜGEN!
+
+            playerRepository.save(player);
+            return true;
+        }
+
+        return false;
     }
 
 

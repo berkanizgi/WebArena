@@ -120,6 +120,8 @@ export default class GameScene extends Phaser.Scene {
         const { bar, text } = createHealthBar(this);
         this.healthBarGraphics = bar;
         this.healthBarText = text;
+        this.add.existing(bar);  // ✅ fügt den Balken zur Szene hinzu
+        this.add.existing(text); // ✅ fügt die Zahl hinzu
         this.currentHealth = this.baseHealth;
         this.displayedHealth = this.baseHealth;
 
@@ -193,8 +195,12 @@ export default class GameScene extends Phaser.Scene {
             const entry = this.otherPlayers.get(playerId);
             if (!entry) return;
 
-            // Smoothe Darstellung
+            // Smoothe Anzeige
             healthData.displayedHealth += (healthData.currentHealth - healthData.displayedHealth) * 0.1;
+
+            // 🔁 HealthBar an Sprite-Position binden (leicht oberhalb)
+            healthData.bar.setPosition(entry.sprite.x, entry.sprite.y - 32);
+            healthData.text.setPosition(entry.sprite.x, entry.sprite.y - 40);
 
             updateHealthBar(
                 healthData.bar,
@@ -204,6 +210,7 @@ export default class GameScene extends Phaser.Scene {
                 healthData.baseHealth
             );
         });
+
 
     }
 }

@@ -2,7 +2,6 @@ package at.fhv.shopservice.service;
 
 import at.fhv.shopservice.dto.GameCharacterDTO;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,7 @@ public class CharacterClient {
     }
 
     public List<GameCharacterDTO> fetchAllCharacters() {
-        String url = "http://localhost:8081/api/characters"; // GameService URL
+        String url = "http://localhost:8084/api/characters"; // GameService URL
         ResponseEntity<GameCharacterDTO[]> response = restTemplate.getForEntity(url, GameCharacterDTO[].class);
 
         if (response.getStatusCode() == HttpStatus.OK) {

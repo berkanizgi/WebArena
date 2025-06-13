@@ -41,7 +41,7 @@ export async function fetchShopItems(): Promise<CharacterItem[]> {
 }
 
 export async function fetchOwnedCharacters(playerId: string) {
-    const response = await fetch(`http://localhost:8081/api/characters/${playerId}/owned-characters`);
+    const response = await fetch(`http://localhost:8084/api/characters/${playerId}/owned-characters`);
     if (!response.ok) {
         throw new Error('Failed to fetch owned characters');
     }

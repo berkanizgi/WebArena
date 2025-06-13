@@ -210,7 +210,7 @@ export default function LobbyPage() {
                         gap: '1rem',
                     }}
                 >
-                    <GameButton label="CHARACTERS" />
+                    <GameButton label="CHARACTERS" onClick={() => window.location.href = '/character'} />
                     <GameButton label="SHOP" onClick={goToShop} />
                     <GameButton label="MISSIONS" />
                 </div>
@@ -232,6 +232,7 @@ export default function LobbyPage() {
                             filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.8))',
                         }}
                     />
+
                 )}
 
                 {/* === READY BUTTON UNTEN MITTE === */}

@@ -53,7 +53,10 @@ public class GameSessionService {
         synchronized (session) {
             if (session.isStarted()) return;
 
-            // Wenn bereits ein Countdown läuft → abbrechen
+            if (session.getSessionPlayers().size() < 2) {
+            return;
+            }
+
             if (session.getCountdownThread() != null && session.getCountdownThread().isAlive()) {
                 session.getCountdownThread().interrupt(); // Thread stoppen
             }
@@ -68,7 +71,6 @@ public class GameSessionService {
                         ));
                         Thread.sleep(1000);
 
-                        // Wenn jemand NEU gejoined ist → Countdown neu starten
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }

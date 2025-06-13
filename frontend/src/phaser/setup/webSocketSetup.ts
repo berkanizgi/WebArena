@@ -204,6 +204,8 @@ export function setupWebSocket(scene: GameScene) {
                         lastDirection: p.direction
                     });
 
+
+
                     const { bar, text } = createHealthBar(scene);
                     scene.otherPlayerHealth.set(p.playerId, {
                         currentHealth: scene.baseHealth,
@@ -212,6 +214,9 @@ export function setupWebSocket(scene: GameScene) {
                         text,
                         displayedHealth: scene.baseHealth
                     });
+                    scene.add.existing(bar);
+                    scene.add.existing(text);
+
                 });
 
             });

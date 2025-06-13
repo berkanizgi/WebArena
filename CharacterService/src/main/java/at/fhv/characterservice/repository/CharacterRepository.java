@@ -1,8 +1,7 @@
-package com.example.gameservice.Repository;
+package at.fhv.characterservice.repository;
 
-import com.example.gameservice.domain.GameCharacter;
+import at.fhv.characterservice.domain.GameCharacter;
 import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.Optional;
 
 public interface CharacterRepository extends JpaRepository<GameCharacter, String> {

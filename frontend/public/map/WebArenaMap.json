@@ -77,7 +77,7 @@
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":true,
+         "visible":false,
          "x":0,
          "y":0
         }, 
@@ -147,7 +147,7 @@
          "name":"Bottom",
          "opacity":1,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":80,
          "x":0,
          "y":0
@@ -289,7 +289,7 @@
          "name":"onTop",
          "opacity":1,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":80,
          "x":0,
          "y":0
@@ -360,7 +360,7 @@
          "name":"Collision",
          "opacity":1,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":80,
          "x":0,
          "y":0
@@ -502,7 +502,7 @@
          "name":"Bruecke",
          "opacity":1,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":80,
          "x":0,
          "y":0

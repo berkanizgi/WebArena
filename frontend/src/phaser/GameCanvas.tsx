@@ -40,8 +40,8 @@ export default function GameCanvas({ playerId, sessionId }: { playerId: string; 
             baseAttack: sessionPlayer.baseAttack,
             baseHealth: sessionPlayer.baseHealth,
             speed: sessionPlayer.speed,
-            sessionId: sessionId
-
+            sessionId: sessionId,
+            gameMode: sessionPlayer.gameMode, // ⬅️ NEU
         };
 
         console.log("[GameCanvas] Konfiguration für GameScene:", config);
@@ -67,7 +67,6 @@ export default function GameCanvas({ playerId, sessionId }: { playerId: string; 
 
     if (!sessionPlayer) return <div>Lade deine Sessiondaten...</div>;
 
-    // ✅ Zentriert in der Mitte, wie bei Lobby
     return (
         <div
             style={{

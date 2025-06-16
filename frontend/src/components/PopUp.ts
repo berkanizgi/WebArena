@@ -22,21 +22,21 @@ export function showPopup(scene: Phaser.Scene, message: string, onConfirm: () =>
     // 🏆 Scharfer, einzeiliger Text
     const popupText = scene.add.text(0, -15, message, {
         fontFamily: 'Verdana',
-        fontSize: '14px',
+        fontSize: '23px',
         color: '#ffeb3b',
         fontStyle: 'bold',
         align: 'center',
         wordWrap: { width: boxWidth - 20, useAdvancedWrap: true }
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setScale(0.5);
 
     // 🔘 Klarer, lesbarer Button
     const button = scene.add.text(0, 20, 'Zurück zur Lobby', {
         fontFamily: 'Arial',
-        fontSize: '11px',
+        fontSize: '20px',
         backgroundColor: '#0077cc',
         color: '#ffffff',
         padding: { x: 10, y: 4 }
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setScale(0.5);
 
     button.on('pointerdown', () => {
         container.destroy();

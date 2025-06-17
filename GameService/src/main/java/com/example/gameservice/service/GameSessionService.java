@@ -1,6 +1,7 @@
 package com.example.gameservice.service;
 
 import com.example.gameservice.domain.GameCharacter;
+import com.example.gameservice.domain.GameMode;
 import com.example.gameservice.domain.Player;
 import com.example.gameservice.session.GameSession;
 import com.example.gameservice.session.SessionPlayer;
@@ -16,7 +17,7 @@ public class GameSessionService {
 
     private final Map<String, GameSession> sessions = new ConcurrentHashMap<>();
 
-    public synchronized GameSession joinOrCreateSession(Player player) {
+    public synchronized GameSession joinOrCreateSession(Player player, GameMode mode) {
         GameCharacter character = player.getWallet().getSelectedCharacter();
         if (character == null) throw new IllegalStateException("Kein Charakter ausgewählt!");
 
@@ -28,6 +29,8 @@ public class GameSessionService {
                 character.getBaseAttack(),
                 character.getSpeed()
         );
+        sessionPlayer.setGameMode(mode); // 🟢 NEU: GameMode beim Player setzen!
+
 
 
         // Suche offene Session mit < 4 Spielern
@@ -41,6 +44,7 @@ public class GameSessionService {
         // Neue Session
         GameSession newSession = new GameSession(UUID.randomUUID().toString());
         newSession.addSessionPlayer(sessionPlayer);
+        newSession.setGameMode(mode);
         sessions.put(newSession.getId(), newSession);
         return newSession;
     }
@@ -53,7 +57,11 @@ public class GameSessionService {
         synchronized (session) {
             if (session.isStarted()) return;
 
-            // Wenn bereits ein Countdown läuft → abbrechen
+            // Für Multiplayer: nur wenn 2+ Spieler da
+            if (session.getGameMode() == GameMode.MULTIPLAYER) {
+                if (session.getSessionPlayers().size() < 2) return;
+            }
+
             if (session.getCountdownThread() != null && session.getCountdownThread().isAlive()) {
                 session.getCountdownThread().interrupt(); // Thread stoppen
             }
@@ -68,10 +76,7 @@ public class GameSessionService {
                         ));
                         Thread.sleep(1000);
 
-                        // Wenn jemand NEU gejoined ist → Countdown neu starten
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
+                        if (Thread.currentThread().isInterrupted()) return;
 
                         countdown--;
                     }
@@ -87,7 +92,7 @@ public class GameSessionService {
                     }
 
                 } catch (InterruptedException e) {
-                    // Abgebrochen weil neuer Spieler dazukam
+                    // Abgebrochen, falls neuer Spieler kommt
                 }
             });
 
@@ -95,5 +100,7 @@ public class GameSessionService {
             countdownThread.start();
         }
     }
+
+
 
 }

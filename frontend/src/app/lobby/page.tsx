@@ -16,6 +16,7 @@ interface Wallet {
     xp: number;
     coins: number;
     selectedCharacterId: string;
+    unlockedLevels: string[];
 }
 
 interface Lobby {
@@ -30,12 +31,30 @@ export default function LobbyPage() {
     const [playerId, setPlayerId] = useState<string | null>(null);
     const [playerName, setPlayerName] = useState<string | null>(null);
     const [wallet, setWallet] = useState<Wallet | null>(null);
+    const [gameMode, setGameMode] = useState<string>('MULTIPLAYER');
 
     const characterImageMap: Record<string, string> = {
         c1: '/lobby/black_char_lobby.png',
         c2: '/lobby/green_char_lobby.png',
         c3: '/lobby/red_char_lobby.png',
         c4: '/lobby/blue_char_lobby.png',
+    };
+
+    const modeList = ['MULTIPLAYER', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3'];
+
+    const modeDisplayMap: Record<string, string> = {
+        MULTIPLAYER: 'Multiplayer',
+        LEVEL_1: 'Level 1',
+        LEVEL_2: 'Level 2',
+        LEVEL_3: 'Level 3',
+    };
+
+    const isUnlocked = (mode: string): boolean => {
+        if (mode === 'MULTIPLAYER') return true;
+        if (mode === 'LEVEL_1') return true;
+        if (mode === 'LEVEL_2') return wallet?.unlockedLevels.includes('LEVEL_1') ?? false;
+        if (mode === 'LEVEL_3') return wallet?.unlockedLevels.includes('LEVEL_2') ?? false;
+        return false;
     };
 
     useEffect(() => {
@@ -86,6 +105,7 @@ export default function LobbyPage() {
                     xp: data.wallet.xp,
                     coins: data.wallet.coins,
                     selectedCharacterId: data.wallet.selectedCharacterId,
+                    unlockedLevels: data.wallet.unlockedLevels || [],
                 };
                 setWallet(walletData);
             });
@@ -104,9 +124,10 @@ export default function LobbyPage() {
         if (!playerId) return;
 
         try {
-            const res = await fetch(`http://localhost:8081/api/game-session/start?playerId=${playerId}`, {
-                method: 'POST',
-            });
+            const res = await fetch(
+                `http://localhost:8081/api/game-session/start?playerId=${playerId}&mode=${gameMode}`,
+                { method: 'POST' }
+            );
 
             if (!res.ok) {
                 alert('Fehler beim Starten der Game Session');
@@ -124,7 +145,7 @@ export default function LobbyPage() {
     const goToShop = () => {
         if (playerId && playerName && wallet) {
             localStorage.setItem('shopPlayerId', playerId);
-            localStorage.setItem('shopPlayerName',playerName)
+            localStorage.setItem('shopPlayerName', playerName);
             localStorage.setItem('shopWallet', JSON.stringify(wallet));
             window.location.href = '/shop';
         }
@@ -144,7 +165,6 @@ export default function LobbyPage() {
                 fontFamily: 'Bangers, cursive',
             }}
         >
-            {/* === LOBBY-FENSTER (feste Größe 960x640) === */}
             <div
                 style={{
                     width: '960px',
@@ -177,7 +197,7 @@ export default function LobbyPage() {
                     <div>💰 {wallet?.coins}</div>
                 </div>
 
-                {/* === OBEN RECHTS: Buttons === */}
+                {/* === OBEN RECHTS: GAME MODES + PLAY === */}
                 <div
                     style={{
                         position: 'absolute',
@@ -185,10 +205,29 @@ export default function LobbyPage() {
                         right: '20px',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '1rem',
+                        gap: '0.5rem',
                     }}
                 >
-                    <GameButton label="Multiplayer" />
+                    {modeList.map((mode) => {
+                        const unlocked = isUnlocked(mode);
+                        return (
+                            <GameButton
+                                key={mode}
+                                label={modeDisplayMap[mode]}
+                                onClick={unlocked ? () => setGameMode(mode) : undefined}
+                                styleOverride={{
+                                    backgroundColor:
+                                        gameMode === mode
+                                            ? '#4CAF50'
+                                            : unlocked
+                                                ? '#2196F3'
+                                                : '#555',
+                                    cursor: unlocked ? 'pointer' : 'not-allowed',
+                                }}
+                            />
+                        );
+                    })}
+
                     <GameButton
                         label="PLAY"
                         styleOverride={{
@@ -210,12 +249,12 @@ export default function LobbyPage() {
                         gap: '1rem',
                     }}
                 >
-                    <GameButton label="CHARACTERS" />
+                    <GameButton label="CHARACTERS" onClick={() => window.location.href = '/character'} />
                     <GameButton label="SHOP" onClick={goToShop} />
                     <GameButton label="MISSIONS" />
                 </div>
 
-                {/* === CHARACTER MITTE ↑ === */}
+                {/* === CHARACTER MITTE === */}
                 {wallet?.selectedCharacterId && characterImageMap[wallet.selectedCharacterId] && (
                     <img
                         src={characterImageMap[wallet.selectedCharacterId]}
@@ -225,16 +264,16 @@ export default function LobbyPage() {
                             bottom: '50px',
                             left: '47%',
                             transform: 'translateX(-50%)',
-                            width: '240px',        // ← feste Breite
-                            height: '300px',       // ← feste Höhe
-                            objectFit: 'contain',  // ← skaliert Bild korrekt ins Format
+                            width: '240px',
+                            height: '300px',
+                            objectFit: 'contain',
                             zIndex: 10,
                             filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.8))',
                         }}
                     />
                 )}
 
-                {/* === READY BUTTON UNTEN MITTE === */}
+                {/* === READY BUTTON UNTEN RECHTS === */}
                 {me && (
                     <div
                         style={{

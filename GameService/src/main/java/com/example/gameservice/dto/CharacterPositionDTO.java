@@ -19,7 +19,7 @@ public class CharacterPositionDTO {
         this.y = position.getY();
         this.rotation = position.getRotation();
         this.direction = position.getDirection();
-        this.skin = position.getSkin();
+        this.skin = position.getSkin(); // ✅ Zugriff auf GameCharacter
         this.isMoving = position.getIsMoving();
     }
 

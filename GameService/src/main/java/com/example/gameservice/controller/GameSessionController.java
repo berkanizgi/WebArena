@@ -1,6 +1,7 @@
 package com.example.gameservice.controller;
 
 import com.example.gameservice.Repository.PlayerRepository;
+import com.example.gameservice.domain.GameMode;
 import com.example.gameservice.domain.Player;
 import com.example.gameservice.service.GameSessionService;
 import com.example.gameservice.session.GameSession;
@@ -29,17 +30,13 @@ public class GameSessionController {
     private SimpMessagingTemplate messagingTemplate;
 
     @GetMapping("/{sessionId}/players")
-    public List<Map<String, String>> getPlayers(@PathVariable String sessionId) {
+    public List<SessionPlayer> getPlayers(@PathVariable String sessionId) {
         GameSession session = sessionService.getSession(sessionId);
-        if (session == null) return List.of();
+        if (session == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
-        return session.getSessionPlayers().stream()
-                .map(p -> Map.of(
-                        "name", p.getCharacterName(),
-                        "characterId", p.getCharacterId()
-                ))
-                .toList();
+        return session.getSessionPlayers();
     }
+
 
     @GetMapping("/{sessionId}/me")
     public SessionPlayer getMySessionData(@PathVariable String sessionId, @RequestParam String playerId) {
@@ -47,16 +44,17 @@ public class GameSessionController {
         if (session == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Session nicht gefunden");
 
         SessionPlayer player = session.getByPlayerId(playerId);
+        player.setGameMode(session.getGameMode());
         if (player == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Spieler nicht in Session");
 
         return player;
     }
 
     @PostMapping("/start")
-    public Map<String, String> startGameSession(@RequestParam String playerId) {
+    public Map<String, String> startGameSession(@RequestParam String playerId, @RequestParam GameMode mode) {
         Player player = playerRepository.findById(playerId).orElseThrow();
 
-        GameSession session = sessionService.joinOrCreateSession(player);
+        GameSession session = sessionService.joinOrCreateSession(player,mode);
         sessionService.maybeStartCountdown(session, messagingTemplate);
 
         messagingTemplate.convertAndSend("/topic/session/" + session.getId(), Map.of(
@@ -70,4 +68,12 @@ public class GameSessionController {
 
         return Map.of("sessionId", session.getId());
     }
+
+    @PostMapping("/unlock-level")
+    public void unlockLevel(@RequestParam String playerId, @RequestParam String level) {
+        Player player = playerRepository.findById(playerId).orElseThrow();
+        player.getWallet().unlockLevel(level);
+        playerRepository.save(player);
+    }
+
 }

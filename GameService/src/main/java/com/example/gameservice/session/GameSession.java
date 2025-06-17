@@ -1,4 +1,5 @@
 package com.example.gameservice.session;
+import com.example.gameservice.domain.GameMode;
 import com.example.gameservice.domain.Player;
 
 import java.util.ArrayList;
@@ -9,6 +10,8 @@ public class GameSession {
     private final List<SessionPlayer> sessionPlayers = new ArrayList<>();
     private boolean started = false;
     private transient Thread countdownThread;
+
+    private GameMode gameMode;
 
 
     public GameSession(String id) {
@@ -51,4 +54,11 @@ public class GameSession {
         this.countdownThread = thread;
     }
 
+    public GameMode getGameMode() {
+        return gameMode;
+    }
+
+    public void setGameMode(GameMode gameMode) {
+        this.gameMode = gameMode;
+    }
 }

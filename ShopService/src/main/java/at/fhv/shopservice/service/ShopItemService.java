@@ -1,10 +1,10 @@
 package at.fhv.shopservice.service;
 
 
+import at.fhv.shopservice.repository.ShopItemRepository;
 import at.fhv.shopservice.domain.ShopItem;
 import at.fhv.shopservice.dto.CharacterWithPriceDTO;
 import at.fhv.shopservice.dto.GameCharacterDTO;
-import at.fhv.shopservice.repository.ShopItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -3,6 +3,8 @@ package com.example.gameservice.domain;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import jakarta.persistence.*;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -22,6 +24,9 @@ public class Wallet {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "character_id")
     private GameCharacter selectedCharacter;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    private Set<String> unlockedLevels = new HashSet<>();
 
     // --- Konstruktoren ---
     public Wallet() {
@@ -86,4 +91,13 @@ public class Wallet {
     public String getSelectedCharacterId() {
         return selectedCharacter != null ? selectedCharacter.getCharacterId() : null;
     }
+
+    public Set<String> getUnlockedLevels() {
+        return unlockedLevels;
+    }
+
+    public void unlockLevel(String level) {
+        unlockedLevels.add(level);
+    }
+
 }

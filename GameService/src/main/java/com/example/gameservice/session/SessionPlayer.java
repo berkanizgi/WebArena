@@ -1,5 +1,7 @@
 package com.example.gameservice.session;
 
+import com.example.gameservice.domain.GameMode;
+
 public class SessionPlayer {
     private String playerId;
     private String characterId;
@@ -7,6 +9,10 @@ public class SessionPlayer {
     private int baseHealth;
     private int baseAttack;
     private int speed;
+    private boolean isDead = false;
+
+    private GameMode gameMode;
+
 
     public SessionPlayer(String playerId, String characterId, String characterName, int baseHealth, int baseAttack, int speed) {
         this.playerId = playerId;
@@ -64,5 +70,22 @@ public class SessionPlayer {
     public void setSpeed(int speed) {
         this.speed = speed;
     }
+
+    public boolean isDead() {
+        return isDead;
+    }
+
+    public void setDead(boolean dead) {
+        isDead = dead;
+    }
+
+    public GameMode getGameMode() {
+        return gameMode;
+    }
+
+    public void setGameMode(GameMode gameMode) {
+        this.gameMode = gameMode;
+    }
+
     // Getter + Setter
 }

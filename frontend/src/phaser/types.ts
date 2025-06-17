@@ -24,6 +24,8 @@ export interface SessionPlayerDTO {
     baseAttack: number;
     speed: number;
     skin: string;
+    gameMode: string;
+
 }
 
 

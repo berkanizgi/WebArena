@@ -29,6 +29,13 @@ public class Player implements Serializable {
     @OneToOne(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private Wallet wallet;
 
+    @ManyToOne
+    @JoinColumn(name = "selected_character_character_id")
+    private GameCharacter selectedCharacter;
+
+    @ManyToOne
+    @JoinColumn(name = "character_id")
+    private GameCharacter character;
 
 
     public Player() {
@@ -111,5 +118,21 @@ public class Player implements Serializable {
 
     public void setPlayerId(String playerId) {
         this.playerId = playerId;
+    }
+
+    public GameCharacter getSelectedCharacter() {
+        return selectedCharacter;
+    }
+
+    public void setSelectedCharacter(GameCharacter selectedCharacter) {
+        this.selectedCharacter = selectedCharacter;
+    }
+
+    public GameCharacter getCharacter() {
+        return character;
+    }
+
+    public void setCharacter(GameCharacter character) {
+        this.character = character;
     }
 }

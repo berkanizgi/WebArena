@@ -5,7 +5,7 @@ export function createHealthBar(
     bar.setDepth(10);
 
     const text = scene.add.text(0, 0, '', {
-        fontSize: '7px',
+        fontSize: '14px',
         color: '#ffffff',
         fontFamily: 'Arial',
         stroke: '#000000',
@@ -13,10 +13,11 @@ export function createHealthBar(
     });
     text.setDepth(11);
     text.setOrigin(0.5);
+    text.setScale(0.5);
+
 
     return { bar, text };
 }
-
 export function updateHealthBar(
     bar: Phaser.GameObjects.Graphics,
     text: Phaser.GameObjects.Text,

@@ -12,7 +12,9 @@ import { createProjectileGroup, updateProjectiles } from '@/phaser/setup/project
 import { handlePlayerMovement } from '@/phaser/movement/movementHandler';
 import { sendMovement } from '@/phaser/movement/movementSender';
 import { createHealthBar, updateHealthBar } from '@/phaser/setup/healthBarSetup';
-
+import { setupLevel1Tutorial} from "@/phaser/setup/level/Level1";
+import { setupMultiplayerZone } from '@/phaser/setup/setupMultiplayerZone';
+import {SessionPlayerDTO} from "@/phaser/types";
 
 
 export default class GameScene extends Phaser.Scene {
@@ -33,7 +35,7 @@ export default class GameScene extends Phaser.Scene {
     public projectiles!: Phaser.GameObjects.Group;
     private cooldownBar!: Phaser.GameObjects.Graphics;
     private cooldownProgress = 1;
-    private collisionLayer!: Phaser.Tilemaps.TilemapLayer;
+    collisionLayer!: Phaser.Tilemaps.TilemapLayer;
     private topLayer!: Phaser.Tilemaps.TilemapLayer;
     public baseAttack!: number;
     public baseHealth!: number;
@@ -42,10 +44,9 @@ export default class GameScene extends Phaser.Scene {
     public sessionId!: string;
     public currentHealth!: number;
     public healthBar!: Phaser.GameObjects.Graphics;
-    // Typ ergänzen
     public healthBarGraphics!: Phaser.GameObjects.Graphics;
     public healthBarText!: Phaser.GameObjects.Text;
-    private displayedHealth!: number; // für Animation
+    private displayedHealth!: number;
     public otherPlayerHealth = new Map<string, {
         currentHealth: number;
         baseHealth: number;
@@ -53,8 +54,9 @@ export default class GameScene extends Phaser.Scene {
         text: Phaser.GameObjects.Text;
         displayedHealth: number;
     }>();
-
-
+    public gameMode!: string;
+    public sessionPlayerMap!: Map<string, SessionPlayerDTO>;
+    public zoneTimerText!: Phaser.GameObjects.Text;
 
 
 
@@ -64,21 +66,20 @@ export default class GameScene extends Phaser.Scene {
         baseAttack: number;
         baseHealth: number;
         speed: number;
-        characterId: string; // < NEU
+        characterId: string;
         sessionId: string;
-
-
+        gameMode: string;
     }) {
         super(config);
         this.skin = config.skin;
-        this.characterId = config.characterId; // < NEU
+        this.characterId = config.characterId;
         this.playerId = config.playerId;
         this.baseAttack = config.baseAttack;
         this.baseHealth = config.baseHealth;
         this.speed = config.speed;
         this.sessionId = config.sessionId;
+        this.gameMode = config.gameMode;
     }
-
 
     preload() {
         this.load.tilemapTiledJSON('map', '/map/WebArenaMap.json');
@@ -99,6 +100,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     create() {
+
+
         this.pointer = this.input.activePointer;
 
         const { map, spawnX, spawnY, collisionLayer, topLayer } = setupMap(this);
@@ -109,17 +112,16 @@ export default class GameScene extends Phaser.Scene {
         this.player = player;
         this.cursors = cursors;
 
-        // ✳️ Collision aktivieren zwischen Spieler und Map
         this.physics.add.collider(this.player, this.collisionLayer);
-
 
         setupAnimations(this, this.skin);
         setupCamera(this, this.player);
 
-
         const { bar, text } = createHealthBar(this);
         this.healthBarGraphics = bar;
         this.healthBarText = text;
+        this.add.existing(bar);
+        this.add.existing(text);
         this.currentHealth = this.baseHealth;
         this.displayedHealth = this.baseHealth;
 
@@ -131,7 +133,6 @@ export default class GameScene extends Phaser.Scene {
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             const now = this.time.now;
             if (now - this.lastAttackTime < this.cooldown) return;
-
             this.lastAttackTime = now;
 
             const dx = pointer.worldX - this.player.x;
@@ -148,18 +149,25 @@ export default class GameScene extends Phaser.Scene {
                 dirX: normX,
                 dirY: normY
             });
-
-
-
         });
 
         setupWebSocket(this);
+        if (this.gameMode === 'MULTIPLAYER') {
+            console.log("[GameScene] MULTIPLAYER aktiv – Zone wird vorbereitet.");
+            setupMultiplayerZone(this);
+        }
+        if (this.gameMode === 'LEVEL_1') {
+            setupLevel1Tutorial(this);
+        } else if (this.gameMode === 'LEVEL_2') {
+            console.log("[GameScene] LEVEL_2 aktiv – Giftzonen werden aktiviert.");
+        } else if (this.gameMode === 'LEVEL_3') {
+            console.log("[GameScene] LEVEL_3 aktiv – Giftwolke und NPC werden aktiviert.");
+        }
     }
 
     update() {
         const { aimDirection, moveX, moveY, rotation } = handlePlayerMovement(this.player, this.cursors, this.pointer, this.speed);
 
-        // Spieler Tiefe dynamisch an Y-Position anpassen
         this.player.setDepth(Math.min(this.player.y, 99));
 
         updateProjectiles(this.projectiles, this.time.now, this.game.loop.delta);
@@ -175,25 +183,22 @@ export default class GameScene extends Phaser.Scene {
             rotation,
             moveX,
             moveY,
-            this.characterId, // NEU: characterId mitgeben, nicht this.skin
+            this.characterId,
             this.sessionId
         );
-
 
         const now = this.time.now;
         const elapsed = now - this.lastAttackTime;
         this.cooldownProgress = Phaser.Math.Clamp(elapsed / this.cooldown, 0, 1);
-
         updateCooldownBar(this.cooldownBar, this.player, this.cooldownProgress);
 
-        const smoothing = 0.1; // smooth 10%
+        const smoothing = 0.1;
         this.displayedHealth += (this.currentHealth - this.displayedHealth) * smoothing;
         updateHealthBar(this.healthBarGraphics, this.healthBarText, this.player, this.displayedHealth, this.baseHealth);
+
         this.otherPlayerHealth.forEach((healthData, playerId) => {
             const entry = this.otherPlayers.get(playerId);
             if (!entry) return;
-
-            // Smoothe Darstellung
             healthData.displayedHealth += (healthData.currentHealth - healthData.displayedHealth) * 0.1;
 
             updateHealthBar(
@@ -204,6 +209,5 @@ export default class GameScene extends Phaser.Scene {
                 healthData.baseHealth
             );
         });
-
     }
 }

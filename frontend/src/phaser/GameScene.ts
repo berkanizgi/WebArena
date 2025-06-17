@@ -56,6 +56,8 @@ export default class GameScene extends Phaser.Scene {
     }>();
     public gameMode!: string;
     public sessionPlayerMap!: Map<string, SessionPlayerDTO>;
+    public zoneTimerText!: Phaser.GameObjects.Text;
+
 
 
     constructor(config: Phaser.Types.Scenes.SettingsConfig & {

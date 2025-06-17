@@ -96,7 +96,7 @@ public class AttackService {
             return;
         }
 
-        int damage = isZoneDamage ? 50 : shooter.getCharacter().getBaseAttack();
+        int damage = isZoneDamage ? request.getDamage() : shooter.getCharacter().getBaseAttack();
         int newHealth = Math.max(0, target.getCurrentHealth() - damage);
         target.setCurrentHealth(newHealth);
 

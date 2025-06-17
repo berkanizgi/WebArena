@@ -2,8 +2,9 @@ import GameScene from '@/phaser/GameScene';
 
 export async function setupMultiplayerZone(scene: GameScene) {
     let lastDamageTime = 0;
-    const center = { x: 643, y: 470 };
-    let radius = 900;
+    let center = { x: 0, y: 0 };
+    let radius = 0;
+
 
     let zonePhases: {
         shrinking: boolean;
@@ -29,6 +30,16 @@ export async function setupMultiplayerZone(scene: GameScene) {
         console.warn('⚠️ Keine Zone-Phasen erhalten.');
         return;
     }
+    try {
+        const res = await fetch('http://localhost:8080/api/zones/config');
+        const config = await res.json();
+        center = { x: config.centerX, y: config.centerY };
+        radius = config.initialRadius;
+    } catch (err) {
+        console.error('❌ Fehler beim Laden der Zonen-Konfiguration:', err);
+        return;
+    }
+
 
     currentPhase = zonePhases[0];
     nextPhaseTime = scene.time.now + currentPhase.durationSeconds * 1000;
@@ -38,7 +49,7 @@ export async function setupMultiplayerZone(scene: GameScene) {
     htmlTimer.innerText = 'Zone lädt...';
     Object.assign(htmlTimer.style, {
         position: 'fixed',
-        top: '170px',
+        top: '80px',
         left: '50%',
         transform: 'translateX(-50%)',
         padding: '10px 20px',
@@ -65,12 +76,24 @@ export async function setupMultiplayerZone(scene: GameScene) {
         callback: () => {
             const now = scene.time.now;
 
-            // 🔁 Phase wechseln
-            if (now >= nextPhaseTime && currentPhaseIndex + 1 < zonePhases.length) {
-                currentPhaseIndex++;
-                currentPhase = zonePhases[currentPhaseIndex];
-                nextPhaseTime = now + currentPhase.durationSeconds * 1000;
+            if (now >= nextPhaseTime) {
+                if (currentPhaseIndex + 1 < zonePhases.length) {
+                    currentPhaseIndex++;
+                    currentPhase = zonePhases[currentPhaseIndex];
+                    nextPhaseTime = now + currentPhase.durationSeconds * 1000;
+                } else {
+                    // ⛔ Keine weiteren Phasen → Finalphase aktiv
+                    currentPhase = {
+                        shrinking: false,
+                        durationSeconds: 0,
+                        damagePerTick: 0,
+                        shrinkAmount: 0,
+                    };
+                    htmlTimer.innerText = '⚔️ Besiege alle Gegner!';
+                    return; // Zone bleibt stehen, keine weiteren Aktionen
+                }
             }
+
 
             // 🕒 Timer-Anzeige
             if (currentPhase.shrinking) {
@@ -107,7 +130,7 @@ export async function setupMultiplayerZone(scene: GameScene) {
                         sessionId: scene.sessionId,
                         shooterId: 'ZONE',
                         targetId: scene.playerId,
-                        damage: currentPhase.damagePerTick  // ✅ NEU: Schadenswert mitsenden!
+                        damage: currentPhase.damagePerTick
                     }),
                 });
 

@@ -1,8 +1,10 @@
 import type GameScene from '@/phaser/GameScene';
 import { showTutorialBox } from '@/components/showTutorialBox';
 import { showPopup } from '@/components/PopUp';
+import { useRouter } from 'next/navigation';
 
-export function setupLevel1Tutorial(scene: GameScene) {
+
+export function setupLevel1Tutorial(scene: GameScene, router: ReturnType<typeof useRouter>) {
     const completed = {
         move: false,
         rotate: false,
@@ -49,12 +51,11 @@ export function setupLevel1Tutorial(scene: GameScene) {
         if (!completed.shoot) {
             completed.shoot = true;
             updateInstruction();
-            unlockLevel2(scene);
+            unlockLevel2(scene,router);
         }
     });
 }
-
-function unlockLevel2(scene: Phaser.Scene) {
+function unlockLevel2(scene: Phaser.Scene, router: ReturnType<typeof useRouter>) {
     const walletData = localStorage.getItem('wallet');
     if (!walletData) return;
 
@@ -68,9 +69,9 @@ function unlockLevel2(scene: Phaser.Scene) {
                 const playerId = localStorage.getItem('playerId');
                 if (playerId) {
                     localStorage.setItem('playerId', playerId);
-                    window.location.href = "/lobby";
+                    router.push("/lobby");
                 } else {
-                    window.location.href = "/login";
+                    router.push("/login");
                 }
             });
         });

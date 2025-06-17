@@ -1,6 +1,7 @@
 package com.example.mapservice.service;
 
 
+import com.example.mapservice.domain.ZoneConfig;
 import com.example.mapservice.domain.ZonePhase;
 import org.springframework.stereotype.Service;
 
@@ -19,4 +20,9 @@ public class ZoneService {
                 new ZonePhase(true, 30, 70, 1.5)
         );
     }
+
+    public ZoneConfig getZoneConfigForMap(String mapId) {
+        return new ZoneConfig(643, 470, 900);
+    }
+
 }

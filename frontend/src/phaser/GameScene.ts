@@ -15,6 +15,8 @@ import { createHealthBar, updateHealthBar } from '@/phaser/setup/healthBarSetup'
 import { setupLevel1Tutorial} from "@/phaser/setup/level/Level1";
 import { setupMultiplayerZone } from '@/phaser/setup/setupMultiplayerZone';
 import {SessionPlayerDTO} from "@/phaser/types";
+import { useRouter } from 'next/navigation';
+
 
 
 export default class GameScene extends Phaser.Scene {
@@ -57,6 +59,9 @@ export default class GameScene extends Phaser.Scene {
     public gameMode!: string;
     public sessionPlayerMap!: Map<string, SessionPlayerDTO>;
     public zoneTimerText!: Phaser.GameObjects.Text;
+    public router: any;
+
+
 
 
 
@@ -69,6 +74,7 @@ export default class GameScene extends Phaser.Scene {
         characterId: string;
         sessionId: string;
         gameMode: string;
+        router: any; // oder: ReturnType<typeof useRouter>
     }) {
         super(config);
         this.skin = config.skin;
@@ -79,10 +85,13 @@ export default class GameScene extends Phaser.Scene {
         this.speed = config.speed;
         this.sessionId = config.sessionId;
         this.gameMode = config.gameMode;
+        this.router = config.router; // 👈 Neu speichern
+
     }
 
     preload() {
         this.load.tilemapTiledJSON('map', '/map/WebArenaMap.json');
+
 
         const tilesets = [
             'Set 1.0', 'Set 1.1', 'Set 1.2', 'Set 1.3',
@@ -151,13 +160,14 @@ export default class GameScene extends Phaser.Scene {
             });
         });
 
+
         setupWebSocket(this);
         if (this.gameMode === 'MULTIPLAYER') {
             console.log("[GameScene] MULTIPLAYER aktiv – Zone wird vorbereitet.");
             setupMultiplayerZone(this);
         }
         if (this.gameMode === 'LEVEL_1') {
-            setupLevel1Tutorial(this);
+            setupLevel1Tutorial(this, this.router);
         } else if (this.gameMode === 'LEVEL_2') {
             console.log("[GameScene] LEVEL_2 aktiv – Giftzonen werden aktiviert.");
         } else if (this.gameMode === 'LEVEL_3') {

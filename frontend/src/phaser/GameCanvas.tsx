@@ -17,12 +17,12 @@ export default function GameCanvas({ playerId, sessionId }: { playerId: string; 
     };
 
     const [sessionPlayer, setSessionPlayer] = useState<SessionPlayerDTO | null>(null);
+    const [sessionPlayers, setSessionPlayers] = useState<SessionPlayerDTO[]>([]);
 
     useEffect(() => {
         async function fetchSessionPlayer() {
             const res = await fetch(`http://localhost:8081/api/game-session/${sessionId}/me?playerId=${playerId}`);
             const data = await res.json();
-            console.log("[CLIENT] SessionPlayer geladen:", data);
             setSessionPlayer(data);
         }
 
@@ -30,7 +30,20 @@ export default function GameCanvas({ playerId, sessionId }: { playerId: string; 
     }, [playerId, sessionId]);
 
     useEffect(() => {
-        if (!containerRef.current || gameRef.current || !sessionPlayer) return;
+        async function fetchAllPlayers() {
+            const res = await fetch(`http://localhost:8081/api/game-session/${sessionId}/players`);
+            const data = await res.json();
+            setSessionPlayers(data);
+        }
+
+        fetchAllPlayers();
+    }, [sessionId]);
+
+    useEffect(() => {
+        if (!containerRef.current || gameRef.current || !sessionPlayer || sessionPlayers.length === 0) return;
+
+        const sessionPlayerMap = new Map<string, SessionPlayerDTO>();
+        sessionPlayers.forEach(p => sessionPlayerMap.set(p.playerId, p));
 
         const config = {
             key: 'main',
@@ -41,17 +54,18 @@ export default function GameCanvas({ playerId, sessionId }: { playerId: string; 
             baseHealth: sessionPlayer.baseHealth,
             speed: sessionPlayer.speed,
             sessionId: sessionId,
-            gameMode: sessionPlayer.gameMode, // ⬅️ NEU
+            gameMode: sessionPlayer.gameMode,
         };
 
-        console.log("[GameCanvas] Konfiguration für GameScene:", config);
+        const scene = new GameScene(config);
+        scene.sessionPlayerMap = sessionPlayerMap;
 
         gameRef.current = new Phaser.Game({
             type: Phaser.AUTO,
             width: 960,
             height: 640,
             parent: containerRef.current,
-            scene: [new GameScene(config)],
+            scene: [scene],
             physics: {
                 default: 'arcade',
                 arcade: { debug: false },
@@ -63,7 +77,7 @@ export default function GameCanvas({ playerId, sessionId }: { playerId: string; 
             gameRef.current?.destroy(true);
             gameRef.current = null;
         };
-    }, [sessionPlayer]);
+    }, [sessionPlayer, sessionPlayers]);
 
     if (!sessionPlayer) return <div>Lade deine Sessiondaten...</div>;
 
@@ -78,13 +92,7 @@ export default function GameCanvas({ playerId, sessionId }: { playerId: string; 
                 alignItems: 'center',
             }}
         >
-            <div
-                ref={containerRef}
-                style={{
-                    width: '960px',
-                    height: '640px',
-                }}
-            />
+            <div ref={containerRef} style={{ width: '960px', height: '640px' }} />
         </div>
     );
 }

@@ -13,6 +13,9 @@ import { handlePlayerMovement } from '@/phaser/movement/movementHandler';
 import { sendMovement } from '@/phaser/movement/movementSender';
 import { createHealthBar, updateHealthBar } from '@/phaser/setup/healthBarSetup';
 import { setupLevel1Tutorial} from "@/phaser/setup/level/Level1";
+import { setupMultiplayerZone } from '@/phaser/setup/setupMultiplayerZone';
+import {SessionPlayerDTO} from "@/phaser/types";
+
 
 export default class GameScene extends Phaser.Scene {
     public player!: Phaser.Physics.Arcade.Sprite;
@@ -52,6 +55,8 @@ export default class GameScene extends Phaser.Scene {
         displayedHealth: number;
     }>();
     public gameMode!: string;
+    public sessionPlayerMap!: Map<string, SessionPlayerDTO>;
+
 
     constructor(config: Phaser.Types.Scenes.SettingsConfig & {
         skin: string;
@@ -145,7 +150,10 @@ export default class GameScene extends Phaser.Scene {
         });
 
         setupWebSocket(this);
-
+        if (this.gameMode === 'MULTIPLAYER') {
+            console.log("[GameScene] MULTIPLAYER aktiv – Zone wird vorbereitet.");
+            setupMultiplayerZone(this);
+        }
         if (this.gameMode === 'LEVEL_1') {
             setupLevel1Tutorial(this);
         } else if (this.gameMode === 'LEVEL_2') {
@@ -190,8 +198,6 @@ export default class GameScene extends Phaser.Scene {
             const entry = this.otherPlayers.get(playerId);
             if (!entry) return;
             healthData.displayedHealth += (healthData.currentHealth - healthData.displayedHealth) * 0.1;
-            healthData.bar.setPosition(entry.sprite.x, entry.sprite.y - 32);
-            healthData.text.setPosition(entry.sprite.x, entry.sprite.y - 40);
 
             updateHealthBar(
                 healthData.bar,

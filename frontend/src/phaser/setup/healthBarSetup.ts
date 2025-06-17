@@ -18,7 +18,6 @@ export function createHealthBar(
 
     return { bar, text };
 }
-
 export function updateHealthBar(
     bar: Phaser.GameObjects.Graphics,
     text: Phaser.GameObjects.Text,

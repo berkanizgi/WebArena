@@ -33,9 +33,10 @@ export function sendMovement(
         sessionId
     };
 
+    console.log(`[Movement] Player: ${playerId}, Position: (${x.toFixed(1)}, ${y.toFixed(1)})`);
+
     stompClient.publish({
         destination: '/app/move',
         body: JSON.stringify(payload)
     });
 }
-

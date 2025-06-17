@@ -58,7 +58,25 @@ export function setupWebSocket(scene: GameScene) {
                     lastY: data.y,
                     lastDirection: data.direction
                 });
+
                 console.log('[WebSocket] Neuer Spieler hinzugefügt:', data.playerId);
+
+                const { bar, text } = createHealthBar(scene);
+                scene.add.existing(bar);
+                scene.add.existing(text);
+
+
+                const baseHealth = scene.sessionPlayerMap?.get(data.playerId)?.baseHealth ?? 1000;
+
+                scene.otherPlayerHealth.set(data.playerId, {
+                    currentHealth: baseHealth,
+                    baseHealth: baseHealth,
+                    bar,
+                    text,
+                    displayedHealth: baseHealth
+                });
+
+
             }
         });
 
@@ -207,15 +225,20 @@ export function setupWebSocket(scene: GameScene) {
 
 
                     const { bar, text } = createHealthBar(scene);
-                    scene.otherPlayerHealth.set(p.playerId, {
-                        currentHealth: scene.baseHealth,
-                        baseHealth: scene.baseHealth,
-                        bar,
-                        text,
-                        displayedHealth: scene.baseHealth
-                    });
                     scene.add.existing(bar);
                     scene.add.existing(text);
+
+
+                    const baseHealth = scene.sessionPlayerMap?.get(p.playerId)?.baseHealth ?? 1000;
+
+                    scene.otherPlayerHealth.set(p.playerId, {
+                        currentHealth: baseHealth,
+                        baseHealth: baseHealth,
+                        bar,
+                        text,
+                        displayedHealth: baseHealth
+                    });
+
 
                 });
 

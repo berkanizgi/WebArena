@@ -30,17 +30,13 @@ public class GameSessionController {
     private SimpMessagingTemplate messagingTemplate;
 
     @GetMapping("/{sessionId}/players")
-    public List<Map<String, String>> getPlayers(@PathVariable String sessionId) {
+    public List<SessionPlayer> getPlayers(@PathVariable String sessionId) {
         GameSession session = sessionService.getSession(sessionId);
-        if (session == null) return List.of();
+        if (session == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
-        return session.getSessionPlayers().stream()
-                .map(p -> Map.of(
-                        "name", p.getCharacterName(),
-                        "characterId", p.getCharacterId()
-                ))
-                .toList();
+        return session.getSessionPlayers();
     }
+
 
     @GetMapping("/{sessionId}/me")
     public SessionPlayer getMySessionData(@PathVariable String sessionId, @RequestParam String playerId) {

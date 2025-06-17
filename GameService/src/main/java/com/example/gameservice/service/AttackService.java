@@ -81,21 +81,24 @@ public class AttackService {
 
 
 
-
     public void processHit(HitRequest request) {
-        CharacterPosition shooter = movementService.getCharacterPosition(request.getSessionId(), request.getShooterId());
+        CharacterPosition shooter = null;
         CharacterPosition target = movementService.getCharacterPosition(request.getSessionId(), request.getTargetId());
 
+        boolean isZoneDamage = "ZONE".equals(request.getShooterId());
 
-        if (shooter == null || target == null) {
-            System.out.println("Ungültiger Hit: Spieler nicht gefunden");
+        if (!isZoneDamage) {
+            shooter = movementService.getCharacterPosition(request.getSessionId(), request.getShooterId());
+        }
+
+        if (target == null) {
+            System.out.println("Ungültiger Hit: Zielspieler nicht gefunden");
             return;
         }
 
-        int damage = shooter.getCharacter().getBaseAttack();
+        int damage = isZoneDamage ? 50 : shooter.getCharacter().getBaseAttack();
         int newHealth = Math.max(0, target.getCurrentHealth() - damage);
         target.setCurrentHealth(newHealth);
-
 
         if (newHealth <= 0) {
             System.out.println("[DEBUG] Spieler " + target.getPlayerId() + " ist tot. Suche Session & markiere isDead.");
@@ -123,7 +126,6 @@ public class AttackService {
                                     "/topic/victory/" + winner.getPlayerId(),
                                     "YOU_WIN"
                             );
-
                         }
                     }
                 } else {
@@ -134,10 +136,8 @@ public class AttackService {
             }
         }
 
-
-
-
-        System.out.println( shooter.getPlayerId() + " trifft " + target.getPlayerId() + " für " + damage + " Schaden (HP: " + newHealth + ")");
+        String source = isZoneDamage ? "ZONE" : shooter.getPlayerId();
+        System.out.println(source + " trifft " + target.getPlayerId() + " für " + damage + " Schaden (HP: " + newHealth + ")");
 
         messagingTemplate.convertAndSend(
                 "/topic/health",

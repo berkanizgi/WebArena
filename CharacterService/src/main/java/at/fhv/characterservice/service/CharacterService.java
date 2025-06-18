@@ -11,6 +11,8 @@ import at.fhv.characterservice.repository.PlayerRepository;
 import at.fhv.characterservice.repository.WalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -92,6 +94,28 @@ public class CharacterService {
         walletRepository.save(wallet);
         playerOwnedCharacterRepository.save(poc);
     }
+
+    public void createOwnedCharacter(String playerId, String characterId) {
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new RuntimeException("Player not found"));
+
+        GameCharacter character = characterRepository.findById(characterId)
+                .orElseThrow(() -> new RuntimeException("Character not found"));
+
+        PlayerOwnedCharacter poc = new PlayerOwnedCharacter();
+        poc.setPlayer(player);
+        poc.setGameCharacter(character);
+        poc.setBaseHealth(character.getBaseHealth());
+        poc.setBaseAttack(character.getBaseAttack());
+        poc.setBaseSpeed(character.getSpeed());
+        poc.setProjectileSpeed(10); // Optional: dynamisch, falls später unterstützt
+        poc.setNextUpgradeCost(1000);
+        poc.setUpgradeLevel(1);
+        poc.setPurchaseDate(LocalDateTime.now());
+
+        playerOwnedCharacterRepository.save(poc);
+    }
+
 
 
 }

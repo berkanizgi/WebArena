@@ -50,19 +50,19 @@ public class PurchaseService {
         playerRepository.save(player);
     }
 
-    public void addOwnedCharacter(String playerId, String characterId) {
-        Player player = playerRepository.findById(playerId)
-                .orElseThrow(() -> new RuntimeException("Player not found"));
-
-        GameCharacter gameCharacter = gameCharacterRepository.findById(characterId)
-                .orElseThrow(() -> new RuntimeException("Character not found"));
-
-        PlayerOwnedCharacter ownedCharacter = new PlayerOwnedCharacter();
-        ownedCharacter.setPlayer(player);
-        ownedCharacter.setGameCharacter(gameCharacter);
-        ownedCharacter.setUpgradeLevel(1);
-        ownedCharacter.setPurchaseDate(LocalDateTime.now());
-
-        ownedCharacterRepository.save(ownedCharacter);
-    }
+//    public void addOwnedCharacter(String playerId, String characterId) {
+//        Player player = playerRepository.findById(playerId)
+//                .orElseThrow(() -> new RuntimeException("Player not found"));
+//
+//        GameCharacter gameCharacter = gameCharacterRepository.findById(characterId)
+//                .orElseThrow(() -> new RuntimeException("Character not found"));
+//
+//        PlayerOwnedCharacter ownedCharacter = new PlayerOwnedCharacter();
+//        ownedCharacter.setPlayer(player);
+//        ownedCharacter.setGameCharacter(gameCharacter);
+//        ownedCharacter.setUpgradeLevel(1);
+//        ownedCharacter.setPurchaseDate(LocalDateTime.now());
+//
+//        ownedCharacterRepository.save(ownedCharacter);
+//    }
 }

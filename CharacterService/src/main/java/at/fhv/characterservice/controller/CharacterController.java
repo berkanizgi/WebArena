@@ -5,6 +5,7 @@ import at.fhv.characterservice.dto.GameCharacterDTO;
 import at.fhv.characterservice.dto.PlayerOwnedCharacterDTO;
 import at.fhv.characterservice.repository.PlayerOwnedCharacterRepository;
 import at.fhv.characterservice.repository.PlayerRepository;
+import at.fhv.characterservice.request.AddOwnedCharacterRequest;
 import at.fhv.characterservice.service.CharacterService;
 import at.fhv.characterservice.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,6 +102,16 @@ public class CharacterController {
         walletService.updateCharacterId(playerId, characterId);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/owned-character")
+    public ResponseEntity<Void> createOwnedCharacter(@RequestBody AddOwnedCharacterRequest request) {
+        characterService.createOwnedCharacter(request.getPlayerId(), request.getCharacterId());
+        return ResponseEntity.ok().build();
+    }
+
+
+
+
 
 
 

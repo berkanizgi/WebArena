@@ -73,8 +73,10 @@ export function setupWebSocket(scene: GameScene) {
                     baseHealth: baseHealth,
                     bar,
                     text,
-                    displayedHealth: baseHealth
+                    displayedHealth: baseHealth,
+                    isDead: false
                 });
+
 
 
             }
@@ -82,6 +84,9 @@ export function setupWebSocket(scene: GameScene) {
 
         scene.stompClient.subscribe(`/topic/victory/${scene.playerId}`, (message) => {
             console.log("[WebSocket] Sieg empfangen:", message.body);
+            if (scene.hasShownVictoryPopup) return;
+            scene.hasShownVictoryPopup = true;
+
             scene.time.delayedCall(200, () => {
                 if (scene.player) {
                     scene.cameras.main.centerOn(scene.player.x, scene.player.y);
@@ -127,7 +132,8 @@ export function setupWebSocket(scene: GameScene) {
             if (isSelf) {
                 scene.currentHealth = data.health;
 
-                if (scene.currentHealth <= 0) {
+                if (scene.currentHealth <= 0 && !scene.hasShownDeathPopup) {
+                    scene.hasShownDeathPopup = true;
                     scene.player.setTint(0x000000);
                     scene.physics.pause();
                     showPopup(scene, "Du bist leider gestorben!", () => {
@@ -152,20 +158,28 @@ export function setupWebSocket(scene: GameScene) {
                 const healthData = scene.otherPlayerHealth.get(data.playerId);
                 if (!entry || !healthData) return;
 
-                if (healthData.currentHealth <= 0) {
+                if (healthData.currentHealth <= 0 && !healthData.isDead) {
                     console.log(`[Game] Spieler ${data.playerId} ist gestorben – prüfe Siegbedingung`);
 
-                    // 🕒 Delay damit z. B. Death-Animation durchlaufen kann
+                    healthData.isDead = true;
+
                     scene.time.delayedCall(200, () => {
-                        checkWinCondition(scene); // ZUERST prüfen
-                        entry.sprite.destroy();   // DANN erst Gegner "entfernen"
+                        checkWinCondition(scene);
+                        entry.sprite.destroy();
+                        healthData.bar.destroy();
+                        healthData.text.destroy();
+                        if (scene.projectiles) {
+                            scene.projectiles.getChildren().forEach((proj: any) => {
+                                if (proj.shooterId === data.playerId) {
+                                    proj.destroy();
+                                }
+                            });
+                        }
                         scene.otherPlayers.delete(data.playerId);
                         scene.otherPlayerHealth.delete(data.playerId);
+
                     });
                 }
-
-
-
 
                 healthData.currentHealth = data.health;
                 healthData.displayedHealth += (healthData.currentHealth - healthData.displayedHealth) * 0.1;
@@ -236,8 +250,10 @@ export function setupWebSocket(scene: GameScene) {
                         baseHealth: baseHealth,
                         bar,
                         text,
-                        displayedHealth: baseHealth
+                        displayedHealth: baseHealth,
+                        isDead: false // 🆕 damit checkWinCondition nicht mehrfach auslöst
                     });
+
 
 
                 });

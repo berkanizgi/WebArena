@@ -55,11 +55,15 @@ export default class GameScene extends Phaser.Scene {
         bar: Phaser.GameObjects.Graphics;
         text: Phaser.GameObjects.Text;
         displayedHealth: number;
+        isDead: boolean;
     }>();
     public gameMode!: string;
     public sessionPlayerMap!: Map<string, SessionPlayerDTO>;
     public zoneTimerText!: Phaser.GameObjects.Text;
     public router: any;
+    public hasShownDeathPopup = false;
+    public hasShownVictoryPopup = false;
+
 
 
 
@@ -186,18 +190,22 @@ export default class GameScene extends Phaser.Scene {
 
         if (!this.stompClient || !this.player || !this.skin || !this.playerId) return;
 
-        sendMovement(
-            this.stompClient,
-            this.playerId,
-            this.player.x,
-            this.player.y,
-            aimDirection,
-            rotation,
-            moveX,
-            moveY,
-            this.characterId,
-            this.sessionId
-        );
+// ❗ Nur senden, wenn du nicht tot bist!
+        if (this.currentHealth > 0) {
+            sendMovement(
+                this.stompClient,
+                this.playerId,
+                this.player.x,
+                this.player.y,
+                aimDirection,
+                rotation,
+                moveX,
+                moveY,
+                this.characterId,
+                this.sessionId
+            );
+        }
+
 
         const now = this.time.now;
         const elapsed = now - this.lastAttackTime;

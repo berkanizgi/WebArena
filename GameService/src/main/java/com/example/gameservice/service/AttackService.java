@@ -89,6 +89,10 @@ public class AttackService {
         SessionPlayer targetPlayer = session.getByPlayerId(request.getTargetId());
         if (targetPlayer == null) return;
 
+        if (targetPlayer.isDead()) {
+            return;
+        }
+
         int damage = request.getDamage();
 
         if (!isZoneDamage) {

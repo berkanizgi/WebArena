@@ -6,6 +6,7 @@ import { setupAnimations } from '@/phaser/setup/animationSetup';
 import {createHealthBar, updateHealthBar} from "@/phaser/setup/healthBarSetup";
 import { showPopup } from '@/components/PopUp';
 import { checkWinCondition } from '@/components/WinCheck';
+import {setupMultiplayerZone} from "@/phaser/setup/setupMultiplayerZone";
 
 
 
@@ -13,6 +14,8 @@ const initializedSkins = new Set<string>();
 
 export function setupWebSocket(scene: GameScene) {
     scene.stompClient.onConnect = () => {
+
+
         scene.stompClient.subscribe(`/topic/movement/${scene.sessionId}`, (message) => {
             const data: CharacterPositionDTO = JSON.parse(message.body);
             if (!data || !data.playerId) return;
@@ -259,6 +262,10 @@ export function setupWebSocket(scene: GameScene) {
                 });
 
             });
+        if (scene.gameMode === 'MULTIPLAYER') {
+            console.log("[WebSocket] Verbindung steht – setupMultiplayerZone wird gestartet.");
+            setupMultiplayerZone(scene);
+        }
     };
 
 

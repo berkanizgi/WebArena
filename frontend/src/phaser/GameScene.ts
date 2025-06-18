@@ -63,6 +63,8 @@ export default class GameScene extends Phaser.Scene {
     public router: any;
     public hasShownDeathPopup = false;
     public hasShownVictoryPopup = false;
+    public lastZoneDamageTime: number = 0;
+
 
 
 
@@ -170,7 +172,6 @@ export default class GameScene extends Phaser.Scene {
         setupWebSocket(this);
         if (this.gameMode === 'MULTIPLAYER') {
             console.log("[GameScene] MULTIPLAYER aktiv – Zone wird vorbereitet.");
-            setupMultiplayerZone(this);
         }
         if (this.gameMode === 'LEVEL_1') {
             setupLevel1Tutorial(this, this.router);

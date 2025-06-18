@@ -1,52 +1,12 @@
 import GameScene from '@/phaser/GameScene';
+import { createZoneStompClient } from '@/phaser/zoneStompClient';
 
-export async function setupMultiplayerZone(scene: GameScene) {
-    let lastDamageTime = 0;
-    let center = { x: 0, y: 0 };
-    let radius = 0;
+export function setupMultiplayerZone(scene: GameScene) {
+    const zoneClient = createZoneStompClient(); // <- NEUER STOMP CLIENT!
+    const poisonGraphics = scene.add.graphics().setDepth(0);
 
-
-    let zonePhases: {
-        shrinking: boolean;
-        durationSeconds: number;
-        damagePerTick: number;
-        shrinkAmount: number;
-    }[] = [];
-
-    let currentPhaseIndex = 0;
-    let currentPhase: typeof zonePhases[0];
-    let nextPhaseTime = 0;
-
-    // 🟢 Backend-Phasen laden
-    try {
-        const res = await fetch('http://localhost:8080/api/zones/phases');
-        zonePhases = await res.json();
-    } catch (err) {
-        console.error('❌ Fehler beim Laden der Zone-Phasen:', err);
-        return;
-    }
-
-    if (zonePhases.length === 0) {
-        console.warn('⚠️ Keine Zone-Phasen erhalten.');
-        return;
-    }
-    try {
-        const res = await fetch('http://localhost:8080/api/zones/config');
-        const config = await res.json();
-        center = { x: config.centerX, y: config.centerY };
-        radius = config.initialRadius;
-    } catch (err) {
-        console.error('❌ Fehler beim Laden der Zonen-Konfiguration:', err);
-        return;
-    }
-
-
-    currentPhase = zonePhases[0];
-    nextPhaseTime = scene.time.now + currentPhase.durationSeconds * 1000;
-
-    // ✅ DOM-Timer mit schönerem Style
     const htmlTimer = document.createElement('div');
-    htmlTimer.innerText = 'Zone lädt...';
+    htmlTimer.innerText = 'Zone wird geladen...';
     Object.assign(htmlTimer.style, {
         position: 'fixed',
         top: '80px',
@@ -65,77 +25,50 @@ export async function setupMultiplayerZone(scene: GameScene) {
     });
     document.body.appendChild(htmlTimer);
 
-    // 🧼 Entferne DOM bei Szenenende
-    scene.events.on('shutdown', () => htmlTimer.remove());
+    scene.events.on('shutdown', () => {
+        htmlTimer.remove();
+        zoneClient.deactivate(); // sauber schließen
+    });
 
-    const poisonGraphics = scene.add.graphics().setDepth(0);
+    zoneClient.onConnect = () => {
+        zoneClient.subscribe('/topic/zone', (message) => {
+            const data = JSON.parse(message.body);
+            console.log('[ZoneClient] Zone-Update empfangen:', data);
 
-    scene.time.addEvent({
-        delay: 100,
-        loop: true,
-        callback: () => {
-            const now = scene.time.now;
+            const { centerX, centerY, radius, shrinking, secondsLeft, damagePerTick } = data;
 
-            if (now >= nextPhaseTime) {
-                if (currentPhaseIndex + 1 < zonePhases.length) {
-                    currentPhaseIndex++;
-                    currentPhase = zonePhases[currentPhaseIndex];
-                    nextPhaseTime = now + currentPhase.durationSeconds * 1000;
-                } else {
-                    // ⛔ Keine weiteren Phasen → Finalphase aktiv
-                    currentPhase = {
-                        shrinking: false,
-                        durationSeconds: 0,
-                        damagePerTick: 0,
-                        shrinkAmount: 0,
-                    };
-                    htmlTimer.innerText = '⚔️ Besiege alle Gegner!';
-                    return; // Zone bleibt stehen, keine weiteren Aktionen
-                }
-            }
+            htmlTimer.innerText = shrinking
+                ? 'Zone schrumpft!'
+                : `Zone pausiert: ${secondsLeft}s`;
 
-
-            // 🕒 Timer-Anzeige
-            if (currentPhase.shrinking) {
-                htmlTimer.innerText = 'Zone schrumpft!';
-                if (radius > 40) radius -= currentPhase.shrinkAmount;
-            } else {
-                const secondsLeft = Math.ceil((nextPhaseTime - now) / 1000);
-                htmlTimer.innerText = `Zone pausiert: ${secondsLeft}s`;
-            }
-
-            // 🎯 Zone zeichnen
             poisonGraphics.clear();
             poisonGraphics.fillStyle(0x00ff00, 0.2);
             poisonGraphics.beginPath();
-            poisonGraphics.arc(center.x, center.y, radius + 750, 0, Math.PI * 2);
-            poisonGraphics.arc(center.x, center.y, radius, 0, Math.PI * 2, true);
+            poisonGraphics.arc(centerX, centerY, radius + 750, 0, Math.PI * 2);
+            poisonGraphics.arc(centerX, centerY, radius, 0, Math.PI * 2, true);
             poisonGraphics.closePath();
             poisonGraphics.fillPath();
 
-            // ☠️ Schaden nur außerhalb Zone
-            const dx = scene.player.x - center.x;
-            const dy = scene.player.y - center.y;
+            const dx = scene.player.x - centerX;
+            const dy = scene.player.y - centerY;
             const distance = Math.sqrt(dx * dx + dy * dy);
+            const now = scene.time.now;
 
-            if (
-                distance > radius &&
-                now - lastDamageTime > 1000 &&
-                currentPhase.damagePerTick > 0
-            ) {
-                scene.currentHealth = Math.max(0, scene.currentHealth - currentPhase.damagePerTick);
-                scene.stompClient.publish({
+            if (distance > radius && damagePerTick > 0 && now - (scene.lastZoneDamageTime || 0) > 1000) {
+                scene.currentHealth = Math.max(0, scene.currentHealth - damagePerTick);
+                scene.stompClient.publish({ // der ursprüngliche Client für /app/hit bleibt gleich
                     destination: '/app/hit',
                     body: JSON.stringify({
                         sessionId: scene.sessionId,
                         shooterId: 'ZONE',
                         targetId: scene.playerId,
-                        damage: currentPhase.damagePerTick
+                        damage: damagePerTick
                     }),
                 });
-
-                lastDamageTime = now;
+                scene.lastZoneDamageTime = now;
             }
-        },
-    });
+        });
+    };
+
+    zoneClient.activate();
 }

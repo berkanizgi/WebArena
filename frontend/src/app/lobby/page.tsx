@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import SockJS from 'sockjs-client';
 import { Client, IMessage } from '@stomp/stompjs';
-import { router } from 'next/client';
+import { useRouter } from 'next/navigation';
+
 
 interface Player {
     playerId: string;
@@ -32,6 +33,8 @@ export default function LobbyPage() {
     const [playerName, setPlayerName] = useState<string | null>(null);
     const [wallet, setWallet] = useState<Wallet | null>(null);
     const [gameMode, setGameMode] = useState<string>('MULTIPLAYER');
+    const router = useRouter();
+
 
     const characterImageMap: Record<string, string> = {
         c1: '/lobby/black_char_lobby.png',
@@ -41,7 +44,6 @@ export default function LobbyPage() {
     };
 
     const modeList = ['MULTIPLAYER', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3'];
-
     const modeDisplayMap: Record<string, string> = {
         MULTIPLAYER: 'Multiplayer',
         LEVEL_1: 'Level 1',
@@ -58,56 +60,60 @@ export default function LobbyPage() {
     };
 
     useEffect(() => {
-        const socket = new SockJS('http://localhost:8081/ws');
-        const stompClient = new Client({
-            webSocketFactory: () => socket,
-            onConnect: () => {
-                stompClient.subscribe('/topic/lobby', (message: IMessage) => {
-                    const data = JSON.parse(message.body);
-                    if (data.type === 'LOBBY_CREATED' || data.type === 'LOBBY_UPDATED') {
-                        setLobby(data.lobby);
-                    }
-                });
-
-                const storedId = localStorage.getItem('playerId');
-                if (storedId) {
-                    stompClient.publish({
-                        destination: '/app/joinLobby',
-                        body: JSON.stringify({ playerId: storedId }),
+        const run = async () => {
+            const socket = new SockJS('http://localhost:8081/ws');
+            const stompClient = new Client({
+                webSocketFactory: () => socket,
+                onConnect: () => {
+                    stompClient.subscribe('/topic/lobby', (message: IMessage) => {
+                        const data = JSON.parse(message.body);
+                        if (data.type === 'LOBBY_CREATED' || data.type === 'LOBBY_UPDATED') {
+                            setLobby(data.lobby);
+                        }
                     });
-                }
-            },
-        });
 
-        stompClient.activate();
-        setClient(stompClient);
+                    const storedId = localStorage.getItem('playerId');
+                    if (storedId) {
+                        stompClient.publish({
+                            destination: '/app/joinLobby',
+                            body: JSON.stringify({ playerId: storedId }),
+                        });
+                    }
+                },
+            });
+
+            stompClient.activate();
+            setClient(stompClient);
+        };
+
+        run(); // sofort ausführen
 
         return () => {
-            stompClient.deactivate();
+            client?.deactivate(); // cleanup
         };
     }, []);
 
+
     useEffect(() => {
-        const idFromStorage = localStorage.getItem('playerId');
-        if (!idFromStorage) {
+        const id = localStorage.getItem('playerId');
+        if (!id) {
             alert('Nicht eingeloggt!');
             router.push('/login');
             return;
         }
 
-        setPlayerId(idFromStorage);
+        setPlayerId(id);
 
-        fetch(`http://localhost:8081/api/players/${idFromStorage}`)
-            .then((res) => res.json())
-            .then((data) => {
+        fetch(`http://localhost:8081/api/players/${id}`)
+            .then(res => res.json())
+            .then(data => {
                 setPlayerName(data.username);
-                const walletData = {
+                setWallet({
                     xp: data.wallet.xp,
                     coins: data.wallet.coins,
                     selectedCharacterId: data.wallet.selectedCharacterId,
                     unlockedLevels: data.wallet.unlockedLevels || [],
-                };
-                setWallet(walletData);
+                });
             });
     }, []);
 
@@ -124,21 +130,13 @@ export default function LobbyPage() {
         if (!playerId) return;
 
         try {
-            const res = await fetch(
-                `http://localhost:8081/api/game-session/start?playerId=${playerId}&mode=${gameMode}`,
-                { method: 'POST' }
-            );
-
-            if (!res.ok) {
-                alert('Fehler beim Starten der Game Session');
-                return;
-            }
+            const res = await fetch(`http://localhost:8081/api/game-session/start?playerId=${playerId}&mode=${gameMode}`, { method: 'POST' });
+            if (!res.ok) return alert('Fehler beim Starten');
 
             const data = await res.json();
-            const sessionId = data.sessionId;
-            window.location.href = `/loading?playerId=${playerId}&sessionId=${sessionId}`;
+            router.push(`/loading?playerId=${playerId}&sessionId=${data.sessionId}`);
         } catch (err) {
-            console.error('Fehler beim Start:', err);
+            console.error(err);
         }
     };
 
@@ -147,11 +145,12 @@ export default function LobbyPage() {
             localStorage.setItem('shopPlayerId', playerId);
             localStorage.setItem('shopPlayerName', playerName);
             localStorage.setItem('shopWallet', JSON.stringify(wallet));
-            window.location.href = '/shop';
+            router.push('/shop');
         }
     };
 
-    const me = lobby?.players.find((p) => p.playerId === playerId);
+
+    const me = lobby?.players.find(p => p.playerId === playerId);
 
     return (
         <div
@@ -159,154 +158,81 @@ export default function LobbyPage() {
                 width: '100vw',
                 height: '100vh',
                 backgroundColor: '#111',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
+                backgroundImage: 'url("/lobby/Lobby_Frame.png")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
                 fontFamily: 'Bangers, cursive',
+                color: '#fff',
+                position: 'relative',
+                overflow: 'hidden',
             }}
         >
-            <div
-                style={{
-                    width: '960px',
-                    height: '640px',
-                    position: 'relative',
-                    backgroundImage: 'url("/lobby/Lobby_Frame.png")',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
-                    color: '#fff',
-                    overflow: 'hidden',
-                }}
-            >
-                {/* === OBEN LINKS: USERINFO === */}
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: '20px',
-                        left: '20px',
-                        display: 'flex',
-                        gap: '1rem',
-                        backgroundColor: 'rgba(0,0,0,0.6)',
-                        padding: '10px 20px',
-                        borderRadius: '12px',
-                        fontSize: '1rem',
-                    }}
-                >
-                    <div>👤 {playerName}</div>
-                    <div>⭐ XP: {wallet?.xp}</div>
-                    <div>💰 {wallet?.coins}</div>
-                </div>
+            <div style={{ position: 'absolute', top: '20px', left: '20px', display: 'flex', gap: '1rem', backgroundColor: 'rgba(0,0,0,0.6)', padding: '12px 24px', borderRadius: '12px', fontSize: '1.3rem' }}>
+                <div>👤 {playerName}</div>
+                <div>⭐ XP: {wallet?.xp}</div>
+                <div>💰 {wallet?.coins}</div>
+            </div>
 
-                {/* === OBEN RECHTS: GAME MODES + PLAY === */}
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: '20px',
-                        right: '20px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.5rem',
-                    }}
-                >
-                    {modeList.map((mode) => {
-                        const unlocked = isUnlocked(mode);
-                        return (
-                            <GameButton
-                                key={mode}
-                                label={modeDisplayMap[mode]}
-                                onClick={unlocked ? () => setGameMode(mode) : undefined}
-                                styleOverride={{
-                                    backgroundColor:
-                                        gameMode === mode
-                                            ? '#4CAF50'
-                                            : unlocked
-                                                ? '#2196F3'
-                                                : '#555',
-                                    cursor: unlocked ? 'pointer' : 'not-allowed',
-                                }}
-                            />
-                        );
-                    })}
-
-                    <GameButton
-                        label="PLAY"
-                        styleOverride={{
-                            backgroundColor: me?.ready ? '#4CAF50' : '#777',
-                            cursor: me?.ready ? 'pointer' : 'not-allowed',
-                        }}
-                        onClick={me?.ready ? startGameSession : undefined}
-                    />
-                </div>
-
-                {/* === SIDEBAR LINKS UNTEN === */}
-                <div
-                    style={{
-                        position: 'absolute',
-                        bottom: '40px',
-                        left: '40px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '1rem',
-                    }}
-                >
-                    <GameButton label="CHARACTERS" onClick={() => window.location.href = '/character'} />
-                    <GameButton label="SHOP" onClick={goToShop} />
-                    <GameButton label="MISSIONS" />
-                </div>
-
-                {/* === CHARACTER MITTE === */}
-                {wallet?.selectedCharacterId && characterImageMap[wallet.selectedCharacterId] && (
-                    <img
-                        src={characterImageMap[wallet.selectedCharacterId]}
-                        alt="Character"
-                        style={{
-                            position: 'absolute',
-                            bottom: '50px',
-                            left: '47%',
-                            transform: 'translateX(-50%)',
-                            width: '240px',
-                            height: '300px',
-                            objectFit: 'contain',
-                            zIndex: 10,
-                            filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.8))',
-                        }}
-                    />
-                )}
-
-                {/* === READY BUTTON UNTEN RECHTS === */}
-                {me && (
-                    <div
-                        style={{
-                            position: 'absolute',
-                            bottom: '30px',
-                            left: '80%',
-                            transform: 'translateX(-50%)',
-                        }}
-                    >
+            <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+                {modeList.map(mode => {
+                    const unlocked = isUnlocked(mode);
+                    return (
                         <GameButton
-                            label={me.ready ? '✅ Ready' : '❌ Not Ready'}
-                            onClick={setReady}
+                            key={mode}
+                            label={modeDisplayMap[mode]}
+                            onClick={unlocked ? () => setGameMode(mode) : undefined}
                             styleOverride={{
-                                backgroundColor: me.ready ? '#4CAF50' : '#ff9800',
-                                width: '200px',
+                                backgroundColor: gameMode === mode ? '#4CAF50' : unlocked ? '#2196F3' : '#555',
+                                cursor: unlocked ? 'pointer' : 'not-allowed',
+                                fontSize: '1.2rem',
+                                height: '60px',
+                                width: '180px'
                             }}
                         />
-                    </div>
-                )}
+                    );
+                })}
+                <GameButton label="PLAY" onClick={me?.ready ? startGameSession : undefined} styleOverride={{ backgroundColor: me?.ready ? '#4CAF50' : '#777', width: '180px', height: '60px', fontSize: '1.2rem' }} />
             </div>
+
+            <div style={{ position: 'absolute', bottom: '60px', left: '60px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <GameButton label="CHARACTERS" onClick={() => router.push('/character')} />
+                <GameButton label="SHOP" onClick={goToShop} styleOverride={{ fontSize: '1.2rem', width: '200px', height: '60px' }} />
+                <GameButton label="MISSIONS" styleOverride={{ fontSize: '1.2rem', width: '200px', height: '60px' }} />
+            </div>
+
+            {wallet?.selectedCharacterId && characterImageMap[wallet.selectedCharacterId] && (
+                <img
+                    src={characterImageMap[wallet.selectedCharacterId]}
+                    alt="Character"
+                    style={{
+                        position: 'absolute',
+                        bottom: '10px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '400px',
+                        height: '500px',
+                        objectFit: 'contain',
+                        zIndex: 10,
+                        filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.8))',
+                    }}
+                />
+            )}
+
+            {me && (
+                <div style={{ position: 'absolute', bottom: '40px', right: '60px' }}>
+                    <GameButton
+                        label={me.ready ? 'Ready' : 'Not Ready'}
+                        onClick={setReady}
+                        styleOverride={{ backgroundColor: me.ready ? '#4CAF50' : '#ff9800', width: '220px', height: '60px', fontSize: '1.2rem' }}
+                    />
+                </div>
+            )}
         </div>
     );
 }
 
-function GameButton({
-                        label,
-                        styleOverride = {},
-                        onClick,
-                    }: {
-    label: string;
-    styleOverride?: React.CSSProperties;
-    onClick?: () => void;
-}) {
+function GameButton({ label, styleOverride = {}, onClick }: { label: string; styleOverride?: React.CSSProperties; onClick?: () => void }) {
     return (
         <button
             onClick={onClick}

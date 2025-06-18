@@ -1,4 +1,5 @@
 package com.example.mapservice.controller;
+import com.example.mapservice.domain.ZoneConfig;
 import com.example.mapservice.domain.ZonePhase;
 import com.example.mapservice.service.ZoneService;
 import org.springframework.web.bind.annotation.*;
@@ -19,4 +20,10 @@ public class ZoneController {
     public List<ZonePhase> getZonePhases(@RequestParam(required = false) String mapId) {
         return zoneService.getZonePhasesForMap(mapId);
     }
+
+    @GetMapping("/config")
+    public ZoneConfig getZoneConfig(@RequestParam(required = false) String mapId) {
+        return zoneService.getZoneConfigForMap(mapId);
+    }
+
 }

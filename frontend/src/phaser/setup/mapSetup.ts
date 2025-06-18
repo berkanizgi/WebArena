@@ -4,8 +4,7 @@ export function setupMap(scene: Phaser.Scene): {
     map: Phaser.Tilemaps.Tilemap;
     collisionLayer: Phaser.Tilemaps.TilemapLayer;
     topLayer: Phaser.Tilemaps.TilemapLayer;
-    spawnX: number;
-    spawnY: number;
+    spawnPoints: { x: number, y: number }[];
 } {
     const map = scene.make.tilemap({ key: 'map' });
 
@@ -25,26 +24,23 @@ export function setupMap(scene: Phaser.Scene): {
             return;
         }
 
-        if (layerData.name === "Collision") {
+        if (layerData.name === 'Collision') {
             collisionLayer = layer;
             collisionLayer.setCollisionByExclusion([-1]);
         }
 
-        if (layerData.name === "Top") {
+        if (layerData.name === 'Top') {
             topLayer = layer;
-            topLayer.setDepth(100); // Hohe Tiefe, damit immer vor Spieler gerendert
+            topLayer.setDepth(100); // über Spieler zeichnen
         }
     });
 
-    if (!collisionLayer) {
-        throw new Error("Collision Layer wurde nicht gefunden!");
-    }
+    if (!collisionLayer) throw new Error("Collision Layer wurde nicht gefunden!");
     if (!topLayer) throw new Error("TopLayer wurde nicht gefunden!");
 
-    // Kamera setzen
     scene.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
-    // Spawns laden
+    // Spawnpunkte aus Object Layer
     const objectLayer = map.getObjectLayer('Spawns');
     if (!objectLayer) {
         console.warn("Object Layer 'Spawns' nicht gefunden.");
@@ -52,22 +48,26 @@ export function setupMap(scene: Phaser.Scene): {
             map,
             collisionLayer,
             topLayer,
-            spawnX: 100,
-            spawnY: 100
-        }; // Fallback
+            spawnPoints: [{ x: 100, y: 100 }]
+        };
     }
 
-    const spawnPoints = objectLayer.objects.filter(obj => obj.name === 'PlayerSpawn');
-    const spawnPoint = Phaser.Utils.Array.GetRandom(spawnPoints);
+    const spawnPoints = objectLayer.objects
+        .filter(obj => obj.name === 'PlayerSpawn')
+        .map(obj => ({
+            x: obj.x ?? 100,
+            y: obj.y ?? 100
+        }));
 
-    const spawnX = spawnPoint?.x ?? 100;
-    const spawnY = spawnPoint?.y ?? 100;
+    if (spawnPoints.length === 0) {
+        console.warn("Keine 'PlayerSpawn'-Objekte gefunden.");
+        spawnPoints.push({ x: 100, y: 100 });
+    }
 
     return {
         map,
         collisionLayer,
         topLayer,
-        spawnX,
-        spawnY
+        spawnPoints
     };
 }

@@ -4,9 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import GameScene from './GameScene';
 import { SessionPlayerDTO } from './types';
+import { useRouter } from 'next/navigation';
+
 
 export default function GameCanvas({ playerId, sessionId }: { playerId: string; sessionId: string }) {
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const router = useRouter();
     const gameRef = useRef<Phaser.Game | null>(null);
 
     const skinMap: Record<string, string> = {
@@ -55,15 +58,17 @@ export default function GameCanvas({ playerId, sessionId }: { playerId: string; 
             speed: sessionPlayer.speed,
             sessionId: sessionId,
             gameMode: sessionPlayer.gameMode,
+            router: router, // ✅ wichtig!
         };
+
 
         const scene = new GameScene(config);
         scene.sessionPlayerMap = sessionPlayerMap;
 
         gameRef.current = new Phaser.Game({
             type: Phaser.AUTO,
-            width: 960,
-            height: 640,
+            width: window.innerWidth,
+            height: window.innerHeight,
             parent: containerRef.current,
             scene: [scene],
             physics: {
@@ -92,7 +97,7 @@ export default function GameCanvas({ playerId, sessionId }: { playerId: string; 
                 alignItems: 'center',
             }}
         >
-            <div ref={containerRef} style={{ width: '960px', height: '640px' }} />
+            <div ref={containerRef} style={{ width: '100vw', height: '100vh'}}/>
         </div>
     );
 }

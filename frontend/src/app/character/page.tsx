@@ -8,7 +8,7 @@ interface OwnedCharacter {
     baseAttack: number;
     baseSpeed: number;
     projectileSpeed: number;
-    level: number; // ← Wichtig
+    level: number;
     nextUpgradeCost: number;
 }
 interface Character {
@@ -39,16 +39,15 @@ export default function CharacterOverview() {
             .then(data => {
                 setSelectedCharacterId(data.selectedCharacterId);
                 setTempSelectedId(data.selectedCharacterId);
-                setOwnedCharacters(data.ownedCharacters); // ✅ KORREKT
+                setOwnedCharacters(data.ownedCharacters);
             });
     }, []);
-
 
     const saveSelection = async () => {
         const playerId = localStorage.getItem('playerId');
         if (!playerId || !tempSelectedId) return;
 
-        await fetch(`http://localhost:8081/api/players/${playerId}/character`, {
+        await fetch(`http://localhost:8084/api/characters/${playerId}/select-character`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ characterId: tempSelectedId }),
@@ -57,7 +56,6 @@ export default function CharacterOverview() {
         setSelectedCharacterId(tempSelectedId);
         alert('Auswahl gespeichert!');
     };
-
 
     const handleLevelUp = async () => {
         const playerId = localStorage.getItem('playerId');
@@ -70,7 +68,6 @@ export default function CharacterOverview() {
 
             if (res.ok) {
                 alert("Level up erfolgreich!");
-                // neu laden
                 const updated = await fetch(`http://localhost:8084/api/characters/${playerId}/character-overview`);
                 const data = await updated.json();
                 setOwnedCharacters(data.ownedCharacters);
@@ -89,159 +86,104 @@ export default function CharacterOverview() {
             ? ownedCharacters.find(c => c.characterId === id)
             : undefined;
 
-
-
-
     return (
         <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
             width: '100vw',
             height: '100vh',
             backgroundColor: '#111',
+            backgroundImage: 'url("/lobby/Lobby_Frame.png")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            fontFamily: 'Bangers, cursive',
+            padding: '2rem'
         }}>
+            <h1 style={{ fontSize: '3rem', marginBottom: '1rem', color: 'white', textShadow: '2px 2px black' }}>
+                Character Overview
+            </h1>
+            <p style={{ color: 'white', marginBottom: '2rem' }}>Hier werden deine Charaktere angezeigt.</p>
+
             <div style={{
-                width: '960px',
-                height: '640px',
-                display: 'flex',
-                flexDirection: 'column',
-                backgroundImage: 'url("/lobby/Lobby_Frame.png")',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-                fontFamily: 'Bangers, cursive',
-                color: '#fff',
-                boxSizing: 'border-box',
-                padding: '20px',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                gap: '2rem',
+                width: '100%',
+                maxWidth: '1000px',
             }}>
-                <div style={{ marginBottom: '20px' }}>
-                    <h1>Character Overview</h1>
-                    <p>Hier werden deine Charaktere angezeigt.</p>
-                </div>
+                {characterData.map((char) => {
+                    const owned = getStatsForCharacter(char.id);
+                    const isUnlocked = !!owned;
+                    const isSaved = selectedCharacterId === char.id;
+                    const isTempSelected = tempSelectedId === char.id;
 
-                <div style={{
-                    flexGrow: 1,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                }}>
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 150px)',
-                        rowGap: '64px',
-                        columnGap: '80px',
-                        justifyItems: 'center',
-                    }}>
-                        {characterData.map((char) => {
-                            const owned = getStatsForCharacter(char.id);
-                            const isUnlocked = !!owned;
-                            const isSaved = selectedCharacterId === char.id;
-                            const isTempSelected = tempSelectedId === char.id;
-
-                            return (
-                                <div
-                                    key={char.id}
-                                    onClick={isUnlocked ? () => setTempSelectedId(char.id) : undefined}
-                                    style={{
-                                        width: 150,
-                                        borderRadius: 8,
-                                        boxShadow: isSaved
-                                            ? '0 0 10px 4px yellow'
-                                            : isTempSelected
-                                                ? '0 0 10px 4px #2196F3'
-                                                : '0 0 10px #000',
-                                        border: isSaved
-                                            ? '2px solid yellow'
-                                            : isTempSelected
-                                                ? '2px solid #2196F3'
-                                                : 'none',
-                                        backgroundColor: '#222',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        padding: 10,
-                                        cursor: isUnlocked ? 'pointer' : 'default',
-                                    }}
-                                >
-                                    <img
-                                        src={char.spriteSheetPath}
-                                        alt={char.name}
-                                        style={{
-                                            width: 120,
-                                            height: 120,
-                                            objectFit: 'contain',
-                                            imageRendering: 'pixelated',
-                                            filter: isUnlocked ? 'none' : 'grayscale(100%)',
-                                            opacity: isUnlocked ? 1 : 0.5,
-                                        }}
-                                    />
-                                    {isUnlocked && owned && (
-                                        <div style={{marginTop: 8, fontSize: '0.8rem', textAlign: 'center'}}>
-                                            <div>⭐ Level: {owned.level ?? '-'}</div>
-                                            <div>❤️ {owned.baseHealth}</div>
-                                            <div>🗡️ {owned.baseAttack}</div>
-                                            <div>💨 {owned.baseSpeed}</div>
-                                            <div>🎯 {owned.projectileSpeed}</div>
-                                            <div>💰 Next: {owned.nextUpgradeCost ?? '-'} Coins</div>
-                                        </div>
-                                    )}
+                    return (
+                        <div
+                            key={char.id}
+                            onClick={isUnlocked ? () => setTempSelectedId(char.id) : undefined}
+                            style={{
+                                borderRadius: 8,
+                                padding: 10,
+                                textAlign: 'center',
+                                backgroundColor: '#222',
+                                cursor: isUnlocked ? 'pointer' : 'default',
+                                boxShadow: isSaved
+                                    ? '0 0 10px 4px yellow'
+                                    : isTempSelected
+                                        ? '0 0 10px 4px #2196F3'
+                                        : '0 0 10px #000',
+                                border: isSaved
+                                    ? '2px solid yellow'
+                                    : isTempSelected
+                                        ? '2px solid #2196F3'
+                                        : 'none',
+                            }}
+                        >
+                            <img
+                                src={char.spriteSheetPath}
+                                alt={char.name}
+                                style={{
+                                    width: '100%',
+                                    objectFit: 'contain',
+                                    imageRendering: 'pixelated',
+                                    filter: isUnlocked ? 'none' : 'grayscale(100%)',
+                                    opacity: isUnlocked ? 1 : 0.5,
+                                }}
+                            />
+                            {isUnlocked && owned && (
+                                <div style={{ marginTop: 8, fontSize: '0.9rem', color: 'white' }}>
+                                    <div>⭐ Level: {owned.level}</div>
+                                    <div>❤️ {owned.baseHealth}</div>
+                                    <div>🗡️ {owned.baseAttack}</div>
+                                    <div>💨 {owned.baseSpeed}</div>
+                                    <div>🎯 {owned.projectileSpeed}</div>
+                                    <div>💰 Next: {owned.nextUpgradeCost}</div>
                                 </div>
-                            );
-                        })}
-                    </div>
-                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
 
-                <div style={{marginTop: '30px', display: 'flex', justifyContent: 'center', gap: '1rem'}}>
-                    <button
-                        onClick={saveSelection}
-                        disabled={!tempSelectedId}
-                        style={{
-                            backgroundColor: '#2196F3',
-                            color: 'white',
-                            border: 'none',
-                            padding: '10px 20px',
-                            borderRadius: '10px',
-                            fontFamily: 'Bangers, cursive',
-                            fontSize: '1.1rem',
-                            cursor: 'pointer',
-                        }}
-                    >
-                        Auswahl speichern
-                    </button>
-                    <button
-                        onClick={handleLevelUp}
-                        disabled={!selectedCharacterId}
-                        style={{
-                            backgroundColor: '#4CAF50',
-                            color: 'white',
-                            border: 'none',
-                            padding: '10px 20px',
-                            borderRadius: '10px',
-                            fontFamily: 'Bangers, cursive',
-                            fontSize: '1.1rem',
-                            cursor: selectedCharacterId ? 'pointer' : 'not-allowed',
-                        }}
-                    >
-                        Level Up
-                    </button>
-                    <button
-                        onClick={() => window.location.href = '/lobby'}
-                        style={{
-                            backgroundColor: '#555',
-                            color: 'white',
-                            border: 'none',
-                            padding: '10px 20px',
-                            borderRadius: '10px',
-                            fontFamily: 'Bangers, cursive',
-                            fontSize: '1.1rem',
-                            cursor: 'pointer',
-                        }}
-                    >
-                        Zurück zur Lobby
-                    </button>
-                </div>
+            <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
+                <button onClick={saveSelection} style={buttonStyle}>Auswahl speichern</button>
+                <button onClick={handleLevelUp} style={buttonStyle}>Level Up</button>
+                <button onClick={() => window.location.href = '/lobby'} style={buttonStyle}>Zurück zur Lobby</button>
             </div>
         </div>
     );
 }
+
+const buttonStyle = {
+    backgroundColor: '#2196F3',
+    color: 'white',
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: '10px',
+    fontFamily: 'Bangers, cursive',
+    fontSize: '1.1rem',
+    cursor: 'pointer',
+};

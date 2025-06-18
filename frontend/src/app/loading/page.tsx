@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import SockJS from 'sockjs-client';
 import { Client, IMessage } from '@stomp/stompjs';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface JoinedPlayer {
     name: string;
@@ -27,23 +27,24 @@ const tips = [
 
 export default function LoadingPage() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const sessionId = searchParams.get('sessionId');
     const playerId = searchParams.get('playerId');
 
     const [client, setClient] = useState<Client | null>(null);
     const [players, setPlayers] = useState<JoinedPlayer[]>([]);
     const [tipIndex, setTipIndex] = useState(0);
+    const [countdown, setCountdown] = useState<number | null>(null);
 
-    // TIPP ROTATION
+    // Tipp-Rotation
     useEffect(() => {
         const interval = setInterval(() => {
             setTipIndex(prev => (prev + 1) % tips.length);
-        }, 7000); // alle 7 Sekunden
+        }, 7000);
         return () => clearInterval(interval);
     }, []);
 
-    const [countdown, setCountdown] = useState<number | null>(null);
-
+    // WebSocket-Verbindung & Datenabruf
     useEffect(() => {
         const socket = new SockJS('http://localhost:8081/ws');
         const stompClient = new Client({
@@ -58,7 +59,7 @@ export default function LoadingPage() {
                         setCountdown(data.value);
                     }
                     if (data.type === 'START_GAME' && data.playerId === playerId) {
-                        window.location.href = `/game/session/${sessionId}?playerId=${playerId}`;
+                        router.push(`/game/session/${sessionId}?playerId=${playerId}`);
                     }
                 });
             },
@@ -84,36 +85,44 @@ export default function LoadingPage() {
                 width: '100vw',
                 height: '100vh',
                 backgroundColor: '#111',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
+                backgroundImage: 'url("/lobby/Lobby_Frame.png")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
                 fontFamily: 'Bangers, cursive',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
             }}
         >
-            {/* ZENTRIERTES FENSTER 960x640 OHNE ABGERUNDETE ECKEN */}
             <div
                 style={{
-                    width: '960px',
-                    height: '640px',
-                    position: 'relative',
-                    backgroundColor: '#222',
-                    padding: '2rem',
-                    boxShadow: '0 0 40px rgba(0,0,0,0.8)',
+                    width: '100%',
+                    maxWidth: '1400px',
+                    height: '90%',
+                    backgroundColor: 'rgba(0,0,0,0.75)',
+                    padding: '3rem',
+                    borderRadius: '20px',
+                    boxShadow: '0 0 40px rgba(0,0,0,0.9)',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     color: '#fff',
+                    textAlign: 'center',
                 }}
             >
-                {/* HEADER */}
-                <div style={{ textAlign: 'center' }}>
-                    <h1 style={{ marginBottom: '0.5rem' }}>🕹 Matchmaking</h1>
-                    <h2 style={{ marginBottom: '1rem' }}>{players.length} von 4 Spielern bereit</h2>
+                {/* Header */}
+                <div>
+                    <h1 style={{ fontSize: '3.5rem', marginBottom: '0.5rem' }}>🕹 Matchmaking</h1>
+                    <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>
+                        {players.length} von 4 Spielern bereit
+                    </h2>
                     <div
                         style={{
-                            width: '50px',
-                            height: '50px',
+                            width: '60px',
+                            height: '60px',
                             border: '6px solid #fff',
                             borderTop: '6px solid #4CAF50',
                             borderRadius: '50%',
@@ -131,14 +140,14 @@ export default function LoadingPage() {
                     </style>
                 </div>
 
-                {/* SPIELER */}
+                {/* Spielerübersicht */}
                 <div
                     style={{
                         display: 'flex',
                         justifyContent: 'center',
-                        gap: '1.5rem',
+                        gap: '2rem',
                         flexWrap: 'wrap',
-                        marginTop: '1.5rem',
+                        marginTop: '2rem',
                     }}
                 >
                     {players.map((p, index) => (
@@ -148,43 +157,45 @@ export default function LoadingPage() {
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
-                                backgroundColor: '#333',
-                                padding: '1rem',
-                                width: '160px',
-                                boxShadow: '0 4px 10px rgba(0,0,0,0.5)',
+                                backgroundColor: '#222',
+                                padding: '1.2rem',
+                                width: '180px',
+                                borderRadius: '12px',
+                                boxShadow: '0 4px 15px rgba(0,0,0,0.6)',
                             }}
                         >
                             <img
                                 src={characterImageMap[p.characterId]}
                                 alt="Character"
                                 style={{
-                                    width: '100px',
-                                    height: '120px',
+                                    width: '120px',
+                                    height: '140px',
                                     objectFit: 'contain',
-                                    marginBottom: '0.5rem',
+                                    marginBottom: '0.7rem',
                                 }}
                             />
-                            <div style={{ fontSize: '1.1rem', color: '#4CAF50' }}>{p.name}</div>
+                            <div style={{ fontSize: '1.4rem', color: '#4CAF50' }}>{p.name}</div>
                         </div>
                     ))}
                 </div>
 
                 {/* Countdown-Anzeige */}
                 {countdown !== null && (
-                    <div style={{ fontSize: '2rem', marginTop: '2rem', color: '#FFD700' }}>
+                    <div style={{ fontSize: '2.5rem', marginTop: '2.5rem', color: '#FFD700' }}>
                         🚀 Spiel startet in {countdown} Sekunden ...
                     </div>
                 )}
 
-
-                {/* TIPP UNTEN */}
-                <div style={{
-                    marginTop: '2rem',
-                    color: '#ccc',
-                    fontSize: '1.1rem',
-                    textAlign: 'center',
-                    height: '2.5rem',
-                }}>
+                {/* Tipp unten */}
+                <div
+                    style={{
+                        marginTop: '2rem',
+                        color: '#ccc',
+                        fontSize: '1.5rem',
+                        height: '3rem',
+                        textAlign: 'center',
+                    }}
+                >
                     <em>{tips[tipIndex]}</em>
                 </div>
             </div>

@@ -4,6 +4,8 @@ import com.example.gameservice.domain.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GameSession {
     private final String id;
@@ -12,6 +14,11 @@ public class GameSession {
     private transient Thread countdownThread;
 
     private GameMode gameMode;
+
+    private final Map<String, Integer> currentHealthMap = new ConcurrentHashMap<>();
+
+
+
 
 
     public GameSession(String id) {
@@ -60,5 +67,13 @@ public class GameSession {
 
     public void setGameMode(GameMode gameMode) {
         this.gameMode = gameMode;
+    }
+
+    public int getCurrentHealth(String playerId) {
+        return currentHealthMap.getOrDefault(playerId, getByPlayerId(playerId).getBaseHealth());
+    }
+
+    public void setCurrentHealth(String playerId, int value) {
+        currentHealthMap.put(playerId, value);
     }
 }

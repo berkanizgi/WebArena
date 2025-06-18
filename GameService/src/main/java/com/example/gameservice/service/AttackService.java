@@ -80,100 +80,54 @@ public class AttackService {
     }
 
 
-
     public void processHit(HitRequest request) {
-        CharacterPosition shooter = null;
-        CharacterPosition target = movementService.getCharacterPosition(request.getSessionId(), request.getTargetId());
-
         boolean isZoneDamage = "ZONE".equals(request.getShooterId());
 
-        if (!isZoneDamage) {
-            shooter = movementService.getCharacterPosition(request.getSessionId(), request.getShooterId());
-        }
+        GameSession session = gameSessionService.getSession(request.getSessionId());
+        if (session == null) return;
 
-        if (target == null) {
-            System.out.println("Ungültiger Hit: Zielspieler nicht gefunden");
-            return;
-        }
+        SessionPlayer targetPlayer = session.getByPlayerId(request.getTargetId());
+        if (targetPlayer == null) return;
 
         int damage = request.getDamage();
 
         if (!isZoneDamage) {
-            GameSession session = gameSessionService.getSession(request.getSessionId());
-            if (session != null) {
-                SessionPlayer shooterPlayer = session.getByPlayerId(request.getShooterId());
-                if (shooterPlayer != null) {
-                    damage = shooterPlayer.getBaseAttack(); // 🎯 hier nehmen wir den korrekten Wert!
-                } else {
-                    System.err.println("[Attack] SessionPlayer nicht gefunden für ID: " + request.getShooterId());
-                }
+            SessionPlayer shooterPlayer = session.getByPlayerId(request.getShooterId());
+            if (shooterPlayer != null) {
+                damage = shooterPlayer.getBaseAttack();
             } else {
-                System.err.println("[Attack] GameSession nicht gefunden für ID: " + request.getSessionId());
+                System.err.println("[Attack] SessionPlayer nicht gefunden für ID: " + request.getShooterId());
             }
         }
 
-        int newHealth = Math.max(0, target.getCurrentHealth() - damage);
-        target.setCurrentHealth(newHealth);
+        int oldHealth = session.getCurrentHealth(targetPlayer.getPlayerId());
+        int newHealth = Math.max(0, oldHealth - damage);
+        session.setCurrentHealth(targetPlayer.getPlayerId(), newHealth);
 
-        if (newHealth <= 0) {
-            System.out.println("[DEBUG] Spieler " + target.getPlayerId() + " ist tot. Suche Session & markiere isDead.");
+        if (newHealth <= 0 && !targetPlayer.isDead()) {
+            targetPlayer.setDead(true);
+            System.out.println("[DEBUG] Markiere isDead = true für Spieler: " + targetPlayer.getPlayerId());
 
-            GameSession session = gameSessionService.getSession(request.getSessionId());
-            if (session != null) {
-                SessionPlayer targetPlayer = session.getByPlayerId(request.getTargetId());
-                if (targetPlayer != null) {
-                    targetPlayer.setDead(true);
-                    System.out.println("[DEBUG] Markiere isDead = true für Spieler: " + targetPlayer.getPlayerId());
+            long aliveCount = session.getSessionPlayers().stream().filter(p -> !p.isDead()).count();
 
-                    long aliveCount = session.getSessionPlayers().stream()
-                            .filter(p -> !p.isDead())
-                            .count();
+            if (aliveCount == 1) {
+                SessionPlayer winner = session.getSessionPlayers().stream()
+                        .filter(p -> !p.isDead())
+                        .findFirst()
+                        .orElse(null);
 
-                    if (aliveCount == 1) {
-                        SessionPlayer winner = session.getSessionPlayers().stream()
-                                .filter(p -> !p.isDead())
-                                .findFirst()
-                                .orElse(null);
-
-                        if (winner != null) {
-                            System.out.println("[DEBUG] SPIEL GEWONNEN von: " + winner.getPlayerId());
-                            messagingTemplate.convertAndSend(
-                                    "/topic/victory/" + winner.getPlayerId(),
-                                    "YOU_WIN"
-                            );
-                        }
-                    }
-                } else {
-                    System.out.println("[DEBUG] SessionPlayer NICHT gefunden in Session!");
+                if (winner != null) {
+                    messagingTemplate.convertAndSend("/topic/victory/" + winner.getPlayerId(), "YOU_WIN");
                 }
-            } else {
-                System.out.println("[DEBUG] Session NICHT gefunden mit ID: " + request.getSessionId());
             }
         }
 
-        String source = isZoneDamage ? "ZONE" : shooter.getPlayerId();
-        System.out.println(source + " trifft " + target.getPlayerId() + " für " + damage + " Schaden (HP: " + newHealth + ")");
-
-        int baseHealth = 100; // Fallback
-        GameSession session = gameSessionService.getSession(request.getSessionId());
-        if (session != null) {
-            SessionPlayer targetPlayer = session.getByPlayerId(request.getTargetId());
-            if (targetPlayer != null) {
-                baseHealth = targetPlayer.getBaseHealth(); // 💡 der korrekte Wert
-            }
-        }
+        String source = isZoneDamage ? "ZONE" : request.getShooterId();
+        System.out.println(source + " trifft " + targetPlayer.getPlayerId() + " für " + damage + " Schaden (HP: " + newHealth + ")");
 
         messagingTemplate.convertAndSend(
                 "/topic/health",
-                new HealthUpdateDTO(target.getPlayerId(), newHealth, baseHealth)
+                new HealthUpdateDTO(targetPlayer.getPlayerId(), newHealth, targetPlayer.getBaseHealth())
         );
-
     }
-
-
-
-
-
-
-
 }

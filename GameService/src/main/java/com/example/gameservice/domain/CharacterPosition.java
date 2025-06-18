@@ -17,7 +17,6 @@ public class CharacterPosition {
     private int y;
     private int rotation;
     private String direction;
-    private int currentHealth;
     private Boolean isMoving;
     private Instant lastShotTime;
 
@@ -33,7 +32,6 @@ public class CharacterPosition {
         this.y = y;
         this.rotation = 0;
         this.direction = "down";
-        this.currentHealth = gameCharacter != null ? gameCharacter.getBaseHealth() : 100;
         this.isMoving = false;
         this.lastShotTime = Instant.EPOCH;
     }
@@ -84,14 +82,6 @@ public class CharacterPosition {
 
     public void setDirection(String direction) {
         this.direction = direction;
-    }
-
-    public int getCurrentHealth() {
-        return currentHealth;
-    }
-
-    public void setCurrentHealth(int currentHealth) {
-        this.currentHealth = currentHealth;
     }
 
     public Boolean getIsMoving() {

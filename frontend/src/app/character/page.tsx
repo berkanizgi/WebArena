@@ -125,6 +125,9 @@ export default function CharacterOverview() {
                             key={char.id}
                             onClick={isUnlocked ? () => setTempSelectedId(char.id) : undefined}
                             style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
                                 borderRadius: 8,
                                 padding: 10,
                                 textAlign: 'center',
@@ -140,35 +143,66 @@ export default function CharacterOverview() {
                                     : isTempSelected
                                         ? '2px solid #2196F3'
                                         : 'none',
+                                transition: 'all 0.3s ease-in-out',
+                                minHeight: '320px', // Box-Höhe einheitlich
                             }}
                         >
-                            <img
-                                src={char.spriteSheetPath}
-                                alt={char.name}
+                            <div
                                 style={{
-                                    width: '100%',
-                                    objectFit: 'contain',
-                                    imageRendering: 'pixelated',
-                                    filter: isUnlocked ? 'none' : 'grayscale(100%)',
-                                    opacity: isUnlocked ? 1 : 0.5,
+                                    filter: isUnlocked ? 'none' : 'grayscale(100%) brightness(0.6)',
+                                    transition: 'filter 0.3s ease-in-out',
+                                    flexGrow: 1, // nimmt den Platz im oberen Bereich ein
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
                                 }}
-                            />
-                            {isUnlocked && owned && (
-                                <div style={{ marginTop: 8, fontSize: '0.9rem', color: 'white' }}>
-                                    <div>⭐ Level: {owned.level}</div>
-                                    <div>❤️ {owned.baseHealth}</div>
-                                    <div>🗡️ {owned.baseAttack}</div>
-                                    <div>💨 {owned.baseSpeed}</div>
-                                    <div>🎯 {owned.projectileSpeed}</div>
-                                    <div>💰 Next: {owned.nextUpgradeCost}</div>
-                                </div>
-                            )}
+                            >
+                                <img
+                                    src={char.spriteSheetPath}
+                                    alt={char.name}
+                                    style={{
+                                        width: '80%',
+                                        objectFit: 'contain',
+                                        imageRendering: 'pixelated',
+                                    }}
+                                />
+                            </div>
+
+                            <div
+                                style={{
+                                    marginTop: 8,
+                                    fontSize: '0.9rem',
+                                    color: isUnlocked ? 'white' : '#aaa',
+                                    filter: isUnlocked ? 'none' : 'grayscale(100%) brightness(0.6)',
+                                }}
+                            >
+                                {owned ? (
+                                    <>
+                                        <div>⭐ Level: {owned.level}</div>
+                                        <div>❤️ {owned.baseHealth}</div>
+                                        <div>🗡️ {owned.baseAttack}</div>
+                                        <div>💨 {owned.baseSpeed}</div>
+                                        <div>🎯 {owned.projectileSpeed}</div>
+                                        <div>💰 Next: {owned.nextUpgradeCost}</div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div>⭐ Level: 1</div>
+                                        <div>❤️ 100</div>
+                                        <div>🗡️ 10</div>
+                                        <div>💨 5</div>
+                                        <div>🎯 8</div>
+                                        <div>💰 Next: 1000</div>
+                                    </>
+                                )}
+                            </div>
                         </div>
-                    );
+                )
+                    ;
                 })}
             </div>
 
-            <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
+            <div style={{marginTop: '2rem', display: 'flex', gap: '1rem'}}>
                 <button onClick={saveSelection} style={buttonStyle}>Auswahl speichern</button>
                 <button onClick={handleLevelUp} style={buttonStyle}>Level Up</button>
                 <button onClick={() => window.location.href = '/lobby'} style={buttonStyle}>Zurück zur Lobby</button>

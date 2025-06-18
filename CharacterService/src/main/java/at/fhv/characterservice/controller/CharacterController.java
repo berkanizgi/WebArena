@@ -6,6 +6,7 @@ import at.fhv.characterservice.dto.PlayerOwnedCharacterDTO;
 import at.fhv.characterservice.repository.PlayerOwnedCharacterRepository;
 import at.fhv.characterservice.repository.PlayerRepository;
 import at.fhv.characterservice.service.CharacterService;
+import at.fhv.characterservice.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +30,9 @@ public class CharacterController {
 
     @Autowired
     private CharacterService characterService;
+
+    @Autowired
+    private WalletService walletService;
 
     @GetMapping
     public List<GameCharacterDTO> getAllCharacters() {
@@ -55,9 +59,8 @@ public class CharacterController {
         }
 
         Player player = optionalPlayer.get();
-        String selectedCharacterId = player.getSelectedCharacter() != null
-                ? player.getSelectedCharacter().getCharacterId()
-                : null;
+        String selectedCharacterId = walletService.getSelectedCharacterId(player.getPlayerId());
+
 
         List<PlayerOwnedCharacterDTO> ownedCharacters = playerOwnedCharacterRepository.findByPlayer(player)
                 .stream()
@@ -91,6 +94,14 @@ public class CharacterController {
             return ResponseEntity.status(400).body(e.getMessage());
         }
     }
+
+    @PutMapping("/{playerId}/select-character")
+    public ResponseEntity<Void> updateWalletCharacter(@PathVariable String playerId, @RequestBody Map<String, String> request) {
+        String characterId = request.get("characterId");
+        walletService.updateCharacterId(playerId, characterId);
+        return ResponseEntity.ok().build();
+    }
+
 
 
 }

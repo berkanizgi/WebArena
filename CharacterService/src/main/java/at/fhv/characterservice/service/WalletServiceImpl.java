@@ -4,8 +4,6 @@ import at.fhv.characterservice.domain.Wallet;
 import at.fhv.characterservice.repository.WalletRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
 @Service
 public class WalletServiceImpl implements WalletService {
 
@@ -25,4 +23,21 @@ public class WalletServiceImpl implements WalletService {
     public void save(Wallet wallet) {
         walletRepository.save(wallet);
     }
+
+    public void updateCharacterId(String playerId, String newCharacterId) {
+        Wallet wallet = walletRepository.findByPlayerId(playerId)
+                .orElseThrow(() -> new RuntimeException("Wallet not found for player: " + playerId));
+        wallet.setCharacterId(newCharacterId);
+        walletRepository.save(wallet);
+    }
+
+    @Override
+    public String getSelectedCharacterId(String playerId) {
+        Wallet wallet = walletRepository.findByPlayerId(playerId)
+                .orElseThrow(() -> new RuntimeException("Wallet not found for player: " + playerId));
+        return wallet.getCharacterId();
+    }
+
+
 }
+

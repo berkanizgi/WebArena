@@ -48,7 +48,8 @@ const ShopPage = () => {
         try {
             setLoading(true);
             const items = await fetchShopItems();
-            const owned = await fetchOwnedCharacters(playerId);
+            const ownedRaw = await fetchOwnedCharacters(playerId);
+            const owned = ownedRaw.map((char: any) => char.characterId);
             const freshWallet = await fetchWallet(playerId);
             setShopItems(items);
             setOwnedCharacterIds(owned);

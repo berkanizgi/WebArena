@@ -113,11 +113,13 @@ export default class GameScene extends Phaser.Scene {
 
         this.pointer = this.input.activePointer;
 
-        const { map, spawnX, spawnY, collisionLayer, topLayer } = setupMap(this);
+        const { map, spawnPoints, collisionLayer, topLayer } = setupMap(this);
+        const index = Array.from(this.sessionPlayerMap.keys()).indexOf(this.playerId);
+        const spawn = spawnPoints[index % spawnPoints.length];
+        const { player, cursors } = setupPlayer(this, spawn.x, spawn.y, this.skin);
         this.collisionLayer = collisionLayer;
         this.topLayer = topLayer;
 
-        const { player, cursors } = setupPlayer(this, spawnX, spawnY, this.skin);
         this.player = player;
         this.cursors = cursors;
 

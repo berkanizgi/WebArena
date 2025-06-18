@@ -47,7 +47,7 @@ export default function CharacterOverview() {
         const playerId = localStorage.getItem('playerId');
         if (!playerId || !tempSelectedId) return;
 
-        await fetch(`http://localhost:8081/api/players/${playerId}/character`, {
+        await fetch(`http://localhost:8084/api/characters/${playerId}/select-character`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ characterId: tempSelectedId }),

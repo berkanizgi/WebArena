@@ -8,7 +8,10 @@ export function setupLevel1Tutorial(scene: GameScene, router: ReturnType<typeof 
     const completed = {
         move: false,
         rotate: false,
-        shoot: false
+        shoot: false,
+        collectItem: false // NEU
+
+
     };
 
     let tutorialBox = showTutorialBox(scene, 'Level 1 – Tutorial\n\n➡️ Bewege dich mit WASD');
@@ -18,7 +21,9 @@ export function setupLevel1Tutorial(scene: GameScene, router: ReturnType<typeof 
         if (!completed.move) msg += '➡️ Bewege dich mit WASD\n';
         else if (!completed.rotate) msg += '➡️ Drehe dich mit der Maus\n';
         else if (!completed.shoot) msg += '➡️ Schieß mit der linken Maustaste\n';
+        else if (!completed.collectItem) msg += '⚡ Sammle den Blitz auf für einen kurzzeitigen Speed-Boost\n';
         else msg += '🎉 Level abgeschlossen! Level 2 freigeschaltet!';
+
 
         const textObj = tutorialBox.list.find(obj => obj instanceof Phaser.GameObjects.Text) as Phaser.GameObjects.Text;
         textObj.setText(msg);
@@ -37,6 +42,11 @@ export function setupLevel1Tutorial(scene: GameScene, router: ReturnType<typeof 
                 updateInstruction();
             }
         }
+        if (!completed.collectItem && scene.registry.get('speedItemCollected')) {
+            completed.collectItem = true;
+            updateInstruction();
+        }
+
 
         if (!completed.rotate) {
             const pointer = scene.input.activePointer;
@@ -51,11 +61,10 @@ export function setupLevel1Tutorial(scene: GameScene, router: ReturnType<typeof 
         if (!completed.shoot) {
             completed.shoot = true;
             updateInstruction();
-            unlockLevel2(scene,router);
         }
     });
 }
-function unlockLevel2(scene: Phaser.Scene, router: ReturnType<typeof useRouter>) {
+export function unlockLevel2(scene: Phaser.Scene, router: ReturnType<typeof useRouter>) {
     const walletData = localStorage.getItem('wallet');
     if (!walletData) return;
 

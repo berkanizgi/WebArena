@@ -12,12 +12,9 @@ import { createProjectileGroup, updateProjectiles } from '@/phaser/setup/project
 import { handlePlayerMovement } from '@/phaser/movement/movementHandler';
 import { sendMovement } from '@/phaser/movement/movementSender';
 import { createHealthBar, updateHealthBar } from '@/phaser/setup/healthBarSetup';
-import { setupLevel1Tutorial} from "@/phaser/setup/level/Level1";
+import { setupLevel1Tutorial, unlockLevel2 } from "@/phaser/setup/level/Level1";
 import { setupMultiplayerZone } from '@/phaser/setup/setupMultiplayerZone';
-import {SessionPlayerDTO} from "@/phaser/types";
-import { useRouter } from 'next/navigation';
-
-
+import { SessionPlayerDTO } from "@/phaser/types";
 
 export default class GameScene extends Phaser.Scene {
     public player!: Phaser.Physics.Arcade.Sprite;
@@ -64,12 +61,7 @@ export default class GameScene extends Phaser.Scene {
     public hasShownDeathPopup = false;
     public hasShownVictoryPopup = false;
     public lastZoneDamageTime: number = 0;
-
-
-
-
-
-
+    private tutorialArrow!: Phaser.GameObjects.Image;
 
     constructor(config: Phaser.Types.Scenes.SettingsConfig & {
         skin: string;
@@ -80,7 +72,7 @@ export default class GameScene extends Phaser.Scene {
         characterId: string;
         sessionId: string;
         gameMode: string;
-        router: any; // oder: ReturnType<typeof useRouter>
+        router: any;
     }) {
         super(config);
         this.skin = config.skin;
@@ -91,20 +83,19 @@ export default class GameScene extends Phaser.Scene {
         this.speed = config.speed;
         this.sessionId = config.sessionId;
         this.gameMode = config.gameMode;
-        this.router = config.router; // 👈 Neu speichern
-
+        this.router = config.router;
     }
 
     preload() {
         this.load.tilemapTiledJSON('map', '/map/WebArenaMap.json');
-
+        this.load.image('speed_boost', '/game/blitz.png');
+        this.load.image('arrow_to_item', '/game/arrow_yellow.png');
 
         const tilesets = [
             'Set 1.0', 'Set 1.1', 'Set 1.2', 'Set 1.3',
             'Set 1.5', 'Set 1.6', 'Set 1.7 pillars',
             'Set 3.1', 'Set 3.3', 'Set 4.01', 'Set 4.04', 'Set 4.4', 'Set 4.5'
         ];
-
         tilesets.forEach((set) => this.load.image(set, `/map/Tiles/${set}.png`));
         this.load.image('big_waterfall', '/map/Tiles/Waterfalls/Big waterfall sheet.png');
 
@@ -115,22 +106,18 @@ export default class GameScene extends Phaser.Scene {
     }
 
     create() {
-
-
         this.pointer = this.input.activePointer;
-
         const { map, spawnPoints, collisionLayer, topLayer } = setupMap(this);
         const index = Array.from(this.sessionPlayerMap.keys()).indexOf(this.playerId);
         const spawn = spawnPoints[index % spawnPoints.length];
+
         const { player, cursors } = setupPlayer(this, spawn.x, spawn.y, this.skin);
+        this.player = player;
+        this.cursors = cursors;
         this.collisionLayer = collisionLayer;
         this.topLayer = topLayer;
 
-        this.player = player;
-        this.cursors = cursors;
-
         this.physics.add.collider(this.player, this.collisionLayer);
-
         setupAnimations(this, this.skin);
         setupCamera(this, this.player);
 
@@ -144,7 +131,6 @@ export default class GameScene extends Phaser.Scene {
 
         this.projectiles = createProjectileGroup(this);
         this.cooldownBar = createCooldownBar(this);
-
         this.stompClient = createStompClient('http://localhost:8081/ws');
 
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -168,52 +154,61 @@ export default class GameScene extends Phaser.Scene {
             });
         });
 
-
         setupWebSocket(this);
+
         if (this.gameMode === 'MULTIPLAYER') {
+            // setupMultiplayerZone(this); // <-- Aktivieren bei Bedarf
             console.log("[GameScene] MULTIPLAYER aktiv – Zone wird vorbereitet.");
         }
+
         if (this.gameMode === 'LEVEL_1') {
+            this.tutorialArrow = this.add.image(this.player.x, this.player.y - 8, 'arrow_to_item'); // 🎯 leicht über dem Kopf
+            this.tutorialArrow.setDisplaySize(12, 12);
+            this.tutorialArrow.setOrigin(0.5, 0.5);
+
+
             setupLevel1Tutorial(this, this.router);
-        } else if (this.gameMode === 'LEVEL_2') {
+
+            const speedBoost = this.physics.add.sprite(648, 468, 'speed_boost');
+            speedBoost.setOrigin(0.5, 0.5);
+            speedBoost.setDisplaySize(16, 16);
+
+            this.physics.add.overlap(this.player, speedBoost, () => {
+                if (!this.registry.get('speedItemCollected')) {
+                    this.registry.set('speedItemCollected', true);
+                    speedBoost.destroy();
+                    this.tutorialArrow.destroy();
+                    unlockLevel2(this, this.router);
+                }
+            }, undefined, this);
+        }
+
+        if (this.gameMode === 'LEVEL_2') {
             console.log("[GameScene] LEVEL_2 aktiv – Giftzonen werden aktiviert.");
-        } else if (this.gameMode === 'LEVEL_3') {
+        }
+
+        if (this.gameMode === 'LEVEL_3') {
             console.log("[GameScene] LEVEL_3 aktiv – Giftwolke und NPC werden aktiviert.");
         }
     }
 
     update() {
         const { aimDirection, moveX, moveY, rotation } = handlePlayerMovement(this.player, this.cursors, this.pointer, this.speed);
-
         this.player.setDepth(Math.min(this.player.y, 99));
-
         updateProjectiles(this.projectiles, this.time.now, this.game.loop.delta);
 
         if (!this.stompClient || !this.player || !this.skin || !this.playerId) return;
 
-// ❗ Nur senden, wenn du nicht tot bist!
         if (this.currentHealth > 0) {
-            sendMovement(
-                this.stompClient,
-                this.playerId,
-                this.player.x,
-                this.player.y,
-                aimDirection,
-                rotation,
-                moveX,
-                moveY,
-                this.characterId,
-                this.sessionId
-            );
+            sendMovement(this.stompClient, this.playerId, this.player.x, this.player.y, aimDirection, rotation, moveX, moveY, this.characterId, this.sessionId);
         }
-
 
         const now = this.time.now;
         const elapsed = now - this.lastAttackTime;
         this.cooldownProgress = Phaser.Math.Clamp(elapsed / this.cooldown, 0, 1);
         updateCooldownBar(this.cooldownBar, this.player, this.cooldownProgress);
 
-        const smoothing = 0.1;
+        const smoothing = 0.5;
         this.displayedHealth += (this.currentHealth - this.displayedHealth) * smoothing;
         updateHealthBar(this.healthBarGraphics, this.healthBarText, this.player, this.displayedHealth, this.baseHealth);
 
@@ -221,14 +216,16 @@ export default class GameScene extends Phaser.Scene {
             const entry = this.otherPlayers.get(playerId);
             if (!entry) return;
             healthData.displayedHealth += (healthData.currentHealth - healthData.displayedHealth) * 0.1;
-
-            updateHealthBar(
-                healthData.bar,
-                healthData.text,
-                entry.sprite,
-                healthData.displayedHealth,
-                healthData.baseHealth
-            );
+            updateHealthBar(healthData.bar, healthData.text, entry.sprite, healthData.displayedHealth, healthData.baseHealth);
         });
+
+        // Tutorial-Pfeil folgen lassen (wenn existiert)
+        if (this.tutorialArrow) {
+            const dx = 648 - this.player.x;
+            const dy = 468 - this.player.y;
+            const angle = Math.atan2(dy, dx);
+            this.tutorialArrow.setPosition(this.player.x, this.player.y - 15); // ✅ sanft oberhalb des Spielers
+            this.tutorialArrow.setRotation(angle);
+        }
     }
 }

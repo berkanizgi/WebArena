@@ -96,7 +96,22 @@ public class AttackService {
             return;
         }
 
-        int damage = isZoneDamage ? request.getDamage() : shooter.getCharacter().getBaseAttack();
+        int damage = request.getDamage();
+
+        if (!isZoneDamage) {
+            GameSession session = gameSessionService.getSession(request.getSessionId());
+            if (session != null) {
+                SessionPlayer shooterPlayer = session.getByPlayerId(request.getShooterId());
+                if (shooterPlayer != null) {
+                    damage = shooterPlayer.getBaseAttack(); // 🎯 hier nehmen wir den korrekten Wert!
+                } else {
+                    System.err.println("[Attack] SessionPlayer nicht gefunden für ID: " + request.getShooterId());
+                }
+            } else {
+                System.err.println("[Attack] GameSession nicht gefunden für ID: " + request.getSessionId());
+            }
+        }
+
         int newHealth = Math.max(0, target.getCurrentHealth() - damage);
         target.setCurrentHealth(newHealth);
 
@@ -139,10 +154,20 @@ public class AttackService {
         String source = isZoneDamage ? "ZONE" : shooter.getPlayerId();
         System.out.println(source + " trifft " + target.getPlayerId() + " für " + damage + " Schaden (HP: " + newHealth + ")");
 
+        int baseHealth = 100; // Fallback
+        GameSession session = gameSessionService.getSession(request.getSessionId());
+        if (session != null) {
+            SessionPlayer targetPlayer = session.getByPlayerId(request.getTargetId());
+            if (targetPlayer != null) {
+                baseHealth = targetPlayer.getBaseHealth(); // 💡 der korrekte Wert
+            }
+        }
+
         messagingTemplate.convertAndSend(
                 "/topic/health",
-                new HealthUpdateDTO(target.getPlayerId(), newHealth)
+                new HealthUpdateDTO(target.getPlayerId(), newHealth, baseHealth)
         );
+
     }
 
 

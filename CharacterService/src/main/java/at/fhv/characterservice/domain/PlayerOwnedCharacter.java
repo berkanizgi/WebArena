@@ -25,10 +25,10 @@ public class PlayerOwnedCharacter {
     private LocalDateTime purchaseDate = LocalDateTime.now();
 
     // Neue Felder
-    private int baseHealth = 100;
-    private int baseAttack = 10;
-    private int baseSpeed = 5;
-    private int projectileSpeed = 8;
+    private int baseHealth;
+    private int baseAttack;
+    private int baseSpeed;
+    private int projectileSpeed;
 
     // --- Getter & Setter ---
     public Long getId() {

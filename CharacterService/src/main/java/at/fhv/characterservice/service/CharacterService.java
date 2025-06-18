@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CharacterService {
@@ -115,6 +116,24 @@ public class CharacterService {
 
         playerOwnedCharacterRepository.save(poc);
     }
+
+    public List<GameCharacterDTO> getAllBaseStats() {
+        return characterRepository.findAll()
+                .stream()
+                .map(g -> new GameCharacterDTO(
+                        g.getCharacterId(),
+                        g.getName(),
+                        g.getSkin(),
+                        g.getBaseHealth(),
+                        g.getBaseAttack(),
+                        g.getSpeed(),
+                        g.getRole(),
+                        g.getDescription(),
+                        g.getRare()
+                ))
+                .collect(Collectors.toList());
+    }
+
 
 
 

@@ -1,10 +1,12 @@
 package com.example.gameservice.service;
 
-import com.example.gameservice.domain.GameCharacter;
+import com.example.gameservice.client.CharacterApiClient;
 import com.example.gameservice.domain.GameMode;
 import com.example.gameservice.domain.Player;
+import com.example.gameservice.dto.PlayerOwnedCharacterDTO;
 import com.example.gameservice.session.GameSession;
 import com.example.gameservice.session.SessionPlayer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -17,19 +19,24 @@ public class GameSessionService {
 
     private final Map<String, GameSession> sessions = new ConcurrentHashMap<>();
 
+    @Autowired
+    private CharacterApiClient characterApiClient;
+
+
     public synchronized GameSession joinOrCreateSession(Player player, GameMode mode) {
-        GameCharacter character = player.getWallet().getSelectedCharacter();
-        if (character == null) throw new IllegalStateException("Kein Charakter ausgewählt!");
+        String selectedCharacterId = player.getWallet().getSelectedCharacterId();
+        PlayerOwnedCharacterDTO owned = characterApiClient.getOwnedCharacter(player.getPlayerId(), selectedCharacterId);
 
         SessionPlayer sessionPlayer = new SessionPlayer(
                 player.getPlayerId(),
-                character.getCharacterId(),
-                character.getName(),
-                character.getBaseHealth(),
-                character.getBaseAttack(),
-                character.getSpeed()
+                owned.getCharacterId(),
+                "Name", // optional nachladen
+                owned.getBaseHealth(),
+                owned.getBaseAttack(),
+                (int) owned.getBaseSpeed()
         );
-        sessionPlayer.setGameMode(mode); // 🟢 NEU: GameMode beim Player setzen!
+        sessionPlayer.setGameMode(mode);
+
 
 
 

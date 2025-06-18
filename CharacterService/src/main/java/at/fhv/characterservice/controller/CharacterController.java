@@ -1,8 +1,10 @@
 package at.fhv.characterservice.controller;
 
+import at.fhv.characterservice.domain.GameCharacter;
 import at.fhv.characterservice.domain.Player;
 import at.fhv.characterservice.dto.GameCharacterDTO;
 import at.fhv.characterservice.dto.PlayerOwnedCharacterDTO;
+import at.fhv.characterservice.repository.CharacterRepository;
 import at.fhv.characterservice.repository.PlayerOwnedCharacterRepository;
 import at.fhv.characterservice.repository.PlayerRepository;
 import at.fhv.characterservice.request.AddOwnedCharacterRequest;
@@ -34,6 +36,10 @@ public class CharacterController {
 
     @Autowired
     private WalletService walletService;
+
+    @Autowired
+    private CharacterRepository characterRepository;
+
 
     @GetMapping
     public List<GameCharacterDTO> getAllCharacters() {
@@ -108,6 +114,31 @@ public class CharacterController {
         characterService.createOwnedCharacter(request.getPlayerId(), request.getCharacterId());
         return ResponseEntity.ok().build();
     }
+
+
+    @GetMapping("/{playerId}/owned-character/{characterId}")
+    public ResponseEntity<PlayerOwnedCharacterDTO> getOwnedCharacter(
+            @PathVariable String playerId,
+            @PathVariable String characterId) {
+
+        Optional<Player> playerOpt = playerRepository.findById(playerId);
+        if (playerOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return playerOwnedCharacterRepository
+                .findByPlayerAndGameCharacter_CharacterId(playerOpt.get(), characterId)
+                .map(owned -> ResponseEntity.ok(new PlayerOwnedCharacterDTO(owned)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+    @GetMapping("/all-base-stats")
+    public List<GameCharacterDTO> getAllBaseStats() {
+        return characterService.getAllBaseStats();
+    }
+
+
+
+
 
 
 

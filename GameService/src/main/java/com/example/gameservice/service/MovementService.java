@@ -51,9 +51,9 @@ public class MovementService {
         int tileY = targetY / tileSize;
 
         // Optional: Mapgrenzen/Kollision
-         if (tileY < 0 || tileY >= blocked.length || tileX < 0 || tileX >= blocked[0].length || blocked[tileY][tileX]) {
-             return pos;
-         }
+//         if (tileY < 0 || tileY >= blocked.length || tileX < 0 || tileX >= blocked[0].length || blocked[tileY][tileX]) {
+//             return pos;
+//         }
 
         pos.setX(targetX);
         pos.setY(targetY);

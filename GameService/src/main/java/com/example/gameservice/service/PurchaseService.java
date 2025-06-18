@@ -1,32 +1,30 @@
 package com.example.gameservice.service;
 
 import com.example.gameservice.Repository.GameCharacterRepository;
-import com.example.gameservice.Repository.OwnedCharacterRepository;
 import com.example.gameservice.Repository.PlayerRepository;
-import com.example.gameservice.domain.GameCharacter;
+import com.example.gameservice.client.CharacterApiClient;
 import com.example.gameservice.domain.Player;
-import com.example.gameservice.domain.PlayerOwnedCharacter;
 import com.example.gameservice.domain.Wallet;
 import com.example.gameservice.dto.WalletDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
 @Service
 public class PurchaseService {
 
     private final PlayerRepository playerRepository;
 
-    private final OwnedCharacterRepository ownedCharacterRepository;
+    @Autowired
+    private CharacterApiClient characterApiClient;
+
+
 
     @Autowired
     private GameCharacterRepository gameCharacterRepository;
 
-    public PurchaseService(PlayerRepository playerRepository, OwnedCharacterRepository ownedCharacterRepository) {
+    public PurchaseService(PlayerRepository playerRepository) {
         this.playerRepository = playerRepository;
-        this.ownedCharacterRepository = ownedCharacterRepository;
     }
 
     // Wallet lesen

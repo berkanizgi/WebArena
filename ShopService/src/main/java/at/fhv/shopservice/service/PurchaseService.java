@@ -45,7 +45,7 @@ public class PurchaseService {
         restTemplate.put(walletUrl, updatedWallet);
 
         // 6. Owned Character hinzufügen
-        String addCharacterUrl = "http://localhost:8081/api/purchase/owned-character";
+        String addCharacterUrl = "http://localhost:8084/api/characters/owned-character";
         restTemplate.postForEntity(addCharacterUrl, request, Void.class);
     }
 }

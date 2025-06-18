@@ -30,8 +30,8 @@ public class PurchaseController {
     }
 
     // Charakter kaufen
-    @PostMapping("/owned-character")
-    public void addOwnedCharacter(@RequestBody PurchaseRequestDTO request) {
-        purchaseService.addOwnedCharacter(request.playerId(), request.characterId());
-    }
+//    @PostMapping("/owned-character")
+//    public void addOwnedCharacter(@RequestBody PurchaseRequestDTO request) {
+//        purchaseService.addOwnedCharacter(request.playerId(), request.characterId());
+//    }
 }

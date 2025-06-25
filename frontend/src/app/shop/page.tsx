@@ -135,7 +135,7 @@ const ShopPage = () => {
                     className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded text-xl"
                     onClick={() => filterItems('all')}
                 >
-                    Alle
+                    All
                 </button>
                 <button
                     className="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded text-xl"

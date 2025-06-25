@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import {
     fetchShopItems,
     fetchOwnedCharacters,
@@ -31,6 +34,7 @@ const ShopPage = () => {
     const [playerName, setPlayerName] = useState<string | null>(null);
     const [wallet, setWallet] = useState<Wallet | null>(null);
     const [playerId, setPlayerId] = useState<string | null>(null);
+    const router = useRouter();
 
     useEffect(() => {
         const name = localStorage.getItem('shopPlayerName');
@@ -67,10 +71,10 @@ const ShopPage = () => {
         if (!playerId) return;
         try {
             await buyCharacter(playerId, characterId);
-            alert('Purchase successful!');
+            toast.success('Purchase successful!');
             await loadShopData(playerId);
         } catch (err) {
-            alert('Purchase failed: ' + err);
+            toast.error('Purchase failed: ' + err);
         }
     };
 
@@ -93,7 +97,7 @@ const ShopPage = () => {
         <div
             style={{
                 width: '100vw',
-                height: '100vh',
+                minHeight: '100vh',
                 backgroundImage: 'url("/lobby/Lobby_Frame.png")',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
@@ -105,6 +109,9 @@ const ShopPage = () => {
                 boxSizing: 'border-box',
             }}
         >
+            {/* Toast Container */}
+            <ToastContainer position="top-center" autoClose={3000} />
+
             {/* User Info oben links */}
             {playerName && wallet && (
                 <div
@@ -193,6 +200,26 @@ const ShopPage = () => {
                         </div>
                     </div>
                 ))}
+            </div>
+
+            {/* Back to Lobby Button */}
+            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
+                <button
+                    onClick={() => router.push('/lobby')}
+                    style={{
+                        backgroundColor: '#2196F3',
+                        color: 'white',
+                        border: 'none',
+                        padding: '10px 20px',
+                        borderRadius: '10px',
+                        fontFamily: 'Bangers, cursive',
+                        fontSize: '1.1rem',
+                        cursor: 'pointer',
+                        marginBottom: '2rem',
+                    }}
+                >
+                    Back to Lobby
+                </button>
             </div>
         </div>
     );

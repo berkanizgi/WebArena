@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface OwnedCharacter {
     characterId: string;
@@ -32,6 +35,7 @@ export default function CharacterOverview() {
     const [baseStats, setBaseStats] = useState<Record<string, BaseStat>>({});
     const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
     const [tempSelectedId, setTempSelectedId] = useState<string | null>(null);
+    const router = useRouter();
 
     const characterData: Character[] = [
         { id: 'c1', name: 'Black Asha', spriteSheetPath: '/lobby/black_char_lobby.png', spriteSheetSize: { width: 256, height: 128 } },
@@ -82,7 +86,7 @@ export default function CharacterOverview() {
         });
 
         setSelectedCharacterId(tempSelectedId);
-        alert('Auswahl gespeichert!');
+        toast.success('Character Change Successful');
     };
 
     const handleLevelUp = async () => {
@@ -95,17 +99,17 @@ export default function CharacterOverview() {
             });
 
             if (res.ok) {
-                alert("Level up erfolgreich!");
+                toast.success('Character LVL UP Successful');
                 const updated = await fetch(`http://localhost:8084/api/characters/${playerId}/character-overview`);
                 const data = await updated.json();
                 setOwnedCharacters(data.ownedCharacters);
             } else {
                 const text = await res.text();
-                alert("Level up fehlgeschlagen: " + text);
+                toast.error('Level up failed: ' + text);
             }
         } catch (err) {
             console.error(err);
-            alert("Fehler beim Leveln");
+            toast.error('Error during Level Up');
         }
     };
 
@@ -128,6 +132,9 @@ export default function CharacterOverview() {
             fontFamily: 'Bangers, cursive',
             padding: '2rem'
         }}>
+            {/* Toast Container */}
+            <ToastContainer position="top-center" autoClose={3000} />
+
             <h1 style={{ fontSize: '3rem', marginBottom: '1rem', color: 'white', textShadow: '2px 2px black' }}>
                 Character Overview
             </h1>
@@ -229,9 +236,9 @@ export default function CharacterOverview() {
             </div>
 
             <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
-                <button onClick={saveSelection} style={buttonStyle}>Auswahl speichern</button>
+                <button onClick={saveSelection} style={buttonStyle}>Set Active</button>
                 <button onClick={handleLevelUp} style={buttonStyle}>Level Up</button>
-                <button onClick={() => window.location.href = '/lobby'} style={buttonStyle}>Zurück zur Lobby</button>
+                <button onClick={() => router.push('/lobby')} style={buttonStyle}>Back to Lobby</button>
             </div>
         </div>
     );

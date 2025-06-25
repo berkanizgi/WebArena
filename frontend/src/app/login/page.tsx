@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+
 
 export default function LoginPage() {
     const [username, setUsername] = useState('');
@@ -9,6 +13,8 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [isRegister, setIsRegister] = useState(false); // Neuer State für Modus
     const router = useRouter();
+    const [popupMessage, setPopupMessage] = useState<string | null>(null);
+
 
     const handleLogin = async () => {
         const res = await fetch('http://localhost:8081/api/login', {
@@ -24,7 +30,7 @@ export default function LoginPage() {
             localStorage.setItem('playerId', data.playerId);
             router.push('/lobby');
         } else {
-            setError(data.message);
+            toast.error(data.message);
         }
     };
 
@@ -39,7 +45,8 @@ export default function LoginPage() {
 
         if (data.success) {
             // ✅ Popup anzeigen
-            alert('Successfully Registered! Login Now!.');
+            toast.success('Successfully registered! Please Log in.');
+
 
             // ✅ zurück auf Login
             setIsRegister(false);
@@ -47,7 +54,7 @@ export default function LoginPage() {
             setPassword('');
             setError('');
         } else {
-            setError(data.message);
+            toast.error(data.message);
         }
     };
 
@@ -68,6 +75,8 @@ export default function LoginPage() {
                 fontFamily: '"Bangers", cursive',
             }}
         >
+            <ToastContainer position="top-center" autoClose={3000} />
+
             <div
                 style={{
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import SockJS from 'sockjs-client';
 import { Client, IMessage } from '@stomp/stompjs';
 import { useRouter } from 'next/navigation';
+import {toast} from "react-toastify";
 
 
 interface Player {
@@ -97,7 +98,7 @@ export default function LobbyPage() {
     useEffect(() => {
         const id = localStorage.getItem('playerId');
         if (!id) {
-            alert('Nicht eingeloggt!');
+            toast.error('Not logged in!')
             router.push('/login');
             return;
         }
@@ -131,14 +132,19 @@ export default function LobbyPage() {
 
         try {
             const res = await fetch(`http://localhost:8081/api/game-session/start?playerId=${playerId}&mode=${gameMode}`, { method: 'POST' });
-            if (!res.ok) return alert('Fehler beim Starten');
+            if (!res.ok) {
+                toast.error('Error while Loading');
+                return;
+            }
 
             const data = await res.json();
             router.push(`/loading?playerId=${playerId}&sessionId=${data.sessionId}`);
         } catch (err) {
             console.error(err);
+            toast.error('Server Error');
         }
     };
+
 
     const goToShop = () => {
         if (playerId && playerName && wallet) {
@@ -196,9 +202,8 @@ export default function LobbyPage() {
             </div>
 
             <div style={{ position: 'absolute', bottom: '60px', left: '60px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <GameButton label="CHARACTERS" onClick={() => router.push('/character')} />
-                <GameButton label="SHOP" onClick={goToShop} styleOverride={{ fontSize: '1.2rem', width: '200px', height: '60px' }} />
-                <GameButton label="MISSIONS" styleOverride={{ fontSize: '1.2rem', width: '200px', height: '60px' }} />
+                <GameButton label="CHARACTERS" onClick={() => router.push('/character')} styleOverride={{ fontSize: '1.2rem', width: '200px', height: '60px' }} />
+                <GameButton label="SHOP" onClick={() => router.push('/shop')} styleOverride={{ fontSize: '1.2rem', width: '200px', height: '60px' }} />
             </div>
 
             {wallet?.selectedCharacterId && characterImageMap[wallet.selectedCharacterId] && (

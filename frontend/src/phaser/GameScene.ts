@@ -16,6 +16,7 @@ import { setupLevel1Tutorial, unlockLevel2 } from "@/phaser/setup/level/Level1";
 import { setupMultiplayerZone } from '@/phaser/setup/setupMultiplayerZone';
 import { SessionPlayerDTO } from "@/phaser/types";
 import {setupSpeedBoosts} from "@/phaser/setup/setupSpeedBoost";
+import {setupHealthBoxes} from "@/phaser/setup/setupHealthBoxes";
 
 export default class GameScene extends Phaser.Scene {
     public player!: Phaser.Physics.Arcade.Sprite;
@@ -91,6 +92,8 @@ export default class GameScene extends Phaser.Scene {
         this.load.tilemapTiledJSON('map', '/map/WebArenaMap.json');
         this.load.image('speed_boost', '/game/blitz.png');
         this.load.image('arrow_to_item', '/game/arrow_yellow.png');
+        this.load.image('health_box', '/game/medikit.png');
+
 
         const tilesets = [
             'Set 1.0', 'Set 1.1', 'Set 1.2', 'Set 1.3',
@@ -160,6 +163,8 @@ export default class GameScene extends Phaser.Scene {
         if (this.gameMode === 'MULTIPLAYER') {
             // setupMultiplayerZone(this); // <-- Aktivieren bei Bedarf
             setupSpeedBoosts(this);
+            setupHealthBoxes(this);
+
             console.log("[GameScene] MULTIPLAYER aktiv – Zone wird vorbereitet.");
         }
 

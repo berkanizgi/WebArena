@@ -4,6 +4,7 @@ import com.example.gameservice.domain.CharacterPosition;
 import com.example.gameservice.dto.AttackEventDTO;
 import com.example.gameservice.dto.HealthUpdateDTO;
 import com.example.gameservice.request.AttackRequest;
+import com.example.gameservice.request.HealRequest;
 import com.example.gameservice.request.HitRequest;
 import com.example.gameservice.session.GameSession;
 import com.example.gameservice.session.SessionPlayer;
@@ -134,4 +135,22 @@ public class AttackService {
                 new HealthUpdateDTO(targetPlayer.getPlayerId(), newHealth, targetPlayer.getBaseHealth())
         );
     }
+
+    public void processHeal(HealRequest request) {
+        GameSession session = gameSessionService.getSession(request.getSessionId());
+        if (session == null) return;
+
+        SessionPlayer player = session.getByPlayerId(request.getPlayerId());
+        if (player == null || player.isDead()) return;
+
+        int current = session.getCurrentHealth(request.getPlayerId());
+        int newHealth = Math.min(current + request.getAmount(), player.getBaseHealth());
+        session.setCurrentHealth(request.getPlayerId(), newHealth);
+
+        messagingTemplate.convertAndSend(
+                "/topic/health",
+                new HealthUpdateDTO(request.getPlayerId(), newHealth, player.getBaseHealth())
+        );
+    }
+
 }

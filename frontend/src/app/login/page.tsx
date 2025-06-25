@@ -7,6 +7,7 @@ export default function LoginPage() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isRegister, setIsRegister] = useState(false); // Neuer State für Modus
     const router = useRouter();
 
     const handleLogin = async () => {
@@ -15,6 +16,7 @@ export default function LoginPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password }),
         });
+
 
         const data = await res.json();
 
@@ -25,6 +27,30 @@ export default function LoginPage() {
             setError(data.message);
         }
     };
+
+    const handleRegister = async () => {
+        const res = await fetch('http://localhost:8081/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            // ✅ Popup anzeigen
+            alert('Successfully Registered! Login Now!.');
+
+            // ✅ zurück auf Login
+            setIsRegister(false);
+            setUsername('');
+            setPassword('');
+            setError('');
+        } else {
+            setError(data.message);
+        }
+    };
+
 
     return (
         <div
@@ -64,7 +90,7 @@ export default function LoginPage() {
                         textShadow: '2px 2px #000',
                     }}
                 >
-                    Login
+                    {isRegister ? 'Register' : 'Login'}
                 </h1>
 
                 {error && (
@@ -82,20 +108,20 @@ export default function LoginPage() {
 
                 <input
                     type="text"
-                    placeholder="Benutzername"
+                    placeholder="Username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     style={inputStyle}
                 />
                 <input
                     type="password"
-                    placeholder="Passwort"
+                    placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     style={inputStyle}
                 />
                 <button
-                    onClick={handleLogin}
+                    onClick={isRegister ? handleRegister : handleLogin}
                     style={buttonStyle}
                     onMouseOver={(e) =>
                         ((e.target as HTMLButtonElement).style.backgroundColor = '#1a80d0')
@@ -104,8 +130,28 @@ export default function LoginPage() {
                         ((e.target as HTMLButtonElement).style.backgroundColor = '#2196F3')
                     }
                 >
-                    Login
+                    {isRegister ? 'Register' : 'Login'}
                 </button>
+
+                {/* Umschalten zwischen Login / Register */}
+                <p
+                    style={{
+                        marginTop: '1rem',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        color: '#aaa',
+                        fontSize: '0.95rem',
+                    }}
+                    onClick={() => {
+                        setIsRegister(!isRegister);
+                        setError('');
+                    }}
+                >
+                    {isRegister
+                        ? 'Account already? Login Now!'
+                        : 'No Account? Register Now!'}
+                </p>
             </div>
         </div>
     );

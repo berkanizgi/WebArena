@@ -1,22 +1,22 @@
 package com.example.gameservice.request;
 
 public class RegisterRequest {
-    private String playerId;
-    private String skin;
+    private String username;
+    private String password;
 
-    public String getPlayerId() {
-        return playerId;
+    public String getUsername() {
+        return username;
     }
 
-    public void setPlayerId(String playerId) {
-        this.playerId = playerId;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
-    public String getSkin() {
-        return skin;
+    public String getPassword() {
+        return password;
     }
 
-    public void setSkin(String skin) {
-        this.skin = skin;
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

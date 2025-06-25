@@ -15,6 +15,7 @@ import { createHealthBar, updateHealthBar } from '@/phaser/setup/healthBarSetup'
 import { setupLevel1Tutorial, unlockLevel2 } from "@/phaser/setup/level/Level1";
 import { setupMultiplayerZone } from '@/phaser/setup/setupMultiplayerZone';
 import { SessionPlayerDTO } from "@/phaser/types";
+import {setupSpeedBoosts} from "@/phaser/setup/setupSpeedBoost";
 
 export default class GameScene extends Phaser.Scene {
     public player!: Phaser.Physics.Arcade.Sprite;
@@ -158,6 +159,7 @@ export default class GameScene extends Phaser.Scene {
 
         if (this.gameMode === 'MULTIPLAYER') {
             // setupMultiplayerZone(this); // <-- Aktivieren bei Bedarf
+            setupSpeedBoosts(this);
             console.log("[GameScene] MULTIPLAYER aktiv – Zone wird vorbereitet.");
         }
 

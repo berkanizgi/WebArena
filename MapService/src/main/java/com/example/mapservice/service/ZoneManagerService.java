@@ -45,7 +45,7 @@ public class ZoneManagerService {
     @Scheduled(fixedRate = 1000)
     private void tick() {
         if (!initialized) return;
-        System.out.println("[ZoneManager] Tick läuft – Radius: " + radius);
+      //     System.out.println("[ZoneManager] Tick läuft – Radius: " + radius);
         long now = System.currentTimeMillis();
 
         ZonePhase current = phases.get(currentPhaseIndex);

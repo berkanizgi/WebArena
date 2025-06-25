@@ -51,7 +51,6 @@ public class CharacterController {
 
     @PostMapping("/unregister")
     public ResponseEntity<Void> unregisterPlayer(@RequestBody RegisterRequest request) {
-        characterService.releaseCharacter(request.getSkin());
         return ResponseEntity.ok().build();
     }
 

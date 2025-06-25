@@ -1,19 +1,25 @@
 package com.example.gameservice.service;
 
 import com.example.gameservice.Repository.GameCharacterRepository;
+import com.example.gameservice.Repository.OwnedCharacterRepository;
 import com.example.gameservice.domain.GameCharacter;
 import com.example.gameservice.domain.Player;
 import com.example.gameservice.Repository.PlayerRepository;
+import com.example.gameservice.domain.PlayerOwnedCharacter;
 import com.example.gameservice.domain.Wallet;
 import com.example.gameservice.dto.PlayerDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class PlayerService {
+
+    @Autowired
+    private OwnedCharacterRepository ownedCharacterRepository;
 
     private final PlayerRepository playerRepository;
     private int lastIndex = -1;
@@ -55,10 +61,31 @@ public class PlayerService {
         player.setName(username); // fallback
 
         Wallet wallet = new Wallet(player, defaultCharacter);
+        wallet.setCoins(100); // Start-Credits
         player.setWallet(wallet);
 
-        return playerRepository.save(player); // durch Cascade wird Wallet mitgespeichert
+        // Player speichern
+        Player savedPlayer = playerRepository.save(player);
+
+        // --- PlayerOwnedCharacter anlegen ---
+        PlayerOwnedCharacter ownedCharacter = new PlayerOwnedCharacter();
+        ownedCharacter.setPlayer(savedPlayer);
+        ownedCharacter.setGameCharacter(defaultCharacter);
+        ownedCharacter.setBaseHealth(1300);
+        ownedCharacter.setBaseAttack(150);
+        ownedCharacter.setBaseSpeed(100);
+        ownedCharacter.setProjectileSpeed(10);
+        ownedCharacter.setLevel(1);
+        ownedCharacter.setNextUpgradeCost(1000);
+        ownedCharacter.setPurchaseDate(LocalDateTime.now());
+        ownedCharacter.setUpgradeLevel(1);
+
+        ownedCharacterRepository.save(ownedCharacter);
+
+        return savedPlayer;
     }
+
+
 
 
     public Optional<Player> getByUsername(String username) {

@@ -22,6 +22,14 @@ public class PlayerOwnedCharacter {
 
     private LocalDateTime purchaseDate = LocalDateTime.now();
 
+    private int baseHealth;
+    private int baseAttack;
+    private int baseSpeed;
+    private int projectileSpeed;
+
+    private int level = 1;
+    private int nextUpgradeCost = 1000;
+
     // --- Getter & Setter ---
 
     public Long getId() {
@@ -44,19 +52,75 @@ public class PlayerOwnedCharacter {
         this.gameCharacter = gameCharacter;
     }
 
-    public void setUpgradeLevel(int upgradeLevel) {
-        this.upgradeLevel = upgradeLevel;
+    public Long getShopItemId() {
+        return shopItemId;
+    }
+
+    public void setShopItemId(Long shopItemId) {
+        this.shopItemId = shopItemId;
     }
 
     public int getUpgradeLevel() {
         return upgradeLevel;
     }
 
-    public void setPurchaseDate(LocalDateTime purchaseDate) {
-        this.purchaseDate = purchaseDate;
+    public void setUpgradeLevel(int upgradeLevel) {
+        this.upgradeLevel = upgradeLevel;
     }
 
     public LocalDateTime getPurchaseDate() {
         return purchaseDate;
+    }
+
+    public void setPurchaseDate(LocalDateTime purchaseDate) {
+        this.purchaseDate = purchaseDate;
+    }
+
+    public int getBaseHealth() {
+        return baseHealth;
+    }
+
+    public void setBaseHealth(int baseHealth) {
+        this.baseHealth = baseHealth;
+    }
+
+    public int getBaseAttack() {
+        return baseAttack;
+    }
+
+    public void setBaseAttack(int baseAttack) {
+        this.baseAttack = baseAttack;
+    }
+
+    public int getBaseSpeed() {
+        return baseSpeed;
+    }
+
+    public void setBaseSpeed(int baseSpeed) {
+        this.baseSpeed = baseSpeed;
+    }
+
+    public int getProjectileSpeed() {
+        return projectileSpeed;
+    }
+
+    public void setProjectileSpeed(int projectileSpeed) {
+        this.projectileSpeed = projectileSpeed;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
+    public int getNextUpgradeCost() {
+        return nextUpgradeCost;
+    }
+
+    public void setNextUpgradeCost(int nextUpgradeCost) {
+        this.nextUpgradeCost = nextUpgradeCost;
     }
 }

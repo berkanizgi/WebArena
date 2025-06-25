@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import SockJS from 'sockjs-client';
 import { Client, IMessage } from '@stomp/stompjs';
 import { useRouter } from 'next/navigation';
-import {toast} from "react-toastify";
-
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface Player {
     playerId: string;
@@ -35,7 +35,6 @@ export default function LobbyPage() {
     const [wallet, setWallet] = useState<Wallet | null>(null);
     const [gameMode, setGameMode] = useState<string>('MULTIPLAYER');
     const router = useRouter();
-
 
     const characterImageMap: Record<string, string> = {
         c1: '/lobby/black_char_lobby.png',
@@ -94,11 +93,10 @@ export default function LobbyPage() {
         };
     }, []);
 
-
     useEffect(() => {
         const id = localStorage.getItem('playerId');
         if (!id) {
-            toast.error('Not logged in!')
+            toast.error('Not logged in!');
             router.push('/login');
             return;
         }
@@ -131,7 +129,10 @@ export default function LobbyPage() {
         if (!playerId) return;
 
         try {
-            const res = await fetch(`http://localhost:8081/api/game-session/start?playerId=${playerId}&mode=${gameMode}`, { method: 'POST' });
+            const res = await fetch(
+                `http://localhost:8081/api/game-session/start?playerId=${playerId}&mode=${gameMode}`,
+                { method: 'POST' }
+            );
             if (!res.ok) {
                 toast.error('Error while Loading');
                 return;
@@ -145,7 +146,6 @@ export default function LobbyPage() {
         }
     };
 
-
     const goToShop = () => {
         if (playerId && playerName && wallet) {
             localStorage.setItem('shopPlayerId', playerId);
@@ -154,7 +154,6 @@ export default function LobbyPage() {
             router.push('/shop');
         }
     };
-
 
     const me = lobby?.players.find(p => p.playerId === playerId);
 
@@ -174,13 +173,37 @@ export default function LobbyPage() {
                 overflow: 'hidden',
             }}
         >
-            <div style={{ position: 'absolute', top: '20px', left: '20px', display: 'flex', gap: '1rem', backgroundColor: 'rgba(0,0,0,0.6)', padding: '12px 24px', borderRadius: '12px', fontSize: '1.3rem' }}>
+            {/* Toast Container */}
+            <ToastContainer position="top-center" autoClose={3000} />
+
+            <div
+                style={{
+                    position: 'absolute',
+                    top: '20px',
+                    left: '20px',
+                    display: 'flex',
+                    gap: '1rem',
+                    backgroundColor: 'rgba(0,0,0,0.6)',
+                    padding: '12px 24px',
+                    borderRadius: '12px',
+                    fontSize: '1.3rem',
+                }}
+            >
                 <div>👤 {playerName}</div>
                 <div>⭐ XP: {wallet?.xp}</div>
                 <div>💰 {wallet?.coins}</div>
             </div>
 
-            <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+            <div
+                style={{
+                    position: 'absolute',
+                    top: '20px',
+                    right: '20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.7rem',
+                }}
+            >
                 {modeList.map(mode => {
                     const unlocked = isUnlocked(mode);
                     return (
@@ -189,47 +212,92 @@ export default function LobbyPage() {
                             label={modeDisplayMap[mode]}
                             onClick={unlocked ? () => setGameMode(mode) : undefined}
                             styleOverride={{
-                                backgroundColor: gameMode === mode ? '#4CAF50' : unlocked ? '#2196F3' : '#555',
+                                backgroundColor:
+                                    gameMode === mode
+                                        ? '#4CAF50'
+                                        : unlocked
+                                            ? '#2196F3'
+                                            : '#555',
                                 cursor: unlocked ? 'pointer' : 'not-allowed',
                                 fontSize: '1.2rem',
                                 height: '60px',
-                                width: '180px'
+                                width: '180px',
                             }}
                         />
                     );
                 })}
-                <GameButton label="PLAY" onClick={me?.ready ? startGameSession : undefined} styleOverride={{ backgroundColor: me?.ready ? '#4CAF50' : '#777', width: '180px', height: '60px', fontSize: '1.2rem' }} />
-            </div>
-
-            <div style={{ position: 'absolute', bottom: '60px', left: '60px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <GameButton label="CHARACTERS" onClick={() => router.push('/character')} styleOverride={{ fontSize: '1.2rem', width: '200px', height: '60px' }} />
-                <GameButton label="SHOP" onClick={() => router.push('/shop')} styleOverride={{ fontSize: '1.2rem', width: '200px', height: '60px' }} />
-            </div>
-
-            {wallet?.selectedCharacterId && characterImageMap[wallet.selectedCharacterId] && (
-                <img
-                    src={characterImageMap[wallet.selectedCharacterId]}
-                    alt="Character"
-                    style={{
-                        position: 'absolute',
-                        bottom: '10px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: '400px',
-                        height: '500px',
-                        objectFit: 'contain',
-                        zIndex: 10,
-                        filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.8))',
+                <GameButton
+                    label="PLAY"
+                    onClick={me?.ready ? startGameSession : undefined}
+                    styleOverride={{
+                        backgroundColor: me?.ready ? '#4CAF50' : '#777',
+                        width: '180px',
+                        height: '60px',
+                        fontSize: '1.2rem',
                     }}
                 />
-            )}
+            </div>
+
+            <div
+                style={{
+                    position: 'absolute',
+                    bottom: '60px',
+                    left: '60px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem',
+                }}
+            >
+                <GameButton
+                    label="CHARACTERS"
+                    onClick={() => router.push('/character')}
+                    styleOverride={{
+                        fontSize: '1.2rem',
+                        width: '200px',
+                        height: '60px',
+                    }}
+                />
+                <GameButton
+                    label="SHOP"
+                    onClick={goToShop}
+                    styleOverride={{
+                        fontSize: '1.2rem',
+                        width: '200px',
+                        height: '60px',
+                    }}
+                />
+            </div>
+
+            {wallet?.selectedCharacterId &&
+                characterImageMap[wallet.selectedCharacterId] && (
+                    <img
+                        src={characterImageMap[wallet.selectedCharacterId]}
+                        alt="Character"
+                        style={{
+                            position: 'absolute',
+                            bottom: '10px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: '400px',
+                            height: '500px',
+                            objectFit: 'contain',
+                            zIndex: 10,
+                            filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.8))',
+                        }}
+                    />
+                )}
 
             {me && (
                 <div style={{ position: 'absolute', bottom: '40px', right: '60px' }}>
                     <GameButton
                         label={me.ready ? 'Ready' : 'Not Ready'}
                         onClick={setReady}
-                        styleOverride={{ backgroundColor: me.ready ? '#4CAF50' : '#ff9800', width: '220px', height: '60px', fontSize: '1.2rem' }}
+                        styleOverride={{
+                            backgroundColor: me.ready ? '#4CAF50' : '#ff9800',
+                            width: '220px',
+                            height: '60px',
+                            fontSize: '1.2rem',
+                        }}
                     />
                 </div>
             )}
@@ -237,7 +305,15 @@ export default function LobbyPage() {
     );
 }
 
-function GameButton({ label, styleOverride = {}, onClick }: { label: string; styleOverride?: React.CSSProperties; onClick?: () => void }) {
+function GameButton({
+                        label,
+                        styleOverride = {},
+                        onClick,
+                    }: {
+    label: string;
+    styleOverride?: React.CSSProperties;
+    onClick?: () => void;
+}) {
     return (
         <button
             onClick={onClick}

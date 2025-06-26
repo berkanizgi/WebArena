@@ -50,47 +50,35 @@ export default function LobbyPage() {
         LEVEL_3: 'Level 3',
     };
 
-    const isUnlocked = (mode: string): boolean => {
-        if (mode === 'MULTIPLAYER') return true;
-        if (mode === 'LEVEL_1') return true;
-        if (mode === 'LEVEL_2') return wallet?.unlockedLevels.includes('LEVEL_1') ?? false;
-        if (mode === 'LEVEL_3') return wallet?.unlockedLevels.includes('LEVEL_2') ?? false;
-        return false;
-    };
-
     useEffect(() => {
-        const run = async () => {
-            const socket = new SockJS('http://localhost:8081/ws');
-            const stompClient = new Client({
-                webSocketFactory: () => socket,
-                onConnect: () => {
-                    const storedId = sessionStorage.getItem('playerId');
-                    if (storedId) {
-                        stompClient.subscribe('/user/queue/lobby-init', (message: IMessage) => {
-                            const initData = JSON.parse(message.body);
-                            const lobbyId = initData.lobbyId;
+        const socket = new SockJS('http://localhost:8081/ws');
+        const stompClient = new Client({
+            webSocketFactory: () => socket,
+            onConnect: () => {
+                const storedId = sessionStorage.getItem('playerId');
+                if (storedId) {
+                    stompClient.subscribe('/user/queue/lobby-init', (message: IMessage) => {
+                        const initData = JSON.parse(message.body);
+                        const lobbyId = initData.lobbyId;
 
-                            stompClient.subscribe(`/topic/lobby/${lobbyId}`, (message: IMessage) => {
-                                const data = JSON.parse(message.body);
-                                if (data.type === 'LOBBY_CREATED' || data.type === 'LOBBY_UPDATED') {
-                                    setLobby(data.lobby);
-                                }
-                            });
+                        stompClient.subscribe(`/topic/lobby/${lobbyId}`, (message: IMessage) => {
+                            const data = JSON.parse(message.body);
+                            if (data.type === 'LOBBY_CREATED' || data.type === 'LOBBY_UPDATED') {
+                                setLobby(data.lobby);
+                            }
                         });
+                    });
 
-                        stompClient.publish({
-                            destination: '/app/joinLobby',
-                            body: JSON.stringify({ playerId: storedId }),
-                        });
-                    }
-                },
-            });
+                    stompClient.publish({
+                        destination: '/app/joinLobby',
+                        body: JSON.stringify({ playerId: storedId }),
+                    });
+                }
+            },
+        });
 
-            stompClient.activate();
-            setClient(stompClient);
-        };
-
-        run();
+        stompClient.activate();
+        setClient(stompClient);
 
         return () => {
             client?.deactivate();
@@ -119,7 +107,6 @@ export default function LobbyPage() {
                 });
             });
     }, []);
-
 
     const startGameSession = async () => {
         if (!playerId) return;
@@ -196,41 +183,41 @@ export default function LobbyPage() {
                 right: '20px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '0.7rem',
+                gap: '1rem',
             }}>
-                {modeList.map(mode => {
-                    const unlocked = isUnlocked(mode);
-                    return (
-                        <GameButton
-                            key={mode}
-                            label={modeDisplayMap[mode]}
-                            onClick={unlocked ? () => setGameMode(mode) : undefined}
-                            styleOverride={{
-                                backgroundColor:
-                                    gameMode === mode
-                                        ? '#4CAF50'
-                                        : unlocked
-                                            ? '#2196F3'
-                                            : '#555',
-                                cursor: unlocked ? 'pointer' : 'not-allowed',
-                                fontSize: '1.2rem',
-                                height: '60px',
-                                width: '180px',
-                            }}
-                        />
-                    );
-                })}
+                {modeList.map(mode => (
+                    <GameButton
+                        key={mode}
+                        label={modeDisplayMap[mode]}
+                        onClick={() => setGameMode(mode)}
+                        styleOverride={{
+                            backgroundColor: gameMode === mode ? '#4CAF50' : '#2196F3',
+                            border: gameMode === mode ? '2px solid #fff' : '2px solid transparent',
+                            transform: gameMode === mode ? 'scale(1.05)' : 'scale(1)',
+                            fontSize: '1.4rem',
+                            height: '70px',
+                            width: '220px',
+                        }}
+                    />
+                ))}
+            </div>
+
+            <div style={{
+                position: 'absolute',
+                bottom: '60px',
+                right: '80px',
+            }}>
                 <GameButton
                     label="PLAY"
                     onClick={startGameSession}
                     styleOverride={{
                         backgroundColor: '#4CAF50',
-                        width: '180px',
-                        height: '60px',
-                        fontSize: '1.2rem',
+                        width: '220px',
+                        height: '70px',
+                        fontSize: '1.5rem',
+                        border: '2px solid #fff',
                     }}
                 />
-
             </div>
 
             <div style={{
@@ -245,18 +232,18 @@ export default function LobbyPage() {
                     label="CHARACTERS"
                     onClick={() => router.push('/character')}
                     styleOverride={{
-                        fontSize: '1.2rem',
-                        width: '200px',
-                        height: '60px',
+                        fontSize: '1.4rem',
+                        width: '220px',
+                        height: '70px',
                     }}
                 />
                 <GameButton
                     label="SHOP"
                     onClick={goToShop}
                     styleOverride={{
-                        fontSize: '1.2rem',
-                        width: '200px',
-                        height: '60px',
+                        fontSize: '1.4rem',
+                        width: '220px',
+                        height: '70px',
                     }}
                 />
             </div>
@@ -281,7 +268,6 @@ export default function LobbyPage() {
         </div>
     );
 }
-
 function GameButton({
                         label,
                         styleOverride = {},
@@ -299,16 +285,24 @@ function GameButton({
                 height: '55px',
                 backgroundColor: '#2196F3',
                 color: '#fff',
-                border: 'none',
+                border: '2px solid transparent',
                 borderRadius: '10px',
                 fontSize: '1.1rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '2px 2px #000',
+                boxShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
                 fontFamily: 'Bangers, cursive',
                 cursor: 'pointer',
+                transition: 'transform 0.15s ease-in-out',
+                transform: 'scale(1)',
                 ...styleOverride,
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.02)';
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
             }}
         >
             {label}

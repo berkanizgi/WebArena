@@ -18,20 +18,17 @@ export function showPopup(scene: Phaser.Scene, message: string, onConfirm: () =>
     graphics.lineStyle(3, 0xffcc00);
     graphics.strokeRoundedRect(-boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight, 18);
 
-    // 🏆 Scharfer, einzeiliger Text
-    const popupText = scene.add.text(0, -15, message, {
+    const popupText = scene.add.text(-boxWidth / 2 + 12, -30, message, {
         fontFamily: 'Verdana',
-        fontSize: '23px',
+        fontSize: '25px',
         color: '#ffeb3b',
         fontStyle: 'bold',
-        align: 'center',
-        wordWrap: { width: boxWidth - 20, useAdvancedWrap: true }
-    }).setOrigin(0.5).setScale(0.5);
+        align: 'left'
+    }).setOrigin(0, 0).setScale(0.5);
 
-    // 🔘 Klarer, lesbarer Button
-    const button = scene.add.text(0, 20, 'Zurück zur Lobby', {
+    const button = scene.add.text(0, 30, 'Zurück zur Lobby', {
         fontFamily: 'Arial',
-        fontSize: '20px',
+        fontSize: '21px',
         backgroundColor: '#0077cc',
         color: '#ffffff',
         padding: { x: 10, y: 4 }
@@ -52,7 +49,6 @@ export function showPopup(scene: Phaser.Scene, message: string, onConfirm: () =>
 
     container.add([graphics, popupText, button]);
 
-    // ✨ Animation ohne Auflösungsverlust
     scene.tweens.add({
         targets: container,
         scale: 1,

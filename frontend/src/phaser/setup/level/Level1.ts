@@ -69,7 +69,7 @@ export function setupLevel1Tutorial(scene: GameScene) {
                 htmlTutorialBox.innerText = instructions[4];
 
                 setTimeout(() => {
-                    showPopup(scene, '🎉 Level 1 completed!\nLevel 2 is now unlocked!', () => {
+                    showPopup(scene, '🎉 Level 1 completed!\nCongratulations!', () => {
                         const walletData = sessionStorage.getItem('wallet');
                         if (walletData) {
                             try {

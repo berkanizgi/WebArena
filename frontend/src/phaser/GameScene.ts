@@ -18,6 +18,7 @@ import {setupSpeedBoosts} from "@/phaser/setup/setupSpeedBoost";
 import {setupHealthBoxes} from "@/phaser/setup/setupHealthBoxes";
 import {setupLevel1Tutorial} from "@/phaser/setup/level/Level1";
 import {setupLevel1Boost} from "@/phaser/setup/setupLevel1SpeedBoost";
+import { setupLevel2 } from '@/phaser/setup/level/Level2';
 
 export default class GameScene extends Phaser.Scene {
     public player!: Phaser.Physics.Arcade.Sprite;
@@ -94,6 +95,8 @@ export default class GameScene extends Phaser.Scene {
         this.load.image('speed_boost', '/game/blitz.png');
         this.load.image('arrow_to_item', '/game/arrow_yellow.png');
         this.load.image('health_box', '/game/medikit.png');
+        this.load.image('giftwolke', '/game/giftwolke.png');
+
 
 
         const tilesets = [
@@ -103,7 +106,6 @@ export default class GameScene extends Phaser.Scene {
         ];
         tilesets.forEach((set) => this.load.image(set, `/map/Tiles/${set}.png`));
         this.load.image('big_waterfall', '/map/Tiles/Waterfalls/Big waterfall sheet.png');
-
         this.load.spritesheet('green_asha', '/map/Tiles/character/green/green_asha_walk.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('black_asha', '/map/Tiles/character/black/black_asha_walk.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('red_asha', '/map/Tiles/character/red/red_asha_walk.png', { frameWidth: 32, frameHeight: 32 });
@@ -175,6 +177,7 @@ export default class GameScene extends Phaser.Scene {
 
         if (this.gameMode === 'LEVEL_2') {
             console.log("[GameScene] LEVEL_2 aktiv – Giftzonen werden aktiviert.");
+            setupLevel2(this);
         }
 
         if (this.gameMode === 'LEVEL_3') {

@@ -86,7 +86,7 @@ public class AttackService {
 
 
     public void processHit(HitRequest request) {
-        boolean isZoneDamage = "ZONE".equals(request.getShooterId());
+        boolean isZoneDamage = "ZONE".equals(request.getShooterId()) || "GIFTWOLKE".equals(request.getShooterId());
 
         GameSession session = gameSessionService.getSession(request.getSessionId());
         if (session == null) return;

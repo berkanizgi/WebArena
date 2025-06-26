@@ -12,7 +12,6 @@ public class GameServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(GameServiceApplication.class, args);
 
-        // 🧪 Test-Hash generieren (nur temporär)
       //  PasswordHasher.printHash("hey123");
     }
 }

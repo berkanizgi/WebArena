@@ -65,19 +65,19 @@ export function setupLevel1Tutorial(scene: GameScene, router: ReturnType<typeof 
     });
 }
 export function unlockLevel2(scene: Phaser.Scene, router: ReturnType<typeof useRouter>) {
-    const walletData = localStorage.getItem('wallet');
+    const walletData = sessionStorage.getItem('wallet');
     if (!walletData) return;
 
     try {
         const wallet = JSON.parse(walletData);
         wallet.level2Unlocked = true;
-        localStorage.setItem('wallet', JSON.stringify(wallet));
+        sessionStorage.setItem('wallet', JSON.stringify(wallet));
 
         scene.time.delayedCall(400, () => {
             showPopup(scene, '🎉 Level 1 abgeschlossen!\nLEVEL 2 freigeschaltet!', () => {
-                const playerId = localStorage.getItem('playerId');
+                const playerId = sessionStorage.getItem('playerId');
                 if (playerId) {
-                    localStorage.setItem('playerId', playerId);
+                    sessionStorage.setItem('playerId', playerId);
                     router.push("/lobby");
                 } else {
                     router.push("/login");

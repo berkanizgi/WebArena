@@ -45,7 +45,7 @@ export default function CharacterOverview() {
     ];
 
     useEffect(() => {
-        const playerId = localStorage.getItem('playerId');
+        const playerId = sessionStorage.getItem('playerId');
         if (!playerId) return;
 
         // Lade Owned Characters + Auswahl
@@ -76,7 +76,7 @@ export default function CharacterOverview() {
     }, []);
 
     const saveSelection = async () => {
-        const playerId = localStorage.getItem('playerId');
+        const playerId = sessionStorage.getItem('playerId');
         if (!playerId || !tempSelectedId) return;
 
         await fetch(`http://localhost:8084/api/characters/${playerId}/select-character`, {
@@ -90,7 +90,7 @@ export default function CharacterOverview() {
     };
 
     const handleLevelUp = async () => {
-        const playerId = localStorage.getItem('playerId');
+        const playerId = sessionStorage.getItem('playerId');
         if (!playerId || !selectedCharacterId) return;
 
         try {

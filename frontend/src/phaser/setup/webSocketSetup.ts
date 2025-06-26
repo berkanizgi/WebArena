@@ -101,7 +101,7 @@ export function setupWebSocket(scene: GameScene) {
                 showPopup(scene, "🏆 Victory!\n💰 +300 Coins", () => {
                     const playerId = scene.playerId;
                     if (playerId) {
-                        localStorage.setItem('playerId', playerId);
+                        sessionStorage.setItem('playerId', playerId);
                         window.location.href = "/lobby";
                     } else {
                         console.warn('No playerId found – redirecting to login.');
@@ -143,7 +143,7 @@ export function setupWebSocket(scene: GameScene) {
                     showPopup(scene, "💀 You were defeated.\n💸 +100 Coins", () => {
                         const playerId = scene.playerId;
                         if (playerId) {
-                            localStorage.setItem('playerId', playerId);
+                            sessionStorage.setItem('playerId', playerId);
                             window.location.href = "/lobby";
                         } else {
                             console.warn('No playerId found – redirecting to login.');

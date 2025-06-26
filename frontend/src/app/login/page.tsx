@@ -27,7 +27,7 @@ export default function LoginPage() {
         const data = await res.json();
 
         if (data.success) {
-            localStorage.setItem('playerId', data.playerId);
+            sessionStorage.setItem('playerId', data.playerId);
             router.push('/lobby');
         } else {
             toast.error(data.message);

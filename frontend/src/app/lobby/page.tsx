@@ -64,7 +64,7 @@ export default function LobbyPage() {
             const stompClient = new Client({
                 webSocketFactory: () => socket,
                 onConnect: () => {
-                    const storedId = localStorage.getItem('playerId');
+                    const storedId = sessionStorage.getItem('playerId');
                     if (storedId) {
                         stompClient.subscribe('/user/queue/lobby-init', (message: IMessage) => {
                             const initData = JSON.parse(message.body);
@@ -98,7 +98,7 @@ export default function LobbyPage() {
     }, []);
 
     useEffect(() => {
-        const id = localStorage.getItem('playerId');
+        const id = sessionStorage.getItem('playerId');
         if (!id) {
             toast.error('Not logged in!');
             router.push('/login');
@@ -144,9 +144,9 @@ export default function LobbyPage() {
 
     const goToShop = () => {
         if (playerId && playerName && wallet) {
-            localStorage.setItem('shopPlayerId', playerId);
-            localStorage.setItem('shopPlayerName', playerName);
-            localStorage.setItem('shopWallet', JSON.stringify(wallet));
+            sessionStorage.setItem('shopPlayerId', playerId);
+            sessionStorage.setItem('shopPlayerName', playerName);
+            sessionStorage.setItem('shopWallet', JSON.stringify(wallet));
             router.push('/shop');
         }
     };

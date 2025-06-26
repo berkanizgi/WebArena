@@ -37,9 +37,9 @@ const ShopPage = () => {
     const router = useRouter();
 
     useEffect(() => {
-        const name = localStorage.getItem('shopPlayerName');
-        const walletData = localStorage.getItem('shopWallet');
-        const id = localStorage.getItem('shopPlayerId');
+        const name = sessionStorage.getItem('shopPlayerName');
+        const walletData = sessionStorage.getItem('shopWallet');
+        const id = sessionStorage.getItem('shopPlayerId');
         if (name && walletData && id) {
             setPlayerName(name);
             setWallet(JSON.parse(walletData));
@@ -59,7 +59,7 @@ const ShopPage = () => {
             setOwnedCharacterIds(owned);
             setFilteredItems(items);
             setWallet(freshWallet);
-            localStorage.setItem('shopWallet', JSON.stringify(freshWallet));
+            sessionStorage.setItem('shopWallet', JSON.stringify(freshWallet));
         } catch (err: any) {
             setError(err.message);
         } finally {

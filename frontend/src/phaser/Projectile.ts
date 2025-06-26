@@ -9,11 +9,9 @@ export default class Projectile extends Phaser.GameObjects.Ellipse {
     private sceneRef: GameScene;
     private createdAt: number;
 
-
     constructor(scene: GameScene, x: number, y: number, dirX: number, dirY: number, shooterId: string) {
         super(scene, x, y, 10, 10, 0xff3300);
         this.createdAt = scene.time.now;
-
 
         this.sceneRef = scene;
         this.shooterId = shooterId;
@@ -67,15 +65,35 @@ export default class Projectile extends Phaser.GameObjects.Ellipse {
             const distance = Phaser.Math.Distance.Between(this.x, this.y, myPlayer.x, myPlayer.y);
 
             if (distance < 16) {
-                // Getroffen! – Kein publish nötig, der Schütze hat das bereits gesendet
                 this.destroy();
             }
         }
 
-        // Auto-destroy
+        // 🔥 Prüfe Kollision mit NPC
+        const npc = this.sceneRef.npcEnemy;
+        if (npc && !this.sceneRef.npcIsDead) {
+            const distanceToNpc = Phaser.Math.Distance.Between(this.x, this.y, npc.x, npc.y);
+            if (distanceToNpc < 16) {
+                this.sceneRef.npcHealth -= this.sceneRef.baseAttack;
+                this.destroy();
+
+                if (this.sceneRef.npcHealth <= 0) {
+                    this.sceneRef.npcIsDead = true;
+                    npc.destroy();
+                    this.sceneRef.npcHealthBar?.destroy();
+
+                    if (!this.sceneRef.hasShownVictoryPopup) {
+                        this.sceneRef.hasShownVictoryPopup = true;
+                        alert('🎉 NPC besiegt! Level abgeschlossen!');
+                        this.sceneRef.router.push('/lobby');
+                    }
+                }
+            }
+        }
+
+        // Auto-destroy nach 1 Sekunde
         if (this.sceneRef.time.now - this.createdAt > 1000) {
             this.destroy();
         }
     }
-
 }

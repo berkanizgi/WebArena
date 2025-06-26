@@ -65,7 +65,16 @@ export default class GameScene extends Phaser.Scene {
     public hasShownDeathPopup = false;
     public hasShownVictoryPopup = false;
     public lastZoneDamageTime: number = 0;
-    tutorialArrow!: Phaser.GameObjects.Image;
+    private tutorialArrow!: Phaser.GameObjects.Image;
+
+    public npcEnemy?: Phaser.Physics.Arcade.Sprite;
+    public npcHealth: number = 100;
+    public npcMaxHealth: number = 100;
+    public npcSpeed: number = 40;
+    public npcHealthBar?: Phaser.GameObjects.Graphics;
+    public npcIsDead: boolean = false;
+
+
 
     constructor(config: Phaser.Types.Scenes.SettingsConfig & {
         skin: string;
@@ -110,6 +119,8 @@ export default class GameScene extends Phaser.Scene {
         this.load.spritesheet('black_asha', '/map/Tiles/character/black/black_asha_walk.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('red_asha', '/map/Tiles/character/red/red_asha_walk.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('blue_asha', '/map/Tiles/character/blue/blue_asha_walk.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('npc_enemy', '/npc/enemy_walk.png', { frameWidth: 32, frameHeight: 32 });
+
     }
 
     create() {
@@ -211,6 +222,30 @@ export default class GameScene extends Phaser.Scene {
             healthData.displayedHealth += (healthData.currentHealth - healthData.displayedHealth) * 0.1;
             updateHealthBar(healthData.bar, healthData.text, entry.sprite, healthData.displayedHealth, healthData.baseHealth);
         });
+
+        // Tutorial-Pfeil folgen lassen (wenn existiert)
+        if (this.tutorialArrow) {
+            const dx = 648 - this.player.x;
+            const dy = 468 - this.player.y;
+            const angle = Math.atan2(dy, dx);
+            this.tutorialArrow.setPosition(this.player.x, this.player.y - 15); // ✅ sanft oberhalb des Spielers
+            this.tutorialArrow.setRotation(angle);
+        }
+
+        if (this.npcEnemy && !this.npcIsDead) {
+            // Bewegung auf Spieler zu
+            const dx = this.player.x - this.npcEnemy.x;
+            const dy = this.player.y - this.npcEnemy.y;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            this.npcEnemy.setVelocity((dx / dist) * this.npcSpeed, (dy / dist) * this.npcSpeed);
+
+            // Healthbar zeichnen
+            this.npcHealthBar?.clear();
+            this.npcHealthBar?.fillStyle(0x000000);
+            this.npcHealthBar?.fillRect(this.npcEnemy.x - 16, this.npcEnemy.y - 30, 32, 5);
+            this.npcHealthBar?.fillStyle(0xff0000);
+            this.npcHealthBar?.fillRect(this.npcEnemy.x - 16, this.npcEnemy.y - 30, 32 * (this.npcHealth / this.npcMaxHealth), 5);
+        }
 
     }
 }

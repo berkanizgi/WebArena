@@ -1,5 +1,6 @@
 package com.example.mapservice.controller;
 
+import com.example.mapservice.domain.HealthBoxItem;
 import com.example.mapservice.domain.SpeedBoostItem;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,4 +22,15 @@ public class ItemController {
                 new SpeedBoostItem(646, 471.6)
         );
     }
+
+    @GetMapping("/healthboxes")
+    public List<HealthBoxItem> getHealthBoxes() {
+        return List.of(
+                new HealthBoxItem(517.3, 475.3),
+                new HealthBoxItem(778.0, 475.3),
+                new HealthBoxItem(648.0, 854.5),
+                new HealthBoxItem(648.0, 102.0)
+        );
+    }
+
 }

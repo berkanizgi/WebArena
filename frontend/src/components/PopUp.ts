@@ -10,9 +10,8 @@ export function showPopup(scene: Phaser.Scene, message: string, onConfirm: () =>
 
     const container = scene.add.container(centerX, centerY).setDepth(1000).setScale(0).setAlpha(0);
 
-    // 🎨 Hintergrundbox (etwas breiter)
     const boxWidth = 200;
-    const boxHeight = 80;
+    const boxHeight = 100;
     const graphics = scene.add.graphics();
     graphics.fillStyle(0x1a2948, 0.98);
     graphics.fillRoundedRect(-boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight, 18);

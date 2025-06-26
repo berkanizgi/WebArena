@@ -38,19 +38,23 @@ public class LobbyController {
 
         System.out.println("✅ [JOIN_LOBBY] Player " + playerId + " ist jetzt in Lobby " + lobby.getId());
 
-        messagingTemplate.convertAndSend("/topic/lobby", Map.of("type", "LOBBY_UPDATED", "lobby", lobby));
+        // ❗ Ändere Topic auf /topic/lobby/{lobbyId}
+        messagingTemplate.convertAndSend("/topic/lobby/" + lobby.getId(), Map.of(
+                "type", "LOBBY_UPDATED",
+                "lobby", lobby
+        ));
+
+        // Zusätzlich zum /topic/lobby/{id}
+        messagingTemplate.convertAndSendToUser(
+                playerId,
+                "/queue/lobby-init",
+                Map.of("lobbyId", lobby.getId())
+        );
+
     }
 
 
-    @MessageMapping("/setReady")
-    public void setReady(@Payload Map<String, String> data) {
-        String playerId = data.get("playerId");
 
-        Lobby updatedLobby = lobbyService.toggleReady(playerId);
-        if (updatedLobby != null) {
-            messagingTemplate.convertAndSend("/topic/lobby", Map.of("type", "LOBBY_UPDATED", "lobby", updatedLobby));
-        }
-    }
 
 }
 

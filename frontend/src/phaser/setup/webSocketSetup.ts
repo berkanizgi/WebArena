@@ -98,16 +98,17 @@ export function setupWebSocket(scene: GameScene) {
                     scene.cameras.main.centerOn(400, 300);
                 }
 
-                showPopup(scene, "🏆 Du hast gewonnen!", () => {
+                showPopup(scene, "🏆 Victory!\n💰 +300 Coins", () => {
                     const playerId = scene.playerId;
                     if (playerId) {
-                        localStorage.setItem('playerId', playerId); // falls nicht gesetzt
-                        window.location.href = "/lobby";
+                        localStorage.setItem('playerId', playerId);
+                        scene.router.push("/lobby");
                     } else {
-                        console.warn('Keine PlayerId beim Zurückspringen – leite zu Login.');
-                        window.location.href = "/login";
+                        console.warn('No playerId found – redirecting to login.');
+                        scene.router.push("/login");
                     }
                 });
+
 
             });
         });
@@ -139,16 +140,17 @@ export function setupWebSocket(scene: GameScene) {
                     scene.hasShownDeathPopup = true;
                     scene.player.setTint(0x000000);
                     scene.physics.pause();
-                    showPopup(scene, "Du bist leider gestorben!", () => {
+                    showPopup(scene, "💀 You were defeated.\n💸 +100 Coins", () => {
                         const playerId = scene.playerId;
                         if (playerId) {
                             localStorage.setItem('playerId', playerId);
-                            window.location.href = "/lobby";
+                            scene.router.push("/lobby");
                         } else {
-                            console.warn('Keine PlayerId beim Zurückspringen – leite zu Login.');
-                            window.location.href = "/login";
+                            console.warn('No playerId found – redirecting to login.');
+                            scene.router.push("/login");
                         }
                     });
+
                     return;
                 }
 

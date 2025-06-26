@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import SockJS from 'sockjs-client';
 import { Client, IMessage } from '@stomp/stompjs';
 import { useRouter } from 'next/navigation';
@@ -9,7 +9,6 @@ import 'react-toastify/dist/ReactToastify.css';
 
 interface Player {
     playerId: string;
-    ready: boolean;
     isHost: boolean;
     name: string;
 }
@@ -65,15 +64,20 @@ export default function LobbyPage() {
             const stompClient = new Client({
                 webSocketFactory: () => socket,
                 onConnect: () => {
-                    stompClient.subscribe('/topic/lobby', (message: IMessage) => {
-                        const data = JSON.parse(message.body);
-                        if (data.type === 'LOBBY_CREATED' || data.type === 'LOBBY_UPDATED') {
-                            setLobby(data.lobby);
-                        }
-                    });
-
                     const storedId = localStorage.getItem('playerId');
                     if (storedId) {
+                        stompClient.subscribe('/user/queue/lobby-init', (message: IMessage) => {
+                            const initData = JSON.parse(message.body);
+                            const lobbyId = initData.lobbyId;
+
+                            stompClient.subscribe(`/topic/lobby/${lobbyId}`, (message: IMessage) => {
+                                const data = JSON.parse(message.body);
+                                if (data.type === 'LOBBY_CREATED' || data.type === 'LOBBY_UPDATED') {
+                                    setLobby(data.lobby);
+                                }
+                            });
+                        });
+
                         stompClient.publish({
                             destination: '/app/joinLobby',
                             body: JSON.stringify({ playerId: storedId }),
@@ -86,10 +90,10 @@ export default function LobbyPage() {
             setClient(stompClient);
         };
 
-        run(); // sofort ausführen
+        run();
 
         return () => {
-            client?.deactivate(); // cleanup
+            client?.deactivate();
         };
     }, []);
 
@@ -116,14 +120,6 @@ export default function LobbyPage() {
             });
     }, []);
 
-    const setReady = () => {
-        if (client && client.connected && lobby) {
-            client.publish({
-                destination: '/app/setReady',
-                body: JSON.stringify({ playerId, lobbyId: lobby.id }),
-            });
-        }
-    };
 
     const startGameSession = async () => {
         if (!playerId) return;
@@ -155,7 +151,10 @@ export default function LobbyPage() {
         }
     };
 
-    const me = lobby?.players.find(p => p.playerId === playerId);
+    const me = useMemo(() => {
+        if (!lobby || !playerId) return null;
+        return lobby.players.find(p => p.playerId === playerId) ?? null;
+    }, [lobby, playerId]);
 
     return (
         <div
@@ -173,37 +172,32 @@ export default function LobbyPage() {
                 overflow: 'hidden',
             }}
         >
-            {/* Toast Container */}
             <ToastContainer position="top-center" autoClose={3000} />
 
-            <div
-                style={{
-                    position: 'absolute',
-                    top: '20px',
-                    left: '20px',
-                    display: 'flex',
-                    gap: '1rem',
-                    backgroundColor: 'rgba(0,0,0,0.6)',
-                    padding: '12px 24px',
-                    borderRadius: '12px',
-                    fontSize: '1.3rem',
-                }}
-            >
+            <div style={{
+                position: 'absolute',
+                top: '20px',
+                left: '20px',
+                display: 'flex',
+                gap: '1rem',
+                backgroundColor: 'rgba(0,0,0,0.6)',
+                padding: '12px 24px',
+                borderRadius: '12px',
+                fontSize: '1.3rem',
+            }}>
                 <div>👤 {playerName}</div>
                 <div>⭐ XP: {wallet?.xp}</div>
                 <div>💰 {wallet?.coins}</div>
             </div>
 
-            <div
-                style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '20px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.7rem',
-                }}
-            >
+            <div style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.7rem',
+            }}>
                 {modeList.map(mode => {
                     const unlocked = isUnlocked(mode);
                     return (
@@ -228,26 +222,25 @@ export default function LobbyPage() {
                 })}
                 <GameButton
                     label="PLAY"
-                    onClick={me?.ready ? startGameSession : undefined}
+                    onClick={startGameSession}
                     styleOverride={{
-                        backgroundColor: me?.ready ? '#4CAF50' : '#777',
+                        backgroundColor: '#4CAF50',
                         width: '180px',
                         height: '60px',
                         fontSize: '1.2rem',
                     }}
                 />
+
             </div>
 
-            <div
-                style={{
-                    position: 'absolute',
-                    bottom: '60px',
-                    left: '60px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '1rem',
-                }}
-            >
+            <div style={{
+                position: 'absolute',
+                bottom: '60px',
+                left: '60px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+            }}>
                 <GameButton
                     label="CHARACTERS"
                     onClick={() => router.push('/character')}
@@ -268,38 +261,22 @@ export default function LobbyPage() {
                 />
             </div>
 
-            {wallet?.selectedCharacterId &&
-                characterImageMap[wallet.selectedCharacterId] && (
-                    <img
-                        src={characterImageMap[wallet.selectedCharacterId]}
-                        alt="Character"
-                        style={{
-                            position: 'absolute',
-                            bottom: '10px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            width: '400px',
-                            height: '500px',
-                            objectFit: 'contain',
-                            zIndex: 10,
-                            filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.8))',
-                        }}
-                    />
-                )}
-
-            {me && (
-                <div style={{ position: 'absolute', bottom: '40px', right: '60px' }}>
-                    <GameButton
-                        label={me.ready ? 'Ready' : 'Not Ready'}
-                        onClick={setReady}
-                        styleOverride={{
-                            backgroundColor: me.ready ? '#4CAF50' : '#ff9800',
-                            width: '220px',
-                            height: '60px',
-                            fontSize: '1.2rem',
-                        }}
-                    />
-                </div>
+            {wallet?.selectedCharacterId && characterImageMap[wallet.selectedCharacterId] && (
+                <img
+                    src={characterImageMap[wallet.selectedCharacterId]}
+                    alt="Character"
+                    style={{
+                        position: 'absolute',
+                        bottom: '10px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '400px',
+                        height: '500px',
+                        objectFit: 'contain',
+                        zIndex: 10,
+                        filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.8))',
+                    }}
+                />
             )}
         </div>
     );

@@ -25,7 +25,6 @@ public class LobbyService {
                 new IllegalArgumentException("Player nicht gefunden: " + playerId)
         );
 
-        dbPlayer.setReady(false);
         Lobby lobby = new Lobby(UUID.randomUUID().toString(), dbPlayer);
         lobbies.put(lobby.getId(), lobby);
         playerToLobby.put(playerId, lobby.getId());
@@ -39,29 +38,6 @@ public class LobbyService {
         return Optional.of(createLobby(playerId)); // Jeder Spieler bekommt sofort eigene Lobby
     }
 
-
-    public Lobby toggleReady(String playerId) {
-        String lobbyId = playerToLobby.get(playerId);
-        if (lobbyId == null) return null;
-
-        Lobby lobby = lobbies.get(lobbyId);
-        if (lobby == null) return null;
-
-        // Ready umschalten
-        lobby.getPlayers().stream()
-                .filter(p -> p.getPlayerId().equals(playerId))
-                .findFirst()
-                .ifPresent(p -> p.setReady(!p.isReady()));
-
-        // Alle Spieler ready?
-        if (lobby.getPlayers().stream().allMatch(Player::isReady)) {
-            lobby.setStatus(LobbyStatus.STARTED);
-        } else {
-            lobby.setStatus(LobbyStatus.WAITING);
-        }
-
-        return lobby;
-    }
 
 
     public void removePlayer(String playerId) {

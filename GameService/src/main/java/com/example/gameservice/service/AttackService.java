@@ -1,5 +1,6 @@
 package com.example.gameservice.service;
 
+import com.example.gameservice.client.WalletApiClient;
 import com.example.gameservice.domain.CharacterPosition;
 import com.example.gameservice.dto.AttackEventDTO;
 import com.example.gameservice.dto.HealthUpdateDTO;
@@ -19,6 +20,8 @@ public class AttackService {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final MovementService movementService; // ← MovementService wird hier genutzt!
+    private final WalletApiClient walletApiClient;
+
 
     @Autowired
     private GameSessionService gameSessionService;
@@ -26,9 +29,10 @@ public class AttackService {
     @Value("${attack.cooldown.millis}")
     private long cooldownMillis;
 
-    public AttackService(SimpMessagingTemplate messagingTemplate, MovementService movementService) {
+    public AttackService(SimpMessagingTemplate messagingTemplate, MovementService movementService, WalletApiClient walletApiClient) {
         this.messagingTemplate = messagingTemplate;
         this.movementService = movementService;
+        this.walletApiClient = walletApiClient;
     }
 
     @Async
@@ -111,6 +115,8 @@ public class AttackService {
         if (newHealth <= 0 && !targetPlayer.isDead()) {
             targetPlayer.setDead(true);
             System.out.println("[DEBUG] Markiere isDead = true für Spieler: " + targetPlayer.getPlayerId());
+            walletApiClient.rewardCoins(targetPlayer.getPlayerId(), targetPlayer.getCharacterId(), 100);
+
 
             long aliveCount = session.getSessionPlayers().stream().filter(p -> !p.isDead()).count();
 
@@ -121,6 +127,8 @@ public class AttackService {
                         .orElse(null);
 
                 if (winner != null) {
+
+                    walletApiClient.rewardCoins(winner.getPlayerId(), winner.getCharacterId(), 300);
                     messagingTemplate.convertAndSend("/topic/victory/" + winner.getPlayerId(), "YOU_WIN");
                 }
             }

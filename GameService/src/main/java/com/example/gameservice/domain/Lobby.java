@@ -24,15 +24,6 @@ public class Lobby {
     public LobbyStatus getStatus() { return status; }
     public void setStatus(LobbyStatus status) { this.status = status; }
 
-    public void updateStatus() {
-        // Für Tests: Schon bei 1 Spieler erlauben, dass STARTED gesetzt wird
-        if (players.stream().allMatch(Player::isReady) && players.size() >= 1) {
-            this.status = LobbyStatus.STARTED;
-        } else {
-            this.status = LobbyStatus.WAITING;
-        }
-    }
-
 
 
 
@@ -49,27 +40,8 @@ public class Lobby {
         players.removeIf(p -> p.getPlayerId().equals(playerId));
     }
 
-    public void toggleReady(String playerId) {
-        players.stream()
-                .filter(p -> p.getPlayerId().equals(playerId))
-                .findFirst()
-                .ifPresent(p -> p.setReady(!p.isReady()));
-    }
 
-    public boolean allReady() {
-        return players.stream().allMatch(Player::isReady);
-    }
 
-    public boolean isFull() {
-        return players.size() >= 4;
-    }
 
-    public Map<String, Boolean> getPlayerStates() {
-        Map<String, Boolean> result = new HashMap<>();
-        for (Player p : players) {
-            result.put(p.getPlayerId(), p.isReady());
-        }
-        return result;
-    }
 
 }

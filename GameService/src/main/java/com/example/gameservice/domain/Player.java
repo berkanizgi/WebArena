@@ -21,9 +21,6 @@ public class Player implements Serializable {
     @Column(nullable = false)
     private String passwordHash;
 
-
-    private Boolean ready;
-
     private Boolean host;
 
     @OneToOne(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
@@ -66,18 +63,6 @@ public class Player implements Serializable {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Boolean isReady() {
-        return ready;
-    }
-
-    public Boolean getReady() {
-        return ready;
-    }
-
-    public void setReady(Boolean ready) {
-        this.ready = ready;
     }
 
     public Boolean isHost() {

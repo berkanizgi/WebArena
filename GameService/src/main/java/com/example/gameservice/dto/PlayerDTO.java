@@ -7,7 +7,6 @@ public class PlayerDTO {
     private String playerId;
     private String username;
     private String name;
-    private Boolean ready;
     private Boolean host;
     private Wallet wallet;
 
@@ -15,7 +14,6 @@ public class PlayerDTO {
         this.playerId = player.getPlayerId();
         this.username = player.getUsername();
         this.name = player.getName();
-        this.ready = player.isReady();
         this.host = player.isHost();
         this.wallet = player.getWallet(); // enthält xp, coins, selectedCharacter
     }
@@ -33,9 +31,6 @@ public class PlayerDTO {
         return name;
     }
 
-    public Boolean getReady() {
-        return ready;
-    }
 
     public Boolean getHost() {
         return host;

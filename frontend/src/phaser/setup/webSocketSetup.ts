@@ -102,10 +102,10 @@ export function setupWebSocket(scene: GameScene) {
                     const playerId = scene.playerId;
                     if (playerId) {
                         localStorage.setItem('playerId', playerId);
-                        scene.router.push("/lobby");
+                        window.location.href = "/lobby";
                     } else {
                         console.warn('No playerId found – redirecting to login.');
-                        scene.router.push("/login");
+                        window.location.href = "/login";
                     }
                 });
 
@@ -144,10 +144,10 @@ export function setupWebSocket(scene: GameScene) {
                         const playerId = scene.playerId;
                         if (playerId) {
                             localStorage.setItem('playerId', playerId);
-                            scene.router.push("/lobby");
+                            window.location.href = "/lobby";
                         } else {
                             console.warn('No playerId found – redirecting to login.');
-                            scene.router.push("/login");
+                            window.location.href = "/login";
                         }
                     });
 

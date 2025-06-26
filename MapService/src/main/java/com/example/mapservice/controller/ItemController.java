@@ -32,5 +32,11 @@ public class ItemController {
                 new HealthBoxItem(648.0, 102.0)
         );
     }
+    @GetMapping("/speedboosts/level1")
+    public SpeedBoostItem getSpeedBoostForLevel1() {
+        return new SpeedBoostItem(648, 472);
+    }
+
+
 
 }

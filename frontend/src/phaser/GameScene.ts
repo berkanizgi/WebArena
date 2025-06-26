@@ -12,11 +12,12 @@ import { createProjectileGroup, updateProjectiles } from '@/phaser/setup/project
 import { handlePlayerMovement } from '@/phaser/movement/movementHandler';
 import { sendMovement } from '@/phaser/movement/movementSender';
 import { createHealthBar, updateHealthBar } from '@/phaser/setup/healthBarSetup';
-import { setupLevel1Tutorial, unlockLevel2 } from "@/phaser/setup/level/Level1";
 import { setupMultiplayerZone } from '@/phaser/setup/setupMultiplayerZone';
 import { SessionPlayerDTO } from "@/phaser/types";
 import {setupSpeedBoosts} from "@/phaser/setup/setupSpeedBoost";
 import {setupHealthBoxes} from "@/phaser/setup/setupHealthBoxes";
+import {setupLevel1Tutorial} from "@/phaser/setup/level/Level1";
+import {setupLevel1Boost} from "@/phaser/setup/setupLevel1SpeedBoost";
 
 export default class GameScene extends Phaser.Scene {
     public player!: Phaser.Physics.Arcade.Sprite;
@@ -63,7 +64,7 @@ export default class GameScene extends Phaser.Scene {
     public hasShownDeathPopup = false;
     public hasShownVictoryPopup = false;
     public lastZoneDamageTime: number = 0;
-    private tutorialArrow!: Phaser.GameObjects.Image;
+    tutorialArrow!: Phaser.GameObjects.Image;
 
     constructor(config: Phaser.Types.Scenes.SettingsConfig & {
         skin: string;
@@ -169,25 +170,7 @@ export default class GameScene extends Phaser.Scene {
         }
 
         if (this.gameMode === 'LEVEL_1') {
-            this.tutorialArrow = this.add.image(this.player.x, this.player.y - 8, 'arrow_to_item'); // 🎯 leicht über dem Kopf
-            this.tutorialArrow.setDisplaySize(12, 12);
-            this.tutorialArrow.setOrigin(0.5, 0.5);
-
-
-            setupLevel1Tutorial(this, this.router);
-
-            const speedBoost = this.physics.add.sprite(648, 468, 'speed_boost');
-            speedBoost.setOrigin(0.5, 0.5);
-            speedBoost.setDisplaySize(16, 16);
-
-            this.physics.add.overlap(this.player, speedBoost, () => {
-                if (!this.registry.get('speedItemCollected')) {
-                    this.registry.set('speedItemCollected', true);
-                    speedBoost.destroy();
-                    this.tutorialArrow.destroy();
-                    unlockLevel2(this, this.router);
-                }
-            }, undefined, this);
+            setupLevel1Tutorial(this);
         }
 
         if (this.gameMode === 'LEVEL_2') {
@@ -226,13 +209,5 @@ export default class GameScene extends Phaser.Scene {
             updateHealthBar(healthData.bar, healthData.text, entry.sprite, healthData.displayedHealth, healthData.baseHealth);
         });
 
-        // Tutorial-Pfeil folgen lassen (wenn existiert)
-        if (this.tutorialArrow) {
-            const dx = 648 - this.player.x;
-            const dy = 468 - this.player.y;
-            const angle = Math.atan2(dy, dx);
-            this.tutorialArrow.setPosition(this.player.x, this.player.y - 15); // ✅ sanft oberhalb des Spielers
-            this.tutorialArrow.setRotation(angle);
-        }
     }
 }

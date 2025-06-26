@@ -91,10 +91,10 @@ export default function CharacterOverview() {
 
     const handleLevelUp = async () => {
         const playerId = sessionStorage.getItem('playerId');
-        if (!playerId || !selectedCharacterId) return;
+        if (!playerId || !tempSelectedId) return;
 
         try {
-            const res = await fetch(`http://localhost:8084/api/characters/${playerId}/level-up/${selectedCharacterId}`, {
+            const res = await fetch(`http://localhost:8084/api/characters/${playerId}/level-up/${tempSelectedId}`, {
                 method: 'POST',
             });
 
@@ -112,6 +112,7 @@ export default function CharacterOverview() {
             toast.error('Error during Level Up');
         }
     };
+
 
     const getOwned = (id: string) => ownedCharacters.find(c => c.characterId === id);
     const getBase = (id: string) => baseStats[id];

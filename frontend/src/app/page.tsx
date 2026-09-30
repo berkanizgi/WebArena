@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import ArenaClient from '@/components/arena/ArenaClient';
 
 export default function Home() {
-    redirect('/login');
+    return <ArenaClient />;
 }

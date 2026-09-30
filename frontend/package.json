@@ -4,9 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "preview": "node scripts/preview.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check:solo": "eslint src/components/arena src/solo && tsc --noEmit",
+    "test:solo": "node --experimental-strip-types --test --test-isolation=none tests/solo.test.mjs"
   },
   "dependencies": {
     "@stomp/stompjs": "^7.1.1",

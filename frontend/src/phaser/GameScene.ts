@@ -65,7 +65,7 @@ export default class GameScene extends Phaser.Scene {
     public hasShownDeathPopup = false;
     public hasShownVictoryPopup = false;
     public lastZoneDamageTime: number = 0;
-    private tutorialArrow!: Phaser.GameObjects.Image;
+    public tutorialArrow!: Phaser.GameObjects.Image;
 
     public npcEnemy?: Phaser.Physics.Arcade.Sprite;
     public npcHealth: number = 100;
